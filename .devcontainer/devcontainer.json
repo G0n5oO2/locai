@@ -1,0 +1,43 @@
+// 開発用コンテナ（Dev Container）の設定
+// VS Code で「コンテナーで再度開く」を選ぶと、この設定どおりの開発環境が Docker 上に作られる
+{
+  "name": "LocAI",
+  // Node.js 20 と git が入った公式イメージ（このパソコンにダウンロード済みのものを使う）
+  // TypeScript はプロジェクトを作るときに npm で入る
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  // Next.js の開発サーバー（3000番）をパソコンのブラウザから開けるようにする
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Next.js", "onAutoForward": "notify" }
+  },
+
+  "containerEnv": {
+    // Windows のフォルダをコンテナから使うと変更の検知が遅れることがあるため、定期的に確認する方式にする
+    "WATCHPACK_POLLING": "true",
+    "CHOKIDAR_USEPOLLING": "true",
+    "TZ": "Asia/Tokyo"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "files.eol": "\n",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+
+  // package.json がある場合だけ、コンテナ作成後に依存パッケージを入れる
+  "postCreateCommand": "if [ -f package.json ]; then npm install; fi",
+
+  "remoteUser": "node"
+}

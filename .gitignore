@@ -1,0 +1,19 @@
+# 秘密情報（API キーやデータベースの接続情報）は絶対に GitHub に送らない
+.env*
+!.env.example
+
+# npm で入るパッケージ（npm install でいつでも作り直せる）
+node_modules/
+
+# Next.js が自動で作るファイル
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Vercel の設定
+.vercel/
+
+# その他
+.DS_Store
+npm-debug.log*

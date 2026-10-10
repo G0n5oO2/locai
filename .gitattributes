@@ -1,0 +1,2 @@
+# Windows とコンテナ（Linux）で改行コードをそろえる（LF に統一）
+* text=auto eol=lf
