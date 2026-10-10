@@ -17,3 +17,10 @@ next-env.d.ts
 # その他
 .DS_Store
 npm-debug.log*
+
+# テスト結果・ビルド結果
+/coverage
+/build
+
+# 証明書などの鍵ファイル
+*.pem
