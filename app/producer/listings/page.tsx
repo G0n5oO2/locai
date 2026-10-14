@@ -5,7 +5,10 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
+import { expireOverdue, usedAmounts } from "@/lib/availability";
 import { requireProducer } from "@/lib/session";
+import { matchingBuyerIds, nearWanted } from "@/lib/wanted";
+import { LeftoverPanel } from "./leftover-panel";
 
 export default function ListingsPage() {
   return (
@@ -20,7 +23,29 @@ export default function ListingsPage() {
 async function Listings() {
   const user = await requireProducer();
   // 自分の出品だけを読む（他人の出品は見えない）
-  const listings = await prisma.listing.findMany({ where: { producerId: user.id }, orderBy: { createdAt: "desc" } });
+  const listings = await prisma.listing.findMany({
+    where: { producerId: user.id },
+    orderBy: { createdAt: "desc" },
+    include: { notices: { select: { buyerId: true } } },
+  });
+
+  // 売れ残りのパネルのための材料（残りの量・近くの「探しています」・まだ知らせていないお店の数）
+  const profile = await prisma.producerProfile.findUnique({ where: { userId: user.id } });
+  await expireOverdue(prisma, listings.map((l) => l.id));
+  const used = await usedAmounts(prisma, listings.map((l) => l.id));
+  const wanted = profile ? await nearWanted(profile) : [];
+  const now = new Date();
+  const panels = new Map<string, { remainingG: number; expired: boolean; newCount: number }>();
+  for (const l of listings) {
+    const u = used.get(l.id)!;
+    const remainingG = l.totalG - u.confirmedG - u.reservedG;
+    const expired = l.acceptUntil <= now;
+    // 受付中のまま期限を過ぎて残っている出品（売れ残り）と、一度知らせた出品にだけパネルを出す
+    if (l.status !== "open" || remainingG < l.minOrderG || !profile || (!expired && l.notices.length === 0)) continue;
+    const notified = new Set(l.notices.map((n) => n.buyerId));
+    const matched = await matchingBuyerIds(profile, l.vegetable);
+    panels.set(l.id, { remainingG, expired, newCount: matched.filter((id) => !notified.has(id)).length });
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -34,8 +59,8 @@ async function Listings() {
             <div className="flex items-center justify-between gap-2">
               {/* 食材名は利用者が入力したものなので、テキストとしてそのまま表示する */}
               <p className="text-lg font-bold">{l.vegetable}</p>
-              <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${l.status === "open" ? "bg-leaf-soft text-leaf" : "bg-line text-muted"}`}>
-                {l.status === "open" ? "受付中" : "受付終了"}
+              <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${l.status === "open" && l.acceptUntil > now ? "bg-leaf-soft text-leaf" : "bg-line text-muted"}`}>
+                {l.status === "closed" ? "受付終了" : l.acceptUntil > now ? "受付中" : "受付期限切れ"}
               </span>
             </div>
             <p className="text-sm">
@@ -51,6 +76,17 @@ async function Listings() {
             <p className="text-sm text-muted">
               納品 {formatDate(l.deliverFrom)}〜{formatDate(l.deliverTo)}
             </p>
+            {panels.has(l.id) && (
+              <LeftoverPanel
+                listingId={l.id}
+                vegetable={l.vegetable}
+                remainingG={panels.get(l.id)!.remainingG}
+                expired={panels.get(l.id)!.expired}
+                wanted={wanted}
+                notifiedCount={l.notices.length}
+                newCount={panels.get(l.id)!.newCount}
+              />
+            )}
           </li>
         ))}
       </ul>

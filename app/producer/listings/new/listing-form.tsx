@@ -21,15 +21,18 @@ type Props = {
   wanted: PublicWanted[];
   // 「探しています」に応えて出品するときの食材名
   initialVegetable?: string;
+  // 再出品のとき：前の出品の内容と、その出品の ID（出品したら前の出品は受付終了にする）
+  initial?: Record<string, string>;
+  fromListingId?: string;
 };
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 const allMethods: DeliveryMethod[] = ["delivery", "self", "pickup"];
 
-export function ListingForm({ limits, available, wanted, initialVegetable }: Props) {
+export function ListingForm({ limits, available, wanted, initialVegetable, initial, fromListingId }: Props) {
   const [state, action, pending] = useActionState<ListingFormState, FormData>(createListing, {});
-  const v = state.values ?? {};
+  const v = state.values ?? initial ?? {};
 
   // 最大件数の表示のために、総量・最低注文量・受け渡し方法は入力のたびに覚えておく
   const [vegetable, setVegetable] = useState(v.vegetable ?? initialVegetable ?? "");
@@ -57,6 +60,12 @@ export function ListingForm({ limits, available, wanted, initialVegetable }: Pro
 
   return (
     <form action={action} className="flex flex-col gap-6">
+      {fromListingId && (
+        <>
+          <input type="hidden" name="fromListingId" value={fromListingId} />
+          <p className="rounded-xl bg-earth-soft p-3 text-sm">前の出品の内容を入れてあります（総量は残りの量）。出品すると、前の出品は受付終了になります。期限と納品できる日は、入れ直してください。</p>
+        </>
+      )}
       <Field label="食材名（例：賀茂茄子）" name="vegetable" maxLength={50} value={vegetable} onChange={(e) => setVegetable(e.target.value)} errors={state.errors?.vegetable} />
 
       <div className="grid grid-cols-2 gap-3">

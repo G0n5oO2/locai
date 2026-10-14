@@ -126,25 +126,31 @@ export async function createListing(_state: ListingFormState, formData: FormData
     return { values, confirmOver: { maxCount, limit: strictest.limit, methodLabel: methodLabel[strictest.method] } };
   }
 
-  await prisma.listing.create({
-    data: {
-      producerId: user.id,
-      vegetable: d.vegetable,
-      totalG: d.total,
-      unitG: d.unit,
-      minOrderG: d.minOrder,
-      unitPriceYen: d.unitPrice,
-      quality: d.quality,
-      surplus: d.surplus,
-      note: d.note,
-      acceptUntil: d.acceptUntil,
-      answerUntil: d.answerUntil,
-      deliverFrom: d.deliverFrom,
-      deliverTo: d.deliverTo,
-      offersDelivery: methods.includes("delivery"),
-      offersSelf: methods.includes("self"),
-      offersPickup: methods.includes("pickup"),
-    },
-  });
+  // 再出品のときは、前の出品（自分のものだけ）を受付終了にする
+  // 「前の出品を終了」と「新しい出品を保存」は1つのトランザクションで行う（片方だけ失敗しないように）
+  const fromListingId = String(formData.get("fromListingId") ?? "");
+  await prisma.$transaction([
+    prisma.listing.updateMany({ where: { id: fromListingId, producerId: user.id }, data: { status: "closed" } }),
+    prisma.listing.create({
+      data: {
+        producerId: user.id,
+        vegetable: d.vegetable,
+        totalG: d.total,
+        unitG: d.unit,
+        minOrderG: d.minOrder,
+        unitPriceYen: d.unitPrice,
+        quality: d.quality,
+        surplus: d.surplus,
+        note: d.note,
+        acceptUntil: d.acceptUntil,
+        answerUntil: d.answerUntil,
+        deliverFrom: d.deliverFrom,
+        deliverTo: d.deliverTo,
+        offersDelivery: methods.includes("delivery"),
+        offersSelf: methods.includes("self"),
+        offersPickup: methods.includes("pickup"),
+      },
+    }),
+  ]);
   redirect("/producer/listings");
 }

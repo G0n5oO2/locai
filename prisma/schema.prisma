@@ -37,6 +37,7 @@ model User {
   orders        Order[]
   exposure      ProducerExposure?
   wanted        WantedRequest[]
+  notices       ListingNotice[]
 
   @@map("user")
 }
@@ -172,6 +173,7 @@ model Listing {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   orders         Order[]
+  notices        ListingNotice[]
 
   @@index([producerId])
   @@index([status, acceptUntil])
@@ -299,4 +301,18 @@ model WantedRequest {
 
   @@index([closed, useDate])
   @@map("wanted_request")
+}
+
+// 売れ残りを「探しているお店」に知らせた記録（同じ出品・同じお店には1回だけ）
+model ListingNotice {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId   String
+  buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([listingId, buyerId])
+  @@index([buyerId])
+  @@map("listing_notice")
 }

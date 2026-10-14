@@ -10,8 +10,9 @@ const sql = neon(process.env.DATABASE_URL);
 
 // 日付：今日から◯日後
 const day = 24 * 60 * 60 * 1000;
-const at = (days) => new Date(Date.now() + days * day);
-const dateOnly = (days) => at(days).toISOString().slice(0, 10);
+// 日時は世界標準時の文字（…Z）で渡す。Date のまま渡すと、パソコンの時刻の設定（日本時間）で書かれて、9時間ずれるため
+const at = (days) => new Date(Date.now() + days * day).toISOString();
+const dateOnly = (days) => at(days).slice(0, 10);
 
 const producers = [
   {
