@@ -38,6 +38,7 @@ model User {
   exposure      ProducerExposure?
   wanted        WantedRequest[]
   notices       ListingNotice[]
+  messages      OrderMessage[]
 
   @@map("user")
 }
@@ -251,6 +252,10 @@ model Order {
   dateChangeProposed   Boolean        @default(false)
   // 同じ申し込みを二重に送らないための目印（送信ボタンの連打対策）
   requestKey   String         @unique
+  // メッセージを最後に読んだ時刻（未読の数を出すため）
+  buyerReadAt    DateTime?
+  producerReadAt DateTime?
+  messages       OrderMessage[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -315,4 +320,18 @@ model ListingNotice {
   @@unique([listingId, buyerId])
   @@index([buyerId])
   @@map("listing_notice")
+}
+
+// 注文ごとのメッセージ（見られるのは、その注文のお店と農家さんだけ：不変条件4）
+model OrderMessage {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@map("order_message")
 }

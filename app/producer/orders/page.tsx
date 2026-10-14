@@ -7,6 +7,7 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import { expireOverdue } from "@/lib/availability";
 import { methodLabel, type DeliveryMethod } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
+import { unreadCounts } from "@/lib/messages";
 import { dateShiftCounts } from "@/lib/order-flow";
 import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
@@ -55,6 +56,9 @@ async function ProducerOrders() {
     const key = o.deliveryDate.toISOString().slice(0, 10);
     days.set(key, [...(days.get(key) ?? []), o]);
   }
+  // メッセージの未読の数
+  const unread = await unreadCounts(user.id, orders.map((o) => ({ id: o.id, readAt: o.producerReadAt })));
+
   // お店ごとの「納品日をずらす提案をされた回数」（提案の候補の順番に使う）
   const shiftCount = await dateShiftCounts([...new Set(orders.map((o) => o.buyerId))]);
   const limitOf: Record<DeliveryMethod, number> = {
@@ -149,6 +153,9 @@ async function ProducerOrders() {
                 <p>
                   商品代 {o.itemYen.toLocaleString()}円／送料・配達料 {o.shippingYen.toLocaleString()}円
                 </p>
+                <Link href={`/orders/${o.id}`} className="font-bold text-earth underline">
+                  注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
+                </Link>
                 {/* 使用日は、お店が見せてよいとしたときだけ */}
                 {o.showUseDate && <p className="text-muted">お店の使用日：{formatDate(o.useDate)}</p>}
                 {o.buyer.buyerProfile && <p className="text-muted">お店の地域：{o.buyer.buyerProfile.prefecture} {o.buyer.buyerProfile.city}</p>}

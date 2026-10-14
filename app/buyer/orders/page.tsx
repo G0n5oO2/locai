@@ -5,6 +5,7 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import { expireOverdue } from "@/lib/availability";
 import { methodLabel } from "@/lib/burden";
 import { formatDate, formatJstDateTime, jstDateText, parseDate } from "@/lib/datetime";
+import { unreadCounts } from "@/lib/messages";
 import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
@@ -32,6 +33,9 @@ async function Orders() {
     orderBy: { createdAt: "desc" },
     include: { listing: { select: { vegetable: true, producer: { select: { name: true, profile: { select: { pickupPlace: true } } } } } } },
   });
+
+  // メッセージの未読の数
+  const unread = await unreadCounts(user.id, orders.map((o) => ({ id: o.id, readAt: o.buyerReadAt })));
 
   // 自分の「探しています」（公開中で、使用日を過ぎていないもの）
   const wanted = await prisma.wantedRequest.findMany({
@@ -78,6 +82,9 @@ async function Orders() {
             <p className="text-sm">
               商品代 {o.itemYen.toLocaleString()}円 ＋ 送料 {o.shippingYen.toLocaleString()}円 ＝ <strong>{o.totalYen.toLocaleString()}円</strong>
             </p>
+            <Link href={`/orders/${o.id}`} className="text-sm font-bold text-leaf underline">
+              注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
+            </Link>
             {/* 農家さんからの条件変更の提案 */}
             {o.status === "change_pending" && o.proposedDeliveryDate && o.proposedQuantityG !== null && o.proposedTotalYen !== null && (
               <div className="rounded-xl bg-leaf-soft p-3 text-sm">
