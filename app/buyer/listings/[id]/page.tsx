@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import type { DeliveryMethod } from "@/lib/burden";
 import { formatJstDateTime, jstDateText, parseDate } from "@/lib/datetime";
+import { canTrial, trialQuantityFor } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireBuyer } from "@/lib/session";
@@ -43,6 +44,9 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
     (m) => ({ delivery: listing.offersDelivery, self: listing.offersSelf, pickup: listing.offersPickup })[m],
   );
 
+  // お試しで申し込めるか（この農家さんと販売確定したことがなく、返事待ちのお試しもない）
+  const trialQuantity = (await canTrial(prisma, user.id, listing.producerId)) ? gramsToKgText(trialQuantityFor(profile.trialAmountG, listing.unitG)) : null;
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
@@ -79,6 +83,7 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
         earliest={earliest.toISOString().slice(0, 10)}
         latest={listing.deliverTo.toISOString().slice(0, 10)}
         initial={{ quantity: text("quantity"), method: text("method"), useDate: text("useDate") }}
+        trialQuantity={trialQuantity}
       />
     </div>
   );

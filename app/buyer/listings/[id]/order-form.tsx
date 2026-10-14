@@ -18,18 +18,23 @@ type Props = {
   earliest: string;
   latest: string;
   initial: { quantity: string; method: string; useDate: string };
+  // お試しで申し込めるときの量（kg の文字）。申し込めないときは null
+  trialQuantity: string | null;
 };
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 
-export function OrderForm({ listingId, requestKey, price, fees, methods, earliest, latest, initial }: Props) {
+export function OrderForm({ listingId, requestKey, price, fees, methods, earliest, latest, initial, trialQuantity }: Props) {
   const [state, action, pending] = useActionState<OrderFormState, FormData>(sendOrder, {});
   const v = state.values ?? {};
   const [quantity, setQuantity] = useState(v.quantity ?? initial.quantity);
   const [method, setMethod] = useState(v.method ?? (methods.includes(initial.method as DeliveryMethod) ? initial.method : methods[0]));
 
-  const grams = kgTextToGrams(quantity);
+  const [trial, setTrial] = useState(v.isTrial === "on");
+  // お試しのときは、数量はお試しの量に決まっている（本当の量は、送ったときにサーバーが決める）
+  const shownQuantity = trial && trialQuantity ? trialQuantity : quantity;
+  const grams = kgTextToGrams(shownQuantity);
   const q = grams ? quote(price, fees, grams, method as DeliveryMethod) : null;
 
   return (
@@ -38,7 +43,25 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       <input type="hidden" name="listingId" value={listingId} />
       <input type="hidden" name="requestKey" value={requestKey} />
 
-      <Field label={`数量（kg・${gramsToKgText(price.unitG)}kg 単位、${gramsToKgText(price.minOrderG)}kg から）`} name="quantity" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)} errors={state.errors?.quantity} />
+      {/* お試し：この農家さんから買ったことがないお店だけ（設計メモ3章） */}
+      {trialQuantity && (
+        <label className="flex items-start gap-2 rounded-xl border border-leaf bg-leaf-soft p-3 text-sm">
+          <input type="checkbox" name="isTrial" checked={trial} onChange={(e) => setTrial(e.target.checked)} className="mt-1" />
+          <span>
+            <strong>お試しで申し込む（{trialQuantity}kg）</strong>
+            <span className="block text-xs">この農家さんから買うのは初めてなので、1回だけ少ない量で試せます。値段はいつもと同じです。</span>
+          </span>
+        </label>
+      )}
+      <Field
+        label={`数量（kg・${gramsToKgText(price.unitG)}kg 単位、${gramsToKgText(price.minOrderG)}kg から）`}
+        name="quantity"
+        inputMode="decimal"
+        value={shownQuantity}
+        readOnly={trial}
+        onChange={(e) => setQuantity(e.target.value)}
+        errors={state.errors?.quantity}
+      />
 
       <div className="flex flex-col gap-1">
         <label htmlFor="method" className="text-sm font-bold">受け取り方法</label>

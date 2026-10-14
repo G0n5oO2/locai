@@ -73,6 +73,7 @@ async function Orders() {
             <p className="text-sm text-muted">{o.listing.producer.name}</p>
             <p className="text-sm">
               {gramsToKgText(o.quantityG)}kg・{methodLabel[o.method]}・納品 {formatDate(o.deliveryDate)}
+              {o.isTrial && "・お試し"}
             </p>
             <p className="text-sm">
               商品代 {o.itemYen.toLocaleString()}円 ＋ 送料 {o.shippingYen.toLocaleString()}円 ＝ <strong>{o.totalYen.toLocaleString()}円</strong>
