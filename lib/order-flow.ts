@@ -4,7 +4,10 @@
 import "server-only";
 import type { Order, OrderStatus } from "./generated/prisma/client";
 import { expireOverdue, usedAmounts } from "./availability";
+import { jstDateText, parseDate } from "./datetime";
 import { prisma } from "./prisma";
+import { quote } from "./pricing";
+import { gramsToKgText } from "./quantity";
 
 // 操作 → 誰が・どの状態のときにできるか
 const flow = {
@@ -74,4 +77,123 @@ export function declineOrder(producerId: string, orderId: string) {
     await tx.order.update({ where: { id: order.id }, data: { status: "declined" } });
     return { ok: true };
   });
+}
+
+// ===== 条件変更の提案（docs/04_producer_design.md 2章） =====
+
+export type ProposalInput = {
+  newDeliveryDate: Date | null; // 納品日を変えないときは null
+  newQuantityG: number | null; // 数量を変えないときは null
+  confirmIfRefused: boolean; // 断られたら元の条件で確定するか（false なら見送り）
+};
+
+// 生産者が、納品日や数量の変更を提案する（回答待ち → 条件変更の確認待ち）
+export function proposeChange(producerId: string, orderId: string, input: ProposalInput) {
+  return runFlow("propose", producerId, orderId, async (tx, order) => {
+    const listing = await tx.listing.findUniqueOrThrow({ where: { id: order.listingId }, include: { producer: { select: { profile: true } } } });
+    const profile = listing.producer.profile;
+    if (!profile) return { ok: false, message: "プロフィールが見つかりません" };
+
+    const dateChanged = input.newDeliveryDate !== null && input.newDeliveryDate.getTime() !== order.deliveryDate.getTime();
+    const quantityChanged = input.newQuantityG !== null && input.newQuantityG !== order.quantityG;
+    if (!dateChanged && !quantityChanged) return { ok: false, message: "納品日か数量のどちらかを変えてください" };
+
+    const newDate = dateChanged ? input.newDeliveryDate! : order.deliveryDate;
+    const newQuantityG = quantityChanged ? input.newQuantityG! : order.quantityG;
+
+    if (dateChanged) {
+      // 使用日を見せていないお店には、日付の提案はしない（設計メモ2章：候補から外すだけ）
+      if (!order.showUseDate) return { ok: false, message: "このお店は使用日を見せていないので、納品日の変更は提案できません" };
+      const today = parseDate(jstDateText(new Date()))!;
+      const earliest = listing.deliverFrom > today ? listing.deliverFrom : today;
+      if (newDate < earliest || newDate > listing.deliverTo) return { ok: false, message: "納品日は、届けられる日の中から選んでください" };
+      // 使用日より後の日には、ずらさない
+      if (newDate > order.useDate) return { ok: false, message: "お店の使用日より後の日には、ずらせません" };
+    }
+
+    if (quantityChanged) {
+      if (newQuantityG <= 0 || newQuantityG % listing.unitG !== 0) return { ok: false, message: `数量は ${gramsToKgText(listing.unitG)}kg 単位にしてください` };
+      // 変更後の量も、残りの量の中に収める（この注文がいま押さえている量は使ってよい）
+      const used = (await usedAmounts(tx, [listing.id])).get(listing.id)!;
+      const ownReserved = Math.max(order.quantityG, order.proposedQuantityG ?? 0);
+      const availableG = listing.totalG - used.confirmedG - used.reservedG + ownReserved;
+      if (newQuantityG > availableG) return { ok: false, message: `数量が残りの量を超えています（${gramsToKgText(availableG)}kg まで）` };
+    }
+
+    // 金額はアプリが計算し直す（不変条件2）
+    const q = quote(listing, profile, newQuantityG, order.method);
+    if ("error" in q) return { ok: false, message: q.error };
+
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: "change_pending",
+        proposedDeliveryDate: newDate,
+        proposedQuantityG: newQuantityG,
+        proposedItemYen: q.itemYen,
+        proposedShippingYen: q.shippingYen,
+        proposedTotalYen: q.totalYen,
+        // 数量を変えるときは、断られたら見送りだけ（出せない量を約束しないため）
+        confirmIfRefused: quantityChanged ? false : input.confirmIfRefused,
+        dateChangeProposed: dateChanged,
+      },
+    });
+    return { ok: true };
+  });
+}
+
+// 販売確定にしても、出品した量を超えないか（不変条件1）
+async function fitsStock(tx: Tx, listingId: string, quantityG: number) {
+  const listing = await tx.listing.findUniqueOrThrow({ where: { id: listingId } });
+  const used = (await usedAmounts(tx, [listingId])).get(listingId)!;
+  return used.confirmedG + quantityG <= listing.totalG;
+}
+
+// お店が提案に同意する（条件変更の確認待ち → 販売確定：変更後の条件）
+export function acceptProposal(buyerId: string, orderId: string) {
+  return runFlow("accept", buyerId, orderId, async (tx, order) => {
+    if (order.proposedDeliveryDate === null || order.proposedQuantityG === null || order.proposedTotalYen === null) {
+      return { ok: false, message: "提案の内容が見つかりません" };
+    }
+    if (!(await fitsStock(tx, order.listingId, order.proposedQuantityG))) return { ok: false, message: "在庫が足りないため、同意できません" };
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: "confirmed",
+        deliveryDate: order.proposedDeliveryDate,
+        quantityG: order.proposedQuantityG,
+        itemYen: order.proposedItemYen!,
+        shippingYen: order.proposedShippingYen!,
+        totalYen: order.proposedTotalYen,
+      },
+    });
+    return { ok: true };
+  });
+}
+
+// お店が提案を断る（→ 生産者が先に選んでいたとおり、元の条件で販売確定 または 見送り）
+export function refuseProposal(buyerId: string, orderId: string) {
+  return runFlow("refuse", buyerId, orderId, async (tx, order) => {
+    if (order.confirmIfRefused) {
+      if (!(await fitsStock(tx, order.listingId, order.quantityG))) return { ok: false, message: "在庫が足りないため、元の条件で確定できません" };
+      await tx.order.update({ where: { id: order.id }, data: { status: "confirmed" } });
+    } else {
+      await tx.order.update({ where: { id: order.id }, data: { status: "declined" } });
+    }
+    return { ok: true };
+  });
+}
+
+// お店が取り消す（回答待ち／条件変更の確認待ち → 取消）
+export function cancelOrder(buyerId: string, orderId: string) {
+  return runFlow("cancel", buyerId, orderId, async (tx, order) => {
+    await tx.order.update({ where: { id: order.id }, data: { status: "cancelled" } });
+    return { ok: true };
+  });
+}
+
+// お店ごとの「納品日をずらす提案をされた回数」
+export async function dateShiftCounts(buyerIds: string[]) {
+  const rows = await prisma.order.groupBy({ by: ["buyerId"], where: { buyerId: { in: buyerIds }, dateChangeProposed: true }, _count: { _all: true } });
+  return new Map(rows.map((r) => [r.buyerId, r._count._all]));
 }

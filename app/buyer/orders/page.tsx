@@ -9,6 +9,7 @@ import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireBuyer } from "@/lib/session";
+import { BuyerOrderButtons } from "./buyer-order-buttons";
 
 export default function BuyerOrdersPage() {
   return (
@@ -28,7 +29,7 @@ async function Orders() {
   const orders = await prisma.order.findMany({
     where: { buyerId: user.id },
     orderBy: { createdAt: "desc" },
-    include: { listing: { select: { vegetable: true, producer: { select: { name: true } } } } },
+    include: { listing: { select: { vegetable: true, producer: { select: { name: true, profile: { select: { pickupPlace: true } } } } } } },
   });
 
   return (
@@ -53,8 +54,37 @@ async function Orders() {
             <p className="text-sm">
               商品代 {o.itemYen.toLocaleString()}円 ＋ 送料 {o.shippingYen.toLocaleString()}円 ＝ <strong>{o.totalYen.toLocaleString()}円</strong>
             </p>
+            {/* 農家さんからの条件変更の提案 */}
+            {o.status === "change_pending" && o.proposedDeliveryDate && o.proposedQuantityG !== null && o.proposedTotalYen !== null && (
+              <div className="rounded-xl bg-leaf-soft p-3 text-sm">
+                <p className="font-bold">農家さんから、条件の変更の提案が届きました</p>
+                <p>
+                  納品日 {formatDate(o.deliveryDate)} → <strong>{formatDate(o.proposedDeliveryDate)}</strong>
+                </p>
+                <p>
+                  数量 {gramsToKgText(o.quantityG)}kg → <strong>{gramsToKgText(o.proposedQuantityG)}kg</strong>
+                </p>
+                <p>
+                  合計 {o.totalYen.toLocaleString()}円 → <strong>{o.proposedTotalYen.toLocaleString()}円</strong>
+                </p>
+                <p className="mt-1">
+                  ※ 断った場合は、{o.confirmIfRefused ? `元の条件（${formatDate(o.deliveryDate)}・${gramsToKgText(o.quantityG)}kg）で届きます` : "この購入希望は見送りになります"}
+                </p>
+              </div>
+            )}
             {(o.status === "pending" || o.status === "change_pending") && (
-              <p className="text-xs text-muted">農家さんの回答期限：{formatJstDateTime(o.answerUntil)}</p>
+              <>
+                <p className="text-xs text-muted">回答期限：{formatJstDateTime(o.answerUntil)}（過ぎると期限切れになります）</p>
+                <BuyerOrderButtons
+                  orderId={o.id}
+                  canRespond={o.status === "change_pending"}
+                  refuseLabel={o.confirmIfRefused ? "断る（元の条件で確定）" : "断る（見送り）"}
+                />
+              </>
+            )}
+            {/* 引き取りの場所は、販売確定したときだけ見せる（不変条件4） */}
+            {o.status === "confirmed" && o.method === "pickup" && o.listing.producer.profile?.pickupPlace && (
+              <p className="text-sm">引き取りの場所：{o.listing.producer.profile.pickupPlace}</p>
             )}
           </li>
         ))}

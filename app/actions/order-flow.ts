@@ -2,9 +2,12 @@
 // 注文の状態を変える操作（サーバー側で動く）。本人か・表にある動きかは lib/order-flow.ts で確かめる
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
-import { approveOrder, declineOrder, type FlowResult } from "@/lib/order-flow";
-import { requireProducer } from "@/lib/session";
+import { parseDate } from "@/lib/datetime";
+import { acceptProposal, approveOrder, cancelOrder, declineOrder, proposeChange, refuseProposal, type FlowResult } from "@/lib/order-flow";
+import { kgTextToGrams } from "@/lib/quantity";
+import { requireBuyer, requireProducer } from "@/lib/session";
 
 export type FlowState = { message?: string; done?: boolean };
 
@@ -30,4 +33,43 @@ export async function approveAction(_state: FlowState, formData: FormData): Prom
 export async function declineAction(_state: FlowState, formData: FormData): Promise<FlowState> {
   const user = await requireProducer();
   return run(formData, (orderId) => declineOrder(user.id, orderId));
+}
+
+// 条件変更の提案（生産者だけ）
+export async function proposeAction(_state: FlowState, formData: FormData): Promise<FlowState> {
+  const user = await requireProducer();
+  const orderId = idSchema.safeParse(formData.get("orderId"));
+  if (!orderId.success) return { message: "注文が見つかりません" };
+
+  // 空なら「変えない」
+  const dateText = String(formData.get("newDate") ?? "");
+  const quantityText = String(formData.get("newQuantity") ?? "").trim();
+  const newDeliveryDate = dateText === "" ? null : parseDate(dateText);
+  const newQuantityG = quantityText === "" ? null : kgTextToGrams(quantityText);
+  if (dateText !== "" && !newDeliveryDate) return { message: "納品日の形が正しくありません" };
+  if (quantityText !== "" && newQuantityG === null) return { message: "数量は 0.1kg 単位の数字で入力してください" };
+  const fallback = formData.get("confirmIfRefused");
+  if (fallback !== "yes" && fallback !== "no") return { message: "断られたときの扱いを選んでください" };
+
+  const result = await proposeChange(user.id, orderId.data, { newDeliveryDate, newQuantityG, confirmIfRefused: fallback === "yes" });
+  if (!result.ok) return { message: result.message };
+  redirect("/producer/orders");
+}
+
+// 提案に同意（飲食店だけ）
+export async function acceptAction(_state: FlowState, formData: FormData): Promise<FlowState> {
+  const user = await requireBuyer();
+  return run(formData, (orderId) => acceptProposal(user.id, orderId));
+}
+
+// 提案を断る（飲食店だけ）
+export async function refuseAction(_state: FlowState, formData: FormData): Promise<FlowState> {
+  const user = await requireBuyer();
+  return run(formData, (orderId) => refuseProposal(user.id, orderId));
+}
+
+// 取消（飲食店だけ）
+export async function cancelAction(_state: FlowState, formData: FormData): Promise<FlowState> {
+  const user = await requireBuyer();
+  return run(formData, (orderId) => cancelOrder(user.id, orderId));
 }

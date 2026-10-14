@@ -244,6 +244,8 @@ model Order {
   proposedTotalYen     Int?
   // 断られたときに「元の条件で確定」するか（false なら見送り）
   confirmIfRefused     Boolean?
+  // 納品日をずらす提案をしたか（「ずらされた回数が少ないお店から」提案するために数える）
+  dateChangeProposed   Boolean        @default(false)
   // 同じ申し込みを二重に送らないための目印（送信ボタンの連打対策）
   requestKey   String         @unique
   createdAt    DateTime       @default(now())

@@ -1,11 +1,13 @@
 // 申し込みの一覧（生産者だけが使える）
 // 納品日ごとにまとめて、その日の件数を受け渡し方法ごとの基準と比べる（docs/04_producer_design.md 2章）
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { expireOverdue } from "@/lib/availability";
 import { methodLabel, type DeliveryMethod } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
+import { dateShiftCounts } from "@/lib/order-flow";
 import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
@@ -53,6 +55,8 @@ async function ProducerOrders() {
     const key = o.deliveryDate.toISOString().slice(0, 10);
     days.set(key, [...(days.get(key) ?? []), o]);
   }
+  // お店ごとの「納品日をずらす提案をされた回数」（提案の候補の順番に使う）
+  const shiftCount = await dateShiftCounts([...new Set(orders.map((o) => o.buyerId))]);
   const limitOf: Record<DeliveryMethod, number> = {
     delivery: profile.shipLimitDelivery,
     self: profile.shipLimitSelf,
@@ -94,10 +98,38 @@ async function ProducerOrders() {
               <h2 className="text-lg font-bold">{formatDate(new Date(day))} の納品</h2>
               {counts.map(({ method, count }) => {
                 const over = count - limitOf[method];
+                // 基準を超えた日は、提案の候補を並べる（設計メモ2章）
+                // 候補：使用日を見せていて、使用日に余裕がある回答待ちのお店
+                // 順番：ずらされた回数が少ないお店 → 回数が同じなら、使用日に余裕があるお店
+                const candidates = list
+                  .filter((o) => o.method === method && o.status === "pending" && o.showUseDate && o.useDate > o.deliveryDate)
+                  .map((o) => ({ o, shifts: shiftCount.get(o.buyerId) ?? 0, slackDays: Math.round((o.useDate.getTime() - o.deliveryDate.getTime()) / 86_400_000) }))
+                  .sort((a, b) => a.shifts - b.shifts || b.slackDays - a.slackDays);
                 return (
-                  <p key={method} className={`text-sm ${over > 0 ? "font-bold text-red-700 dark:text-red-400" : "text-muted"}`}>
-                    {methodLabel[method]} {count}件（あなたの基準：{limitOf[method]}件まで）{over > 0 && ` → ${over}件超えています`}
-                  </p>
+                  <div key={method} className="flex flex-col gap-1">
+                    <p className={`text-sm ${over > 0 ? "font-bold text-red-700 dark:text-red-400" : "text-muted"}`}>
+                      {methodLabel[method]} {count}件（あなたの基準：{limitOf[method]}件まで）{over > 0 && ` → ${over}件超えています`}
+                    </p>
+                    {over > 0 && (
+                      <div className="rounded-xl bg-earth-soft p-3 text-sm">
+                        <p className="font-bold">納品日をずらす提案の候補（上から順に、公平になるように並べています）</p>
+                        {candidates.length === 0 ? (
+                          <p className="text-muted">使用日に余裕があるお店はありません。見送りや、数量の変更も考えてみてください。</p>
+                        ) : (
+                          <ol className="mt-1 flex list-decimal flex-col gap-1 pl-5">
+                            {candidates.map(({ o, shifts, slackDays }) => (
+                              <li key={o.id}>
+                                {o.buyer.name}（これまでにずらした回数 {shifts}回・使用日まで {slackDays}日）{" "}
+                                <Link href={`/producer/orders/${o.id}/propose`} className="font-bold text-earth underline">
+                                  提案する
+                                </Link>
+                              </li>
+                            ))}
+                          </ol>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -128,7 +160,20 @@ async function ProducerOrders() {
                   <>
                     <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
                     <OrderButtons orderId={o.id} />
+                    <Link href={`/producer/orders/${o.id}/propose`} className="text-center font-bold text-earth underline">
+                      条件の変更を提案する
+                    </Link>
                   </>
+                )}
+                {o.status === "change_pending" && o.proposedDeliveryDate && o.proposedQuantityG !== null && (
+                  <div className="rounded-xl bg-earth-soft p-3">
+                    <p className="font-bold">提案中（お店の返事待ち）</p>
+                    <p>
+                      納品日 {formatDate(o.deliveryDate)} → {formatDate(o.proposedDeliveryDate)}／数量 {gramsToKgText(o.quantityG)}kg → {gramsToKgText(o.proposedQuantityG)}kg
+                    </p>
+                    <p>断られたら：{o.confirmIfRefused ? "元の条件で販売確定" : "見送り"}</p>
+                    <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
+                  </div>
                 )}
               </article>
             ))}

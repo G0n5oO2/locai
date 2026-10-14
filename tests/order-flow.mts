@@ -5,7 +5,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { placeOrder } from "../lib/orders";
-import { approveOrder, declineOrder } from "../lib/order-flow";
+import { acceptProposal, approveOrder, cancelOrder, declineOrder, proposeChange, refuseProposal } from "../lib/order-flow";
 import { jstDateText, parseDate } from "../lib/datetime";
 
 const day = 24 * 60 * 60 * 1000;
@@ -20,6 +20,7 @@ function check(name: string, ok: boolean, detail = "") {
 const producer = await id("producer2@example.com");
 const otherProducer = await id("producer3@example.com");
 const buyer = await id("buyer1@example.com");
+const otherBuyer = await id("buyer2@example.com");
 const today = parseDate(jstDateText(new Date()))!;
 const listing = await prisma.listing.create({
   data: {
@@ -29,8 +30,9 @@ const listing = await prisma.listing.create({
     offersDelivery: true, offersSelf: false, offersPickup: false,
   },
 });
-const newOrder = async () => {
-  const r = await placeOrder({ buyerId: buyer, listingId: listing.id, quantityG: 1000, method: "delivery", deliveryDate: listing.deliverFrom, useDate: listing.deliverFrom, showUseDate: false, requestKey: randomUUID() });
+// useDays：納品日の何日後が使用日か。showUseDate：使用日を見せるか
+const newOrder = async (useDays = 0, showUseDate = false, quantityG = 1000) => {
+  const r = await placeOrder({ buyerId: buyer, listingId: listing.id, quantityG, method: "delivery", deliveryDate: listing.deliverFrom, useDate: new Date(listing.deliverFrom.getTime() + useDays * day), showUseDate, requestKey: randomUUID() });
   if (!r.ok) throw new Error(r.message);
   return r.orderId;
 };
@@ -56,6 +58,44 @@ try {
   const o3 = await newOrder();
   const r5 = await declineOrder(producer, o3);
   check("見送り → 見送り", r5.ok && (await statusOf(o3)) === "declined");
+
+  // ===== 条件変更の提案 =====
+  const nextDay = new Date(listing.deliverFrom.getTime() + day);
+  const o4 = await newOrder(3, false);
+  const r6 = await proposeChange(producer, o4, { newDeliveryDate: nextDay, newQuantityG: null, confirmIfRefused: true });
+  check("使用日を見せていないお店には、日付の提案ができない", !r6.ok, r6.ok ? "" : r6.message);
+
+  const o5 = await newOrder(1, true);
+  const r7 = await proposeChange(producer, o5, { newDeliveryDate: new Date(listing.deliverFrom.getTime() + 2 * day), newQuantityG: null, confirmIfRefused: true });
+  check("使用日より後の日には、ずらせない", !r7.ok, r7.ok ? "" : r7.message);
+
+  const r8 = await proposeChange(producer, o5, { newDeliveryDate: nextDay, newQuantityG: null, confirmIfRefused: true });
+  check("納品日の変更を提案 → 条件変更の確認待ち", r8.ok && (await statusOf(o5)) === "change_pending");
+  const r9 = await acceptProposal(otherBuyer, o5);
+  check("別のお店は同意できない", !r9.ok, r9.ok ? "" : r9.message);
+  await refuseProposal(buyer, o5);
+  const after5 = await prisma.order.findUniqueOrThrow({ where: { id: o5 } });
+  check("断る＋「元の日程で確定」→ 元の納品日で販売確定", after5.status === "confirmed" && after5.deliveryDate.getTime() === listing.deliverFrom.getTime());
+
+  const o6 = await newOrder(3, true, 2000);
+  const r10 = await proposeChange(producer, o6, { newDeliveryDate: null, newQuantityG: 1000, confirmIfRefused: true });
+  const p6 = await prisma.order.findUniqueOrThrow({ where: { id: o6 } });
+  check("数量の変更は「断られたら見送り」だけになる", r10.ok && p6.confirmIfRefused === false);
+  await refuseProposal(buyer, o6);
+  check("数量の変更を断る → 見送り", (await statusOf(o6)) === "declined");
+
+  const o7 = await newOrder(3, true, 2000);
+  await proposeChange(producer, o7, { newDeliveryDate: nextDay, newQuantityG: 1000, confirmIfRefused: false });
+  const r11 = await acceptProposal(buyer, o7);
+  const after7 = await prisma.order.findUniqueOrThrow({ where: { id: o7 } });
+  check("同意 → 変更後の条件で販売確定（金額も計算し直し）", r11.ok && after7.status === "confirmed" && after7.quantityG === 1000 && after7.itemYen === 100 && after7.deliveryDate.getTime() === nextDay.getTime(), `商品代 ${after7.itemYen}円`);
+
+  // ===== 取消 =====
+  const o8 = await newOrder();
+  const r12 = await cancelOrder(buyer, o8);
+  check("回答待ちを取り消す → 取消", r12.ok && (await statusOf(o8)) === "cancelled");
+  const r13 = await cancelOrder(buyer, o1);
+  check("販売確定のあとは取り消せない", !r13.ok, r13.ok ? "" : r13.message);
 } finally {
   await prisma.listing.delete({ where: { id: listing.id } });
   await prisma.$disconnect();
