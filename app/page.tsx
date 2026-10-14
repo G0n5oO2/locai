@@ -1,19 +1,22 @@
 // 初期画面（紹介画面）
 // 仕様書 4章「① 入口」：紹介文を表示し、飲食店・生産者それぞれの入口を用意する
+import Link from "next/link";
 
-// 立場ごとの入口。ログインの仕組みができたら、ボタンをログイン画面へのリンクにする
+// 立場ごとの入口。ボタンを押すと、立場を選んだ状態で登録画面が開く
 const entrances = [
   {
     who: "飲食店の方",
     title: "野菜を仕入れる",
     points: ["仕入れ日の前に、必要な量だけ申し込める", "送料込みの合計金額が先に分かる", "地元の農家さんのこだわりが見える"],
     tone: "leaf",
+    role: "buyer",
   },
   {
     who: "生産者の方",
     title: "野菜を販売する",
     points: ["値段は自分で決めて、一度にまとめて出品", "複数のお店の申し込みを一覧で確認", "どのお店に、どれだけ売るかを自分で決める"],
     tone: "earth",
+    role: "producer",
   },
 ] as const;
 
@@ -28,7 +31,12 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="mx-auto w-full max-w-3xl px-4 pt-5">
-        <p className="text-lg font-bold tracking-wide text-leaf">LocAI</p>
+        <div className="flex items-center justify-between">
+          <p className="text-lg font-bold tracking-wide text-leaf">LocAI</p>
+          <Link href="/login" className="text-sm font-bold text-leaf underline">
+            ログイン
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 pt-8 pb-12">
@@ -72,15 +80,14 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                disabled
-                className={`rounded-xl px-4 py-3 text-base font-bold text-white opacity-60 ${
+              <Link
+                href={`/signup?role=${entrance.role}`}
+                className={`rounded-xl px-4 py-3 text-center text-base font-bold text-white ${
                   entrance.tone === "leaf" ? "bg-leaf" : "bg-earth"
                 }`}
               >
-                {entrance.title}（準備中）
-              </button>
+                {entrance.title}
+              </Link>
             </div>
           ))}
         </section>

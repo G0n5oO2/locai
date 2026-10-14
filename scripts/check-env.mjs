@@ -5,7 +5,13 @@
 import { neon } from "@neondatabase/serverless";
 import { GoogleGenAI } from "@google/genai";
 
-const names = ["DATABASE_URL", "DATABASE_URL_UNPOOLED", "GEMINI_API_KEY", "GEMINI_MODEL"];
+const names = [
+  "DATABASE_URL",
+  "DATABASE_URL_UNPOOLED",
+  "GEMINI_API_KEY",
+  "GEMINI_MODEL",
+  "BETTER_AUTH_SECRET",
+];
 
 // エラー文に秘密情報が混ざっていたら、*** に置き換えてから表示する
 function hideSecrets(message) {
@@ -19,7 +25,7 @@ function hideSecrets(message) {
 
 let ok = true;
 
-// 1. 4つの環境変数が書かれているか
+// 1. 環境変数が書かれているか
 console.log("【1】環境変数");
 for (const name of names) {
   const filled = Boolean(process.env[name]?.trim());
