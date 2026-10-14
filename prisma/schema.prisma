@@ -32,6 +32,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   profile       ProducerProfile?
+  buyerProfile  BuyerProfile?
   listings      Listing[]
 
   @@map("user")
@@ -171,4 +172,21 @@ model Listing {
   @@index([producerId])
   @@index([status, acceptUntil])
   @@map("listing")
+}
+
+// ===== 飲食店 =====
+
+// 飲食店プロフィール（飲食店1つにつき1つ）
+model BuyerProfile {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // お店の地域（市区町村）。「近い地域」の判断に使う
+  prefecture String
+  city       String
+  // 届け先の住所。販売確定した相手の生産者にだけ見せる（不変条件4）
+  address    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("buyer_profile")
 }

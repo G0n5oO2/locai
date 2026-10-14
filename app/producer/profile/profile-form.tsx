@@ -1,9 +1,10 @@
 "use client";
 // 生産者プロフィールの入力フォーム（確かめと保存はサーバー側の saveProfile で行う）
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { saveProfile, type ProfileFormState } from "@/app/actions/profile";
 import { Field } from "@/app/ui/field";
+import { RegionSelect } from "@/app/ui/region-select";
 
 type Props = {
   // 府県ごとの市区町村の一覧
@@ -18,31 +19,18 @@ const errorClass = "text-sm text-red-700 dark:text-red-400";
 export function ProfileForm({ citiesByPrefecture, initial }: Props) {
   const [state, action, pending] = useActionState<ProfileFormState, FormData>(saveProfile, {});
   const values = state.values ?? initial;
-  // 府県を選ぶと、市区町村の選択肢が切り替わる
-  const [prefecture, setPrefecture] = useState(values.prefecture ?? "");
-  const cities = citiesByPrefecture[prefecture] ?? [];
 
   return (
     <form action={action} className="flex flex-col gap-6">
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-bold">畑の地域</legend>
-        <select name="prefecture" value={prefecture} onChange={(e) => setPrefecture(e.target.value)} className={inputClass} aria-label="府県">
-          <option value="">府県を選ぶ</option>
-          {Object.keys(citiesByPrefecture).map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-        {state.errors?.prefecture && <p className={errorClass}>{state.errors.prefecture[0]}</p>}
-        {/* 府県が変わったら選び直してもらうため、key で作り直す */}
-        <select key={prefecture} name="city" defaultValue={values.city ?? ""} disabled={!prefecture} className={inputClass} aria-label="市区町村">
-          <option value="">市区町村を選ぶ</option>
-          {cities.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        {state.errors?.city && <p className={errorClass}>{state.errors.city[0]}</p>}
-        <p className="text-xs text-muted">畑の正確な場所は保存しません。市区町村だけを使います。</p>
-      </fieldset>
+      <RegionSelect
+        legend="畑の地域"
+        note="畑の正確な場所は保存しません。市区町村だけを使います。"
+        citiesByPrefecture={citiesByPrefecture}
+        defaultPrefecture={values.prefecture}
+        defaultCity={values.city}
+        prefectureErrors={state.errors?.prefecture}
+        cityErrors={state.errors?.city}
+      />
 
       <Field label="栽培している品目（例：賀茂茄子、万願寺唐辛子）" name="items" defaultValue={values.items} errors={state.errors?.items} maxLength={200} />
 

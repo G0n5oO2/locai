@@ -30,3 +30,10 @@ export async function requireProducer(): Promise<CurrentUser> {
   if (user.role !== "producer") redirect("/mypage");
   return user;
 }
+
+// 飲食店だけが使える画面・処理で使う。飲食店でなければマイページへ戻す
+export async function requireBuyer(): Promise<CurrentUser> {
+  const user = await requireUser();
+  if (user.role !== "buyer") redirect("/mypage");
+  return user;
+}

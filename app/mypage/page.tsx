@@ -34,6 +34,7 @@ async function Profile() {
         <p className="text-xl font-bold">{user.name} さん</p>
       </div>
       {user.role === "producer" && <ProducerProfileSummary userId={user.id} />}
+      {user.role === "buyer" && <BuyerProfileSummary userId={user.id} />}
       <form action={signOut}>
         <button type="submit" className="w-full rounded-xl border border-line px-4 py-3 font-bold">
           ログアウト
@@ -91,5 +92,35 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
       </Link>
     </div>
     </>
+  );
+}
+
+// 飲食店プロフィールのまとめ（まだ作っていなければ、作る画面への入口を出す）
+async function BuyerProfileSummary({ userId }: { userId: string }) {
+  const profile = await prisma.buyerProfile.findUnique({ where: { userId } });
+  if (!profile) {
+    return (
+      <div className="flex flex-col gap-3 rounded-2xl border border-leaf bg-leaf-soft p-5">
+        <p className="font-bold">はじめに、お店のプロフィールを作りましょう</p>
+        <p className="text-sm text-muted">お店の地域から、近くの農家さんの出品を探せるようになります。</p>
+        <Link href="/buyer/profile" className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">
+          プロフィールを作る
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+      <p className="font-bold">お店のプロフィール</p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+        <dt className="text-muted">お店の地域</dt>
+        <dd>{profile.prefecture} {profile.city}</dd>
+        <dt className="text-muted">届け先</dt>
+        <dd>{profile.address}</dd>
+      </dl>
+      <Link href="/buyer/profile" className="rounded-xl border border-line px-4 py-3 text-center font-bold">
+        プロフィールを編集する
+      </Link>
+    </div>
   );
 }
