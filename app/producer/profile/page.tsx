@@ -34,6 +34,14 @@ async function ProfileEditor() {
         shipLimitSelf: String(profile.shipLimitSelf),
         shipLimitPickup: String(profile.shipLimitPickup),
         trialAmount: gramsToKgText(profile.trialAmountG),
+        band1Kg: profile.deliveryBand1MaxG === null ? "" : gramsToKgText(profile.deliveryBand1MaxG),
+        band1Yen: profile.deliveryBand1Yen?.toString() ?? "",
+        band2Kg: profile.deliveryBand2MaxG === null ? "" : gramsToKgText(profile.deliveryBand2MaxG),
+        band2Yen: profile.deliveryBand2Yen?.toString() ?? "",
+        band3Kg: profile.deliveryBand3MaxG === null ? "" : gramsToKgText(profile.deliveryBand3MaxG),
+        band3Yen: profile.deliveryBand3Yen?.toString() ?? "",
+        selfDeliveryYen: profile.selfDeliveryYen?.toString() ?? "",
+        pickupPlace: profile.pickupPlace ?? "",
       }
     : { shipLimitDelivery: "10", shipLimitSelf: "10", shipLimitPickup: "10", trialAmount: "0.5" };
 

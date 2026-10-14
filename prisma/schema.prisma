@@ -32,6 +32,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   profile       ProducerProfile?
+  listings      Listing[]
 
   @@map("user")
 }
@@ -106,8 +107,68 @@ model ProducerProfile {
   shipLimitPickup   Int // 引き取り
   // お試しの量（g）。まだ買ったことがないお店が、1回だけこの量で買える
   trialAmountG      Int
+  // 宅配発送の送料（数量帯別、3行まで）。「◯g まで ◯円」。宅配をしない人は空のまま
+  deliveryBand1MaxG Int?
+  deliveryBand1Yen  Int?
+  deliveryBand2MaxG Int?
+  deliveryBand2Yen  Int?
+  deliveryBand3MaxG Int?
+  deliveryBand3Yen  Int?
+  // 自分で配達するときの料金（1件あたり）。配達をしない人は空のまま
+  selfDeliveryYen   Int?
+  // 引き取りの場所。販売確定した相手にだけ見せる（不変条件4）
+  pickupPlace       String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   @@map("producer_profile")
+}
+
+// 品の状態
+enum Quality {
+  normal // 通常品
+  irregular // 規格外
+}
+
+// 出品の状態
+enum ListingStatus {
+  open // 受付中
+  closed // 受付終了
+}
+
+// 出品
+// 量はすべて g の整数、金額は円の整数（小数で計算しない）
+model Listing {
+  id             String        @id @default(cuid())
+  producerId     String
+  producer       User          @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  // 食材名
+  vegetable      String
+  // 販売可能総量・注文単位・最低注文量（g）
+  totalG         Int
+  unitG          Int
+  minOrderG      Int
+  // 単価（注文単位あたりの円）
+  unitPriceYen   Int
+  // 品の状態・余剰品かどうか・伝えたいこと
+  quality        Quality
+  surplus        Boolean
+  note           String        @default("")
+  // 受付期限・回答期限
+  acceptUntil    DateTime
+  answerUntil    DateTime
+  // 納品できる日（いつから・いつまで）
+  deliverFrom    DateTime      @db.Date
+  deliverTo      DateTime      @db.Date
+  // 対応する受け渡し方法
+  offersDelivery Boolean // 宅配発送
+  offersSelf     Boolean // 自分で配達
+  offersPickup   Boolean // 引き取り
+  status         ListingStatus @default(open)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([producerId])
+  @@index([status, acceptUntil])
+  @@map("listing")
 }

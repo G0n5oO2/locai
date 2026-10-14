@@ -67,6 +67,24 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         <p className="text-xs text-muted">まだあなたから買ったことがないお店が、1回だけこの量で買えます（値段はいつもと同じ）。</p>
       </div>
 
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-sm font-bold">宅配発送の送料（重さごと、3行まで）</legend>
+        <p className="text-xs text-muted">宅配をしない場合は空のままで大丈夫です。いちばん下の行より重い注文は、宅配では受け付けません。</p>
+        {[1, 2, 3].map((n) => (
+          <div key={n} className="grid grid-cols-2 gap-3">
+            <Field label={`${n}行目：◯kg まで`} name={`band${n}Kg`} inputMode="decimal" defaultValue={values[`band${n}Kg`]} errors={state.errors?.[`band${n}Kg`]} />
+            <Field label="送料（円）" name={`band${n}Yen`} inputMode="numeric" defaultValue={values[`band${n}Yen`]} errors={state.errors?.[`band${n}Yen`]} />
+          </div>
+        ))}
+      </fieldset>
+
+      <Field label="自分で配達するときの料金（円・1件あたり。配達しない場合は空）" name="selfDeliveryYen" inputMode="numeric" defaultValue={values.selfDeliveryYen} errors={state.errors?.selfDeliveryYen} />
+
+      <div className="flex flex-col gap-1">
+        <Field label="引き取りの場所（引き取りをしない場合は空）" name="pickupPlace" maxLength={200} defaultValue={values.pickupPlace} errors={state.errors?.pickupPlace} />
+        <p className="text-xs text-muted">販売確定したお店にだけ表示します。</p>
+      </div>
+
       <button type="submit" disabled={pending} className="rounded-xl bg-earth px-4 py-3 font-bold text-white disabled:opacity-60">
         {pending ? "保存しています…" : "保存する"}
       </button>
