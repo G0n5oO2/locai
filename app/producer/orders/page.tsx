@@ -13,7 +13,9 @@ import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
+import { checksFor } from "@/lib/order-check-facts";
 import { OrderButtons } from "./order-buttons";
+import { OrderChecks } from "./order-checks";
 
 export default function ProducerOrdersPage() {
   return (
@@ -56,6 +58,13 @@ async function ProducerOrders() {
     const key = o.deliveryDate.toISOString().slice(0, 10);
     days.set(key, [...(days.get(key) ?? []), o]);
   }
+  // 回答待ちの申し込みの確認ポイント（アプリの決まりで見つける）
+  const checks = new Map<string, string[]>();
+  for (const o of orders.filter((x) => x.status === "pending")) {
+    const found = await checksFor(user.id, o.id);
+    if (found) checks.set(o.id, found.checks);
+  }
+
   // メッセージの未読の数
   const unread = await unreadCounts(user.id, orders.map((o) => ({ id: o.id, readAt: o.producerReadAt })));
 
@@ -166,6 +175,7 @@ async function ProducerOrders() {
                 {o.status === "pending" && (
                   <>
                     <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
+                    <OrderChecks orderId={o.id} checks={checks.get(o.id) ?? []} />
                     <OrderButtons orderId={o.id} />
                     <Link href={`/producer/orders/${o.id}/propose`} className="text-center font-bold text-earth underline">
                       条件の変更を提案する

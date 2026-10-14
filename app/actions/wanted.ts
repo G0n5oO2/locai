@@ -3,6 +3,7 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
+import { suggestSubstitutes, type SubstituteSuggestion } from "@/lib/ai-substitutes";
 import { jstDateText, parseDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { kgTextToGrams } from "@/lib/quantity";
@@ -63,4 +64,18 @@ export async function closeWanted(_state: WantedFormState, formData: FormData): 
   if (result.count === 0) return { message: "見つかりませんでした" };
   refresh();
   return { done: true };
+}
+
+export type SuggestState = { suggestions?: SubstituteSuggestion[]; message?: string };
+
+// AI に代わりの野菜を提案してもらう（AI は提案だけ。選ぶのはお店）
+export async function suggestAction(_state: SuggestState, formData: FormData): Promise<SuggestState> {
+  const user = await requireBuyer();
+  const vegetable = String(formData.get("vegetable") ?? "").trim().slice(0, 50);
+  const usage = String(formData.get("usage") ?? "").trim().slice(0, 50);
+  if (vegetable === "") return { message: "食材を入れて探してから使ってください" };
+  const suggestions = await suggestSubstitutes(user.id, vegetable, usage);
+  // AI が使えなくても、自分で入力すれば公開できる
+  if (!suggestions || suggestions.length === 0) return { message: "今は AI の提案を出せませんでした。代わりの野菜を自分で入力してください" };
+  return { suggestions };
 }

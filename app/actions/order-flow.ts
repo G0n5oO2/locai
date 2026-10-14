@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { parseDate } from "@/lib/datetime";
 import { acceptProposal, approveOrder, cancelOrder, declineOrder, proposeChange, refuseProposal, type FlowResult } from "@/lib/order-flow";
+import { summarizeOrder } from "@/lib/ai-order-summary";
+import { summaryFactsFor } from "@/lib/order-check-facts";
 import { kgTextToGrams } from "@/lib/quantity";
 import { requireBuyer, requireProducer } from "@/lib/session";
 
@@ -72,4 +74,17 @@ export async function refuseAction(_state: FlowState, formData: FormData): Promi
 export async function cancelAction(_state: FlowState, formData: FormData): Promise<FlowState> {
   const user = await requireBuyer();
   return run(formData, (orderId) => cancelOrder(user.id, orderId));
+}
+
+export type SummaryState = { summary?: string; message?: string };
+
+// AI で確認ポイントを短くまとめる（生産者だけ。自分の出品への注文だけ）
+export async function summarizeAction(_state: SummaryState, formData: FormData): Promise<SummaryState> {
+  const user = await requireProducer();
+  const orderId = idSchema.safeParse(formData.get("orderId"));
+  if (!orderId.success) return { message: "注文が見つかりません" };
+  const facts = await summaryFactsFor(user.id, orderId.data);
+  if (!facts) return { message: "注文が見つかりません" };
+  const summary = await summarizeOrder(user.id, facts);
+  return summary ? { summary } : { message: "今は AI のまとめを出せませんでした。下の確認ポイントを見てください" };
 }

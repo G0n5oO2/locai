@@ -14,7 +14,8 @@
     "test:concurrency": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/concurrency.mts",
     "test:flow": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/order-flow.mts",
     "seed:leftover": "node --env-file-if-exists=.env.local scripts/seed-leftover.mjs",
-    "test:messages": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/messages.mts"
+    "test:messages": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/messages.mts",
+    "try:ai": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/ai-try.mts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
