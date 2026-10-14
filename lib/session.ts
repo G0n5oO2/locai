@@ -23,3 +23,10 @@ export async function requireUser(): Promise<CurrentUser> {
   if (!user) redirect("/login");
   return user;
 }
+
+// 生産者だけが使える画面・処理で使う。生産者でなければマイページへ戻す
+export async function requireProducer(): Promise<CurrentUser> {
+  const user = await requireUser();
+  if (user.role !== "producer") redirect("/mypage");
+  return user;
+}

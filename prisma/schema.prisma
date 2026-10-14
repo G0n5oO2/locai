@@ -31,6 +31,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  profile       ProducerProfile?
 
   @@map("user")
 }
@@ -83,4 +84,30 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// ===== 生産者 =====
+
+// 生産者プロフィール（生産者1人につき1つ）
+// 写真はあとで足す（飲食店が「どんな人か」分かるようにするため）
+model ProducerProfile {
+  userId            String   @id
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // 畑の地域（市区町村）。「近い地域」の判断に使う
+  prefecture        String
+  city              String
+  // 栽培している品目（例：賀茂茄子、万願寺唐辛子）
+  items             String
+  // 栽培のこだわり
+  commitment        String
+  // 1回の出荷で何件まで対応できるか（受け渡し方法ごと）
+  shipLimitDelivery Int // 宅配発送
+  shipLimitSelf     Int // 自分で配達
+  shipLimitPickup   Int // 引き取り
+  // お試しの量（g）。まだ買ったことがないお店が、1回だけこの量で買える
+  trialAmountG      Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("producer_profile")
 }
