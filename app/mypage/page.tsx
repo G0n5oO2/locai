@@ -58,6 +58,10 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
     );
   }
   return (
+    <>
+    <Link href="/producer/listings" className="rounded-xl bg-earth px-4 py-3 text-center font-bold text-white">
+      出品一覧・新しく出品する
+    </Link>
     <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
       <p className="font-bold">生産者プロフィール</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
@@ -86,5 +90,6 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
         プロフィールを編集する
       </Link>
     </div>
+    </>
   );
 }
