@@ -36,6 +36,7 @@ model User {
   listings      Listing[]
   orders        Order[]
   exposure      ProducerExposure?
+  wanted        WantedRequest[]
 
   @@map("user")
 }
@@ -264,4 +265,38 @@ model ProducerExposure {
   updatedAt  DateTime @updatedAt
 
   @@map("producer_exposure")
+}
+
+// ===== 探しています =====
+
+// 食材の種類
+enum WantedKind {
+  specified // 指定する
+  substitute // 代替野菜も可
+  any // 種類を問わない
+}
+
+// お店の「探しています」
+// 農家さんに見せるのは、地域・食材・希望数量・使用日・受け取り方法だけ（店名・住所は見せない）
+// 予算は、見えると値段がそれに引っ張られるので、そもそも保存しない
+model WantedRequest {
+  id          String         @id @default(cuid())
+  buyerId     String
+  buyer       User           @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  kind        WantedKind
+  // 探している食材（種類を問わないときは空）
+  vegetable   String         @default("")
+  // 代替野菜も可のとき、お店が「これならOK」と選んだ野菜
+  substitutes String[]       @default([])
+  quantityG   Int
+  useDate     DateTime       @db.Date
+  method      DeliveryMethod
+  // お店の地域（公開したときのもの）
+  prefecture  String
+  city        String
+  closed      Boolean        @default(false) // お店が取り下げたら true
+  createdAt   DateTime       @default(now())
+
+  @@index([closed, useDate])
+  @@map("wanted_request")
 }

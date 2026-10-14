@@ -9,23 +9,30 @@ import { Field } from "@/app/ui/field";
 import { maxOrderCount, methodLabel, strictestLimit, type DeliveryMethod } from "@/lib/burden";
 import { quantityErrors } from "@/lib/listing-rules";
 import { kgTextToGrams } from "@/lib/quantity";
+import type { PublicWanted } from "@/lib/wanted";
+import { WantedSheet } from "./wanted-sheet";
 
 type Props = {
   // 受け渡し方法ごとの「1回の出荷で何件まで」（プロフィールの値）
   limits: { shipLimitDelivery: number; shipLimitSelf: number; shipLimitPickup: number };
   // プロフィールで送料などを入れていて、選べる受け渡し方法
   available: Record<DeliveryMethod, boolean>;
+  // 畑から 70km 以内の「探しています」（店名・住所は入っていない）
+  wanted: PublicWanted[];
+  // 「探しています」に応えて出品するときの食材名
+  initialVegetable?: string;
 };
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 const allMethods: DeliveryMethod[] = ["delivery", "self", "pickup"];
 
-export function ListingForm({ limits, available }: Props) {
+export function ListingForm({ limits, available, wanted, initialVegetable }: Props) {
   const [state, action, pending] = useActionState<ListingFormState, FormData>(createListing, {});
   const v = state.values ?? {};
 
   // 最大件数の表示のために、総量・最低注文量・受け渡し方法は入力のたびに覚えておく
+  const [vegetable, setVegetable] = useState(v.vegetable ?? initialVegetable ?? "");
   const [total, setTotal] = useState(v.total ?? "");
   const [unit, setUnit] = useState(v.unit ?? "");
   const [minOrder, setMinOrder] = useState(v.minOrder ?? "");
@@ -50,7 +57,7 @@ export function ListingForm({ limits, available }: Props) {
 
   return (
     <form action={action} className="flex flex-col gap-6">
-      <Field label="食材名（例：賀茂茄子）" name="vegetable" maxLength={50} defaultValue={v.vegetable} errors={state.errors?.vegetable} />
+      <Field label="食材名（例：賀茂茄子）" name="vegetable" maxLength={50} value={vegetable} onChange={(e) => setVegetable(e.target.value)} errors={state.errors?.vegetable} />
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="販売可能総量（kg）" name="total" inputMode="decimal" value={total} onChange={(e) => setTotal(e.target.value)} errors={errorsFor("total")} />
@@ -60,6 +67,8 @@ export function ListingForm({ limits, available }: Props) {
       {/* 最低注文量：入力したその場で、出荷の負担の目安を出す */}
       <div className="flex flex-col gap-2">
         <Field label="最低注文量（kg・注文単位の倍数）" name="minOrder" inputMode="decimal" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} errors={errorsFor("minOrder")} />
+        {/* 最低注文量を決める手がかり：近くのお店が、どのくらいの量を探しているか（設計メモ1章） */}
+        <WantedSheet wanted={wanted} vegetable={vegetable} />
         {maxCount !== null && (
           <div className={`rounded-xl p-3 text-sm ${over ? "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200" : "bg-leaf-soft"}`}>
             <p>最大 <strong>{maxCount}件</strong> の発送になる可能性があります</p>

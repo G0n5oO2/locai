@@ -66,6 +66,9 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
     <Link href="/producer/listings" className="rounded-xl border border-earth px-4 py-3 text-center font-bold text-earth">
       出品一覧・新しく出品する
     </Link>
+    <Link href="/producer/wanted" className="rounded-xl border border-earth px-4 py-3 text-center font-bold text-earth">
+      近くの「探しています」
+    </Link>
     <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
       <p className="font-bold">生産者プロフィール</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">

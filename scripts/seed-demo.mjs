@@ -85,3 +85,23 @@ for (const b of buyers) {
     returning "userId"`;
   console.log(`  ${b.email} プロフィール：${created.length ? "作った" : "すでにある（そのまま）"}`);
 }
+
+// テスト用の「探しています」（同じお店で公開中のものがなければ作る）。予算は保存しない
+const wanted = [
+  { email: "buyer1@example.com", kind: "specified", vegetable: "賀茂茄子", substitutes: [], quantityG: 1000, method: "delivery" },
+  { email: "buyer2@example.com", kind: "substitute", vegetable: "万願寺唐辛子", substitutes: ["伏見甘長", "ししとう"], quantityG: 2000, method: "delivery" },
+  { email: "buyer3@example.com", kind: "any", vegetable: "", substitutes: [], quantityG: 5000, method: "self" },
+];
+for (const w of wanted) {
+  const id = await userId(w.email);
+  const exists = await sql`select 1 from wanted_request where "buyerId" = ${id} and closed = false and "useDate" >= current_date`;
+  if (exists.length) {
+    console.log(`  ${w.email} 探しています：公開中のものがある（作らない）`);
+    continue;
+  }
+  const [b] = await sql`select prefecture, city from buyer_profile where "userId" = ${id}`;
+  await sql`
+    insert into wanted_request (id, "buyerId", kind, vegetable, substitutes, "quantityG", "useDate", method, prefecture, city)
+    values (${randomUUID()}, ${id}, ${w.kind}, ${w.vegetable}, ${w.substitutes}, ${w.quantityG}, ${dateOnly(7)}, ${w.method}, ${b.prefecture}, ${b.city})`;
+  console.log(`  ${w.email} 探しています：作った`);
+}

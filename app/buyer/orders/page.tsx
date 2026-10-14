@@ -4,12 +4,13 @@ import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { expireOverdue } from "@/lib/availability";
 import { methodLabel } from "@/lib/burden";
-import { formatDate, formatJstDateTime } from "@/lib/datetime";
+import { formatDate, formatJstDateTime, jstDateText, parseDate } from "@/lib/datetime";
 import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireBuyer } from "@/lib/session";
 import { BuyerOrderButtons } from "./buyer-order-buttons";
+import { CloseWantedButton } from "./close-wanted-button";
 
 export default function BuyerOrdersPage() {
   return (
@@ -32,11 +33,33 @@ async function Orders() {
     include: { listing: { select: { vegetable: true, producer: { select: { name: true, profile: { select: { pickupPlace: true } } } } } } },
   });
 
+  // 自分の「探しています」（公開中で、使用日を過ぎていないもの）
+  const wanted = await prisma.wantedRequest.findMany({
+    where: { buyerId: user.id, closed: false, useDate: { gte: parseDate(jstDateText(new Date()))! } },
+    orderBy: { createdAt: "desc" },
+  });
+  const kindLabel = { specified: "", substitute: "（代わりの野菜も可）", any: "種類を問わない" } as const;
+
   return (
     <div className="flex flex-col gap-4">
       <Link href="/buyer/search" className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">
         仕入れ候補を探す
       </Link>
+      {wanted.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="font-bold">公開中の「探しています」</h2>
+          {wanted.map((w) => (
+            <div key={w.id} className="flex items-center justify-between gap-2 rounded-2xl border border-line bg-surface p-3 text-sm">
+              <p>
+                {w.vegetable}
+                {kindLabel[w.kind]}
+                {w.substitutes.length > 0 && `：${w.substitutes.join("、")}`}・{gramsToKgText(w.quantityG)}kg・使用日 {formatDate(w.useDate)}・{methodLabel[w.method]}
+              </p>
+              <CloseWantedButton wantedId={w.id} />
+            </div>
+          ))}
+        </section>
+      )}
       {orders.length === 0 && <p className="text-muted">まだ注文はありません。</p>}
       <ul className="flex flex-col gap-3">
         {orders.map((o) => (

@@ -9,6 +9,7 @@ import { methodLabel } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { gramsToKgText } from "@/lib/quantity";
 import type { Candidate } from "@/lib/search";
+import { PublishWanted } from "./publish-wanted";
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
@@ -52,6 +53,9 @@ export function SearchForm({ area }: { area: string }) {
               <p className="font-bold">条件に合う出品は、今はありません。</p>
               <p className="text-muted">数量・予算・使用日・受け取り方法を変えると、見つかるかもしれません。</p>
             </div>
+          ) : null}
+          {count === 0 ? (
+            <PublishWanted key={JSON.stringify(v)} values={v} />
           ) : (
             <>
               <Group title="前に買った農家さん" list={r.repeat} useDate={v.useDate} />
