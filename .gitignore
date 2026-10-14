@@ -24,3 +24,6 @@ npm-debug.log*
 
 # 証明書などの鍵ファイル
 *.pem
+
+# Prisma が自動で作るファイル（npm install のときに prisma generate で作り直せる）
+/lib/generated/

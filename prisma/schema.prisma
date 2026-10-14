@@ -1,0 +1,14 @@
+// 表の設計図（スキーマ）
+// 接続先は prisma.config.ts に書いてある
+
+generator client {
+  provider = "prisma-client"
+  // 型付きの部品（Prisma Client）を作る場所
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ここに表（model）を足していく
