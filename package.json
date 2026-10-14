@@ -11,7 +11,8 @@
     "postinstall": "prisma generate",
     "seed:users": "node scripts/seed-users.mjs",
     "seed:demo": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs",
-    "test:concurrency": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/concurrency.mts"
+    "test:concurrency": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/concurrency.mts",
+    "test:flow": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/order-flow.mts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
