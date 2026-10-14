@@ -1,0 +1,87 @@
+// テスト用のプロフィールと出品を入れるプログラム（先に npm run seed:users で利用者を作っておく）
+// 実行：npm run seed:demo
+// すでにあるプロフィールは上書きしない。出品は、同じ農家さん・同じ食材の「受付中のデモ出品」がなければ作る。
+// 名前・場所・文はすべて作り物。
+
+import { randomUUID } from "node:crypto";
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL);
+
+// 日付：今日から◯日後
+const day = 24 * 60 * 60 * 1000;
+const at = (days) => new Date(Date.now() + days * day);
+const dateOnly = (days) => at(days).toISOString().slice(0, 10);
+
+const producers = [
+  {
+    email: "producer1@example.com",
+    profile: { prefecture: "京都府", city: "南丹市", items: "賀茂茄子、万願寺唐辛子", commitment: "朝どりにこだわっています（デモ）", band1: [2000, 800], band2: [5000, 1200], band3: [10000, 1600], self: 500, pickup: "南丹市の畑の前（デモ）" },
+    listings: [{ vegetable: "賀茂茄子", totalG: 30000, unitG: 500, minOrderG: 1000, unitPriceYen: 300, quality: "normal", surplus: true, note: "豊作です（デモ）" }],
+  },
+  {
+    email: "producer2@example.com",
+    profile: { prefecture: "京都府", city: "亀岡市", items: "賀茂茄子、伏見甘長", commitment: "農薬を減らして育てています（デモ）", band1: [3000, 900], band2: [10000, 1500], band3: null, self: 700, pickup: null },
+    listings: [
+      { vegetable: "賀茂茄子", totalG: 20000, unitG: 1000, minOrderG: 2000, unitPriceYen: 650, quality: "normal", surplus: false, note: "" },
+      { vegetable: "伏見甘長", totalG: 10000, unitG: 500, minOrderG: 500, unitPriceYen: 400, quality: "irregular", surplus: true, note: "形は不ぞろいです（デモ）" },
+    ],
+  },
+  {
+    email: "producer3@example.com",
+    profile: { prefecture: "京都府", city: "南丹市", items: "賀茂茄子", commitment: "今年から始めました（デモ）", band1: [5000, 1000], band2: null, band3: null, self: null, pickup: "南丹市の集荷場（デモ）" },
+    listings: [{ vegetable: "賀茂茄子", totalG: 10000, unitG: 500, minOrderG: 500, unitPriceYen: 280, quality: "irregular", surplus: false, note: "少し小ぶりです（デモ）" }],
+  },
+];
+
+const buyers = [
+  { email: "buyer1@example.com", prefecture: "大阪府", city: "大阪市福島区", address: "大阪市福島区（デモ住所）" },
+  { email: "buyer2@example.com", prefecture: "京都府", city: "京都市中京区", address: "京都市中京区（デモ住所）" },
+  { email: "buyer3@example.com", prefecture: "兵庫県", city: "神戸市中央区", address: "神戸市中央区（デモ住所）" },
+];
+
+async function userId(email) {
+  const rows = await sql`select id from "user" where email = ${email}`;
+  if (rows.length === 0) throw new Error(`${email} がいません。先に npm run seed:users を実行してください`);
+  return rows[0].id;
+}
+
+for (const p of producers) {
+  const id = await userId(p.email);
+  const f = p.profile;
+  const created = await sql`
+    insert into producer_profile ("userId", prefecture, city, items, commitment, "shipLimitDelivery", "shipLimitSelf", "shipLimitPickup", "trialAmountG",
+      "deliveryBand1MaxG", "deliveryBand1Yen", "deliveryBand2MaxG", "deliveryBand2Yen", "deliveryBand3MaxG", "deliveryBand3Yen", "selfDeliveryYen", "pickupPlace", "updatedAt")
+    values (${id}, ${f.prefecture}, ${f.city}, ${f.items}, ${f.commitment}, 10, 5, 15, 500,
+      ${f.band1?.[0] ?? null}, ${f.band1?.[1] ?? null}, ${f.band2?.[0] ?? null}, ${f.band2?.[1] ?? null}, ${f.band3?.[0] ?? null}, ${f.band3?.[1] ?? null}, ${f.self}, ${f.pickup}, now())
+    on conflict ("userId") do nothing
+    returning "userId"`;
+  console.log(`  ${p.email} プロフィール：${created.length ? "作った" : "すでにある（そのまま）"}`);
+
+  // プロフィールに合わせて、対応できる受け渡し方法だけを選ぶ
+  const [profile] = await sql`select "deliveryBand1MaxG", "selfDeliveryYen", "pickupPlace" from producer_profile where "userId" = ${id}`;
+  for (const l of p.listings) {
+    const exists = await sql`select 1 from listing where "producerId" = ${id} and vegetable = ${l.vegetable} and status = 'open' and "acceptUntil" > now()`;
+    if (exists.length) {
+      console.log(`    出品 ${l.vegetable}：受付中のものがある（作らない）`);
+      continue;
+    }
+    await sql`
+      insert into listing (id, "producerId", vegetable, "totalG", "unitG", "minOrderG", "unitPriceYen", quality, surplus, note,
+        "acceptUntil", "answerUntil", "deliverFrom", "deliverTo", "offersDelivery", "offersSelf", "offersPickup", "updatedAt")
+      values (${randomUUID()}, ${id}, ${l.vegetable}, ${l.totalG}, ${l.unitG}, ${l.minOrderG}, ${l.unitPriceYen}, ${l.quality}, ${l.surplus}, ${l.note},
+        ${at(3)}, ${at(4)}, ${dateOnly(5)}, ${dateOnly(12)},
+        ${profile.deliveryBand1MaxG !== null}, ${profile.selfDeliveryYen !== null}, ${profile.pickupPlace !== null}, now())`;
+    console.log(`    出品 ${l.vegetable}：作った`);
+  }
+}
+
+for (const b of buyers) {
+  const id = await userId(b.email);
+  const created = await sql`
+    insert into buyer_profile ("userId", prefecture, city, address, "updatedAt")
+    values (${id}, ${b.prefecture}, ${b.city}, ${b.address}, now())
+    on conflict ("userId") do nothing
+    returning "userId"`;
+  console.log(`  ${b.email} プロフィール：${created.length ? "作った" : "すでにある（そのまま）"}`);
+}

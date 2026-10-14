@@ -34,6 +34,8 @@ model User {
   profile       ProducerProfile?
   buyerProfile  BuyerProfile?
   listings      Listing[]
+  orders        Order[]
+  exposure      ProducerExposure?
 
   @@map("user")
 }
@@ -168,6 +170,7 @@ model Listing {
   status         ListingStatus @default(open)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  orders         Order[]
 
   @@index([producerId])
   @@index([status, acceptUntil])
@@ -189,4 +192,74 @@ model BuyerProfile {
   updatedAt  DateTime @updatedAt
 
   @@map("buyer_profile")
+}
+
+// ===== 注文（購入希望） =====
+
+// 注文の状態（docs/04_producer_design.md 4章の状態遷移）
+enum OrderStatus {
+  pending // 回答待ち
+  change_pending // 条件変更の確認待ち
+  confirmed // 販売確定
+  declined // 見送り
+  cancelled // 取消
+  expired // 期限切れ
+}
+
+// 受け渡し方法
+enum DeliveryMethod {
+  delivery // 宅配発送
+  self // 自分で配達
+  pickup // 引き取り
+}
+
+// 注文（購入希望）
+// 単価・送料・金額は、申し込んだときの値を写して保存する（あとで出品やプロフィールを変えても、この注文の金額は変わらない）
+model Order {
+  id           String         @id @default(cuid())
+  listingId    String
+  listing      Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId      String
+  buyer        User           @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  // 量（g）と受け渡し
+  quantityG    Int
+  method       DeliveryMethod
+  deliveryDate DateTime       @db.Date // 納品日
+  useDate      DateTime       @db.Date // 使用日（お店が料理に使う日）
+  showUseDate  Boolean // 使用日を生産者に見せてよいか（お店が選ぶ）
+  // 申し込んだときの単価と金額（円）
+  unitG        Int
+  unitPriceYen Int
+  itemYen      Int // 商品代
+  shippingYen  Int // 送料・配達料
+  totalYen     Int // 合計
+  isTrial      Boolean        @default(false) // お試しの申し込みか
+  status       OrderStatus    @default(pending)
+  answerUntil  DateTime // 回答期限
+  // 生産者からの条件変更の提案（条件変更の確認待ちのときだけ使う）
+  proposedDeliveryDate DateTime? @db.Date
+  proposedQuantityG    Int?
+  proposedItemYen      Int?
+  proposedShippingYen  Int?
+  proposedTotalYen     Int?
+  // 断られたときに「元の条件で確定」するか（false なら見送り）
+  confirmIfRefused     Boolean?
+  // 同じ申し込みを二重に送らないための目印（送信ボタンの連打対策）
+  requestKey   String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([listingId, status])
+  @@index([buyerId])
+  @@map("order")
+}
+
+// 農家さんごとの、検索結果に表示された回数（不変条件6：公平に並べる）
+model ProducerExposure {
+  producerId String   @id
+  producer   User     @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  count      Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@map("producer_exposure")
 }

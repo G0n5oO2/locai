@@ -110,6 +110,10 @@ async function BuyerProfileSummary({ userId }: { userId: string }) {
     );
   }
   return (
+    <>
+    <Link href="/buyer/search" className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">
+      仕入れ候補を探す
+    </Link>
     <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
       <p className="font-bold">お店のプロフィール</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
@@ -122,5 +126,6 @@ async function BuyerProfileSummary({ userId }: { userId: string }) {
         プロフィールを編集する
       </Link>
     </div>
+    </>
   );
 }
