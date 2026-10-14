@@ -1,6 +1,7 @@
 "use client";
 // 仕入れ条件の入力と、検索結果の表示（探す処理はサーバー側の search で行う）
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { search, type SearchFormState } from "@/app/actions/search";
 import { Field } from "@/app/ui/field";
@@ -53,9 +54,9 @@ export function SearchForm({ area }: { area: string }) {
             </div>
           ) : (
             <>
-              <Group title="前に買った農家さん" list={r.repeat} />
-              <Group title="条件に合う農家さん" list={r.matched} />
-              <Group title="新しい農家さん" list={r.newcomers} />
+              <Group title="前に買った農家さん" list={r.repeat} useDate={v.useDate} />
+              <Group title="条件に合う農家さん" list={r.matched} useDate={v.useDate} />
+              <Group title="新しい農家さん" list={r.newcomers} useDate={v.useDate} />
               <p className="text-xs text-muted">並び順は、これまでに表示された回数が少ない農家さんからです（人気順ではありません）。</p>
             </>
           )}
@@ -65,19 +66,19 @@ export function SearchForm({ area }: { area: string }) {
   );
 }
 
-function Group({ title, list }: { title: string; list: Candidate[] }) {
+function Group({ title, list, useDate }: { title: string; list: Candidate[]; useDate?: string }) {
   if (list.length === 0) return null;
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-bold">{title}</h2>
       {list.map((c) => (
-        <CandidateCard key={c.listingId} c={c} />
+        <CandidateCard key={c.listingId} c={c} useDate={useDate ?? ""} />
       ))}
     </div>
   );
 }
 
-function CandidateCard({ c }: { c: Candidate }) {
+function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
   // 1kg あたりの値段は、市場と比べるための参考（計算には使わない）
   const perKg = Math.round((c.unitPriceYen * 1000) / c.unitG);
   return (
@@ -128,9 +129,13 @@ function CandidateCard({ c }: { c: Candidate }) {
         <p className="mt-1 whitespace-pre-wrap">こだわり：{c.commitment}</p>
       </details>
 
-      <button type="button" disabled className="rounded-xl bg-leaf px-4 py-3 font-bold text-white opacity-60">
-        購入希望を送る（次のステップで作ります）
-      </button>
+      {/* 探したときの条件を持って、購入希望の画面へ */}
+      <Link
+        href={`/buyer/listings/${c.listingId}?${new URLSearchParams({ quantity: gramsToKgText(c.quantityG), method: c.method, useDate })}`}
+        className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white"
+      >
+        この内容で購入希望へ進む
+      </Link>
     </article>
   );
 }
