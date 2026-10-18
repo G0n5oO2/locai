@@ -4,6 +4,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
+import { ListingTabs } from "../listing-tabs";
+import { SalesSummary } from "./sales-summary";
 import { expireOverdue } from "@/lib/availability";
 import { methodLabel, type DeliveryMethod } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
@@ -20,7 +22,12 @@ import { OrderChecks } from "./order-checks";
 
 export default function ProducerOrdersPage() {
   return (
-    <AuthShell title="申し込みの一覧" wide>
+    <AuthShell title="注文管理" wide>
+      <ListingTabs current="orders" />
+      {/* 上に売上のまとめ、その下に申し込みの一覧 */}
+      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+        <SalesSummary />
+      </Suspense>
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <ProducerOrders />
       </Suspense>

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
+import { ListingTabs } from "../listing-tabs";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
@@ -13,6 +14,7 @@ import { LeftoverPanel } from "./leftover-panel";
 export default function ListingsPage() {
   return (
     <AuthShell title="出品一覧" wide>
+      <ListingTabs current="listings" />
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <Listings />
       </Suspense>
