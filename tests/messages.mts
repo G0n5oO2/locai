@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { placeOrder } from "../lib/orders";
 import { cancelOrder } from "../lib/order-flow";
-import { sendMessage } from "../lib/messages";
+import { sendMessage, totalUnread } from "../lib/messages";
 import { jstDateText, parseDate } from "../lib/datetime";
 
 const day = 24 * 60 * 60 * 1000;
@@ -38,8 +38,17 @@ const newOrder = async () => {
 
 try {
   const o = await newOrder();
+  // 未読の合計（ナビゲーションバーの通知のしるし）。テストの前の数を覚えておき、増えた分を見る
+  const base = { producer: await totalUnread(producer), buyer: await totalUnread(buyer), otherProducer: await totalUnread(otherProducer), otherBuyer: await totalUnread(otherBuyer) };
   check("お店は送れる", (await sendMessage(buyer, o, "こんにちは")).ok);
+  check("お店が送ると、農家さんの未読が1つ増える", (await totalUnread(producer)) === base.producer + 1);
+  check("自分が送ったものは、自分の未読に数えない", (await totalUnread(buyer)) === base.buyer);
+  check("ほかの人の未読は増えない", (await totalUnread(otherProducer)) === base.otherProducer && (await totalUnread(otherBuyer)) === base.otherBuyer);
   check("農家さんは送れる", (await sendMessage(producer, o, "よろしくお願いします")).ok);
+  check("返事をすると、農家さんの未読は読んだことになる", (await totalUnread(producer)) === base.producer);
+  check("農家さんが送ると、お店の未読が1つ増える", (await totalUnread(buyer)) === base.buyer + 1);
+  await prisma.order.update({ where: { id: o }, data: { buyerReadAt: new Date() } });
+  check("お店が注文の詳細を開くと、未読が消える", (await totalUnread(buyer)) === base.buyer);
   const r1 = await sendMessage(otherBuyer, o, "のぞき見");
   check("ほかのお店は送れない", !r1.ok, r1.ok ? "" : r1.message);
   const r2 = await sendMessage(otherProducer, o, "のぞき見");

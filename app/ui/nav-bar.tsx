@@ -4,7 +4,8 @@
 // ボタンはアイコンだけ。読み上げ用に、見えない名前（aria-label）を付ける
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { unreadCountAction } from "@/app/actions/message";
 import type { Role } from "@/lib/auth";
 
 type NavItem = {
@@ -34,8 +35,19 @@ const buyerItems: NavItem[] = [
   { label: "プロフィール", href: "/mypage", match: ["/mypage", "/buyer/profile"], icon: <PersonIcon /> },
 ];
 
-export function NavBar({ role }: { role: Role }) {
+export function NavBar({ role, initialUnread }: { role: Role; initialUnread: number }) {
   const pathname = usePathname();
+  // 未読メッセージの数。画面を移動するたびに、サーバーに聞き直す（読んだら消えるように）
+  const [unread, setUnread] = useState(initialUnread);
+  useEffect(() => {
+    let alive = true;
+    unreadCountAction()
+      .then((n) => alive && setUnread(n))
+      .catch(() => {}); // 聞けなかったときは、前の数のまま
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
   const items = role === "producer" ? producerItems : buyerItems;
   // 今開いている画面かどうか（「/producer/listings/new」も「出品」に含める）
   const isActive = (item: NavItem) => item.match.some((m) => pathname === m || pathname.startsWith(`${m}/`));
@@ -51,18 +63,27 @@ export function NavBar({ role }: { role: Role }) {
           <ul className="flex justify-around md:justify-center md:gap-2">
             {items.map((item) => {
               const active = isActive(item);
+              // メッセージのボタンにだけ、未読の数を出す
+              const badge = item.label === "メッセージ" && unread > 0 ? unread : 0;
+              const name = badge > 0 ? `${item.label}（未読 ${badge}件）` : item.label;
               return (
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    aria-label={item.label}
-                    title={item.label}
+                    aria-label={name}
+                    title={name}
                     aria-current={active ? "page" : undefined}
-                    className={`flex size-14 items-center justify-center rounded-xl ${
+                    className={`relative flex size-14 items-center justify-center rounded-xl ${
                       active ? "bg-leaf-soft text-leaf" : "text-muted hover:text-foreground"
                     }`}
                   >
                     {item.icon}
+                    {/* 通知のしるし：未読があるときだけ、右上に数を出す（10件以上は「9+」） */}
+                    {badge > 0 && (
+                      <span aria-hidden className="absolute top-1.5 right-1.5 flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs leading-5 font-bold text-white">
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );

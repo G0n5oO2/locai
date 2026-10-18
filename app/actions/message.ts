@@ -3,8 +3,8 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { sendMessage } from "@/lib/messages";
-import { requireUser } from "@/lib/session";
+import { sendMessage, totalUnread } from "@/lib/messages";
+import { getCurrentUser, requireUser } from "@/lib/session";
 
 export type MessageState = { message?: string; sent?: number };
 
@@ -19,4 +19,12 @@ export async function sendMessageAction(state: MessageState, formData: FormData)
   refresh();
   // 送れたら数を増やす（入力欄を空に戻すのに使う）
   return { sent: (state.sent ?? 0) + 1 };
+}
+
+// 自分あての未読メッセージの数（ナビゲーションバーが画面を移動するたびに聞きに来る）
+// 外から直接呼ばれても、ログイン中の本人の数しか返さない
+export async function unreadCountAction(): Promise<number> {
+  const user = await getCurrentUser();
+  if (!user) return 0;
+  return totalUnread(user.id);
 }

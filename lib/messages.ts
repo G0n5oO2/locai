@@ -47,3 +47,19 @@ export async function unreadCounts(userId: string, orders: { id: string; readAt:
   );
   return counts;
 }
+
+// 自分あての未読メッセージの合計（ナビゲーションバーの通知のしるしに使う）
+// 自分が当事者の注文（お店として申し込んだ注文・農家として受けた注文）だけを数える（不変条件4）
+export async function totalUnread(userId: string): Promise<number> {
+  const rows = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT COUNT(*)::int AS n
+    FROM order_message m
+    JOIN "order" o ON o.id = m."orderId"
+    JOIN listing l ON l.id = o."listingId"
+    WHERE m."senderId" <> ${userId}
+      AND (
+        (o."buyerId" = ${userId} AND (o."buyerReadAt" IS NULL OR m."createdAt" > o."buyerReadAt"))
+        OR (l."producerId" = ${userId} AND (o."producerReadAt" IS NULL OR m."createdAt" > o."producerReadAt"))
+      )`;
+  return rows[0]?.n ?? 0;
+}
