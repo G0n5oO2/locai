@@ -111,8 +111,8 @@ model ProducerProfile {
   shipLimitDelivery Int // 宅配発送
   shipLimitSelf     Int // 自分で配達
   shipLimitPickup   Int // 引き取り
-  // お試しの量（g）。まだ買ったことがないお店が、1回だけこの量で買える
-  trialAmountG      Int
+  // お試しの量（g）。第1版のお試しで使っていたもの。第2版のお試し食材に置き換えたので、今は使わない
+  trialAmountG      Int      @default(500)
   // 宅配発送の送料（数量帯別、3行まで）。「◯g まで ◯円」。宅配をしない人は空のまま
   deliveryBand1MaxG Int?
   deliveryBand1Yen  Int?
@@ -181,6 +181,10 @@ model Listing {
   offersSelf     Boolean // 自分で配達
   offersPickup   Boolean // 引き取り
   status         ListingStatus @default(open)
+  // お試し食材か（第2版）。お試し食材は、お試しのタブにだけ出す（ふつうの検索・出品一覧には出さない）
+  isTrial        Boolean       @default(false)
+  // お試し食材の回答期限：申し込みから何日以内に返事をするか（1〜3日。ふつうの出品では空）
+  trialAnswerDays Int?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   orders         Order[]
