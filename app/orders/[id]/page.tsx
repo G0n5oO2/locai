@@ -6,6 +6,7 @@ import { methodLabel } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { MESSAGE_OPEN_STATUSES, partyOf } from "@/lib/messages";
 import { orderStatusLabel } from "@/lib/order-status";
+import { paymentLabel } from "@/lib/payment";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireUser } from "@/lib/session";
@@ -58,6 +59,8 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
         <p>
           商品代 {order.itemYen.toLocaleString()}円 ＋ 送料 {order.shippingYen.toLocaleString()}円 ＝ <strong>{order.totalYen.toLocaleString()}円</strong>
         </p>
+        {/* 支払方法（第2版）。選ばれていないときは、メッセージで相談 */}
+        <p>支払方法：{order.paymentMethod ? paymentLabel[order.paymentMethod] : "メッセージで相談"}</p>
         {/* 使用日は、お店本人か、お店が見せてよいとしたときだけ */}
         {(isBuyer || order.showUseDate) && <p className="text-muted">使用日：{formatDate(order.useDate)}</p>}
         {/* 届け先・引き取りの場所は、販売確定したときだけ相手に見せる（不変条件4） */}
@@ -65,7 +68,7 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
         {confirmed && isBuyer && order.method === "pickup" && order.listing.producer.profile?.pickupPlace && (
           <p>引き取りの場所：{order.listing.producer.profile.pickupPlace}</p>
         )}
-        {confirmed && <p className="mt-1 text-xs text-muted">支払いと配送の手配は、当事者どうしでアプリの外で行います。支払方法・支払期限・発送予定は、下のメッセージで確かめてください。</p>}
+        {confirmed && <p className="mt-1 text-xs text-muted">支払いと配送の手配は、当事者どうしでアプリの外で行います。支払期限・発送予定（支払方法が決まっていなければ支払方法も）は、下のメッセージで確かめてください。</p>}
       </div>
 
       <section className="flex flex-col gap-3">

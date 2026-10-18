@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { sendOrder, type OrderFormState } from "@/app/actions/order";
 import { Field } from "@/app/ui/field";
 import { methodLabel, type DeliveryMethod } from "@/lib/burden";
+import { paymentFits, paymentLabel, type PaymentMethodKey } from "@/lib/payment";
 import { quote } from "@/lib/pricing";
 import { gramsToKgText, kgTextToGrams } from "@/lib/quantity";
 
@@ -20,12 +21,14 @@ type Props = {
   initial: { quantity: string; method: string; useDate: string };
   // お試しで申し込めるときの量（kg の文字）。申し込めないときは null
   trialQuantity: string | null;
+  // 農家さんが受け付ける支払方法（空なら、メッセージで相談）
+  payments: PaymentMethodKey[];
 };
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 
-export function OrderForm({ listingId, requestKey, price, fees, methods, earliest, latest, initial, trialQuantity }: Props) {
+export function OrderForm({ listingId, requestKey, price, fees, methods, earliest, latest, initial, trialQuantity, payments }: Props) {
   const [state, action, pending] = useActionState<OrderFormState, FormData>(sendOrder, {});
   const v = state.values ?? {};
   const [quantity, setQuantity] = useState(v.quantity ?? initial.quantity);
@@ -36,6 +39,12 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
   const shownQuantity = trial && trialQuantity ? trialQuantity : quantity;
   const grams = kgTextToGrams(shownQuantity);
   const q = grams ? quote(price, fees, grams, method as DeliveryMethod) : null;
+
+  // 支払方法：選んだ受け取り方法で使えるものだけを出す（代金引換は宅配のときだけ）
+  const paymentOptions = payments.filter((p) => paymentFits(p, method as DeliveryMethod));
+  const [payment, setPayment] = useState(v.paymentMethod ?? "");
+  // 受け取り方法を変えて、選んでいた支払方法が使えなくなったら、使えるものの先頭にする
+  const shownPayment = paymentOptions.includes(payment as PaymentMethodKey) ? payment : (paymentOptions[0] ?? "");
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -70,6 +79,30 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
             <option key={m} value={m}>{methodLabel[m]}</option>
           ))}
         </select>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="paymentMethod" className="text-sm font-bold">支払方法</label>
+        {payments.length === 0 ? (
+          // 農家さんがまだ設定していないときは、選ばずに送れる
+          <>
+            <input type="hidden" name="paymentMethod" value="" />
+            <p className="rounded-xl bg-surface p-3 text-sm text-muted">この農家さんは、まだ支払方法を設定していません。支払方法はメッセージで相談してください。</p>
+          </>
+        ) : paymentOptions.length === 0 ? (
+          <>
+            <input type="hidden" name="paymentMethod" value="" />
+            <p className={errorClass}>この受け取り方法で使える支払方法がありません。受け取り方法を変えてください。</p>
+          </>
+        ) : (
+          <select id="paymentMethod" name="paymentMethod" value={shownPayment} onChange={(e) => setPayment(e.target.value)} className={inputClass}>
+            {paymentOptions.map((p) => (
+              <option key={p} value={p}>{paymentLabel[p]}</option>
+            ))}
+          </select>
+        )}
+        {state.errors?.paymentMethod && <p className={errorClass}>{state.errors.paymentMethod[0]}</p>}
+        <p className="text-xs text-muted">支払い自体は、アプリの外で行います。{payments.includes("cod") && "代金引換は、宅配のときだけ選べます。"}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

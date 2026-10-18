@@ -10,6 +10,7 @@ import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { unreadCounts } from "@/lib/messages";
 import { dateShiftCounts } from "@/lib/order-flow";
 import { orderStatusLabel } from "@/lib/order-status";
+import { paymentLabel } from "@/lib/payment";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
@@ -164,6 +165,7 @@ async function ProducerOrders() {
                   <p>
                     商品代 {o.itemYen.toLocaleString()}円／送料・配達料 {o.shippingYen.toLocaleString()}円
                   </p>
+                  <p>支払方法：{o.paymentMethod ? paymentLabel[o.paymentMethod] : "メッセージで相談"}</p>
                   <Link href={`/orders/${o.id}`} className="font-bold text-earth underline">
                     注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
                   </Link>

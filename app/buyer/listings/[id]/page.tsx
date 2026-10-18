@@ -84,6 +84,7 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
         latest={listing.deliverTo.toISOString().slice(0, 10)}
         initial={{ quantity: text("quantity"), method: text("method"), useDate: text("useDate") }}
         trialQuantity={trialQuantity}
+        payments={profile.paymentMethods}
       />
     </div>
   );

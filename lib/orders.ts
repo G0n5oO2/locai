@@ -5,6 +5,7 @@ import { Prisma } from "./generated/prisma/client";
 import { expireOverdue, usedAmounts } from "./availability";
 import type { DeliveryMethod } from "./burden";
 import { jstDateText, parseDate } from "./datetime";
+import { paymentFits, type PaymentMethodKey } from "./payment";
 import { prisma } from "./prisma";
 import { quote } from "./pricing";
 import { gramsToKgText } from "./quantity";
@@ -21,6 +22,8 @@ export type PlaceOrderInput = {
   requestKey: string;
   // お試しの申し込みか（true のとき、数量はサーバーがお試しの量に決める）
   isTrial?: boolean;
+  // お店が選んだ支払方法（農家さんが設定していないときは null。第2版）
+  paymentMethod?: PaymentMethodKey | null;
 };
 
 // その出品でのお試しの量：お試しの量が注文単位の倍数ならそのまま、そうでなければ注文単位1つ分（設計メモ3章）
@@ -73,6 +76,14 @@ export async function placeOrder(placeInput: PlaceOrderInput): Promise<PlaceOrde
       if (!farm || !shop || !isNear(farm, shop)) return fail("お店の地域が、この農家さんの対応地域の外です");
       const offered = { delivery: listing.offersDelivery, self: listing.offersSelf, pickup: listing.offersPickup }[input.method];
       if (!offered) return fail("この受け取り方法には対応していません");
+      // 支払方法：農家さんが受け付ける方法の中から選んでいるか。代金引換は宅配のときだけ（第2版）
+      // 農家さんがまだ設定していないときは、選ばずに申し込める（メッセージで相談）
+      let paymentMethod: PaymentMethodKey | null = null;
+      if (profile.paymentMethods.length > 0) {
+        if (!input.paymentMethod || !profile.paymentMethods.includes(input.paymentMethod)) return fail("支払方法を、農家さんが受け付ける方法の中から選んでください");
+        if (!paymentFits(input.paymentMethod, input.method)) return fail("代金引換は、宅配のときだけ選べます");
+        paymentMethod = input.paymentMethod;
+      }
       // お試し：数量は画面の値を使わず、サーバーがお試しの量に決める。最低注文量は気にしない
       if (input.isTrial) {
         // 同じ農家さんの別の出品へのお試しと同時にならないよう、農家さんにも鍵をかける
@@ -114,6 +125,7 @@ export async function placeOrder(placeInput: PlaceOrderInput): Promise<PlaceOrde
           answerUntil: listing.answerUntil,
           requestKey: input.requestKey,
           isTrial: input.isTrial ?? false,
+          paymentMethod,
         },
       });
       return { ok: true as const, orderId: order.id };
