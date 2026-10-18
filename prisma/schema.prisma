@@ -124,10 +124,20 @@ model ProducerProfile {
   selfDeliveryYen   Int?
   // 引き取りの場所。販売確定した相手にだけ見せる（不変条件4）
   pickupPlace       String?
+  // 受け付ける支払方法（第2版）。支払い自体はアプリの外で行う。空なら「メッセージで相談」
+  paymentMethods    PaymentMethod[] @default([])
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   @@map("producer_profile")
+}
+
+// 支払方法（第2版）。支払い自体はアプリの外で行い、どう払うかを伝えるために使う
+enum PaymentMethod {
+  cash // 現金（農家さん本人に渡す）
+  transfer // 振り込み
+  cod // 代金引換（宅配のときだけ）
+  mobile // スマホ決済
 }
 
 // 品の状態
@@ -238,6 +248,8 @@ model Order {
   shippingYen  Int // 送料・配達料
   totalYen     Int // 合計
   isTrial      Boolean        @default(false) // お試しの申し込みか
+  // お店が選んだ支払方法（第2版）。農家さんが設定していないときは空（メッセージで相談）
+  paymentMethod PaymentMethod?
   status       OrderStatus    @default(pending)
   answerUntil  DateTime // 回答期限
   // 生産者からの条件変更の提案（条件変更の確認待ちのときだけ使う）
