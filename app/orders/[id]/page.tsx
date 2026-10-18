@@ -2,13 +2,13 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
+import { OrderAmount } from "@/app/ui/order-amount";
 import { methodLabel } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { MESSAGE_OPEN_STATUSES, partyOf } from "@/lib/messages";
 import { orderStatusLabel } from "@/lib/order-status";
 import { paymentLabel } from "@/lib/payment";
 import { prisma } from "@/lib/prisma";
-import { gramsToKgText } from "@/lib/quantity";
 import { requireUser } from "@/lib/session";
 import { MessageForm } from "./message-form";
 
@@ -53,12 +53,11 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
         </div>
         <p>相手：{isBuyer ? order.listing.producer.name : order.buyer.name}</p>
         <p>
-          {gramsToKgText(order.quantityG)}kg・{methodLabel[order.method]}・納品 {formatDate(order.deliveryDate)}
+          {methodLabel[order.method]}・納品 {formatDate(order.deliveryDate)}
           {order.isTrial && "・お試し"}
         </p>
-        <p>
-          商品代 {order.itemYen.toLocaleString()}円 ＋ 送料 {order.shippingYen.toLocaleString()}円 ＝ <strong>{order.totalYen.toLocaleString()}円</strong>
-        </p>
+        {/* 数量と金額（合計は大きく、色を変える） */}
+        <OrderAmount isTrial={order.isTrial} quantityG={order.quantityG} unitG={order.unitG} unitPriceYen={order.unitPriceYen} itemYen={order.itemYen} shippingYen={order.shippingYen} totalYen={order.totalYen} />
         {/* 支払方法（第2版）。選ばれていないときは、メッセージで相談 */}
         <p>支払方法：{order.paymentMethod ? paymentLabel[order.paymentMethod] : "メッセージで相談"}</p>
         {/* 使用日は、お店本人か、お店が見せてよいとしたときだけ */}

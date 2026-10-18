@@ -19,7 +19,8 @@
     "test:payment": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/payment.mts",
     "test:search": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/search.mts",
     "test:sales": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/sales.mts",
-    "test:estimate": "node --import tsx tests/estimate.mts"
+    "test:estimate": "node --import tsx tests/estimate.mts",
+    "test:trial": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/trial.mts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

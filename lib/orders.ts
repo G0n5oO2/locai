@@ -10,6 +10,7 @@ import { prisma } from "./prisma";
 import { quote } from "./pricing";
 import { gramsToKgText } from "./quantity";
 import { findMunicipality, isNear } from "./region";
+import { trialAnswerUntil } from "./trial";
 
 export type PlaceOrderInput = {
   buyerId: string;
@@ -37,6 +38,19 @@ export async function canTrial(db: Pick<typeof prisma, "order">, buyerId: string
     where: {
       buyerId,
       listing: { producerId },
+      OR: [{ status: "confirmed" }, { isTrial: true, status: { in: ["pending", "change_pending"] } }],
+    },
+  });
+  return blocking === 0;
+}
+
+// お試し食材を申し込めるか（第2版）：この農家さんから、この野菜を買ったこと（販売確定）がなく、
+// 同じ野菜の返事待ちのお試しもない。一度でも買ったことがあれば、その農家さんの野菜の状態は分かっているため
+export async function canTrialItem(db: Pick<typeof prisma, "order">, buyerId: string, producerId: string, vegetable: string): Promise<boolean> {
+  const blocking = await db.order.count({
+    where: {
+      buyerId,
+      listing: { producerId, vegetable },
       OR: [{ status: "confirmed" }, { isTrial: true, status: { in: ["pending", "change_pending"] } }],
     },
   });
@@ -84,8 +98,16 @@ export async function placeOrder(placeInput: PlaceOrderInput): Promise<PlaceOrde
         if (!paymentFits(input.paymentMethod, input.method)) return fail("代金引換は、宅配のときだけ選べます");
         paymentMethod = input.paymentMethod;
       }
-      // お試し：数量は画面の値を使わず、サーバーがお試しの量に決める。最低注文量は気にしない
-      if (input.isTrial) {
+      // お試し食材（第2版）：まだ買ったことがない野菜だけ。量は 100g ずつ
+      if (listing.isTrial) {
+        // 同じ野菜のお試しと同時にならないよう、農家さんにも鍵をかける
+        await tx.$queryRaw`SELECT id FROM "user" WHERE id = ${listing.producerId} FOR UPDATE`;
+        if (!(await canTrialItem(tx, input.buyerId, listing.producerId, listing.vegetable))) return fail("この野菜は、お試しで申し込めません（買ったことがあるか、返事待ちのお試しがあります）");
+        if (input.quantityG < listing.minOrderG) return fail(`${listing.minOrderG}g から申し込めます`);
+        if (input.quantityG % listing.unitG !== 0) return fail(`${listing.unitG}g 単位で申し込んでください`);
+      }
+      // お試し（第1版）：数量は画面の値を使わず、サーバーがお試しの量に決める。最低注文量は気にしない
+      else if (input.isTrial) {
         // 同じ農家さんの別の出品へのお試しと同時にならないよう、農家さんにも鍵をかける
         await tx.$queryRaw`SELECT id FROM "user" WHERE id = ${listing.producerId} FOR UPDATE`;
         if (!(await canTrial(tx, input.buyerId, listing.producerId))) return fail("この農家さんには、お試しで申し込めません（買ったことがあるか、返事待ちのお試しがあります）");
@@ -93,7 +115,10 @@ export async function placeOrder(placeInput: PlaceOrderInput): Promise<PlaceOrde
       } else if (input.quantityG < listing.minOrderG) return fail(`最低注文量は ${gramsToKgText(listing.minOrderG)}kg です`);
       if (input.quantityG % listing.unitG !== 0) return fail(`${gramsToKgText(listing.unitG)}kg 単位で申し込んでください`);
       if (input.useDate < today) return fail("使用日は、今日以降にしてください");
-      const earliest = listing.deliverFrom > today ? listing.deliverFrom : today;
+      // お試し食材は、返事の日数がたってから届ける（返事を待たずに届けることにならないように）
+      const answerReady = listing.isTrial && listing.trialAnswerDays ? new Date(today.getTime() + listing.trialAnswerDays * 86_400_000) : today;
+      const earliestBase = listing.deliverFrom > today ? listing.deliverFrom : today;
+      const earliest = answerReady > earliestBase ? answerReady : earliestBase;
       if (input.deliveryDate < earliest || input.deliveryDate > listing.deliverTo) return fail("納品日は、届けられる日の中から選んでください");
       if (input.deliveryDate > input.useDate) return fail("納品日は、使用日までの日にしてください");
 
@@ -122,9 +147,10 @@ export async function placeOrder(placeInput: PlaceOrderInput): Promise<PlaceOrde
           itemYen: q.itemYen,
           shippingYen: q.shippingYen,
           totalYen: q.totalYen,
-          answerUntil: listing.answerUntil,
+          // 回答期限：ふつうは出品の回答期限。お試し食材は、申し込みから○日（第2版）
+          answerUntil: listing.isTrial && listing.trialAnswerDays ? trialAnswerUntil(now, listing.trialAnswerDays, listing.answerUntil) : listing.answerUntil,
           requestKey: input.requestKey,
-          isTrial: input.isTrial ?? false,
+          isTrial: listing.isTrial || (input.isTrial ?? false),
           paymentMethod,
         },
       });
