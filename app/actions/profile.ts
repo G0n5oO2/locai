@@ -29,18 +29,6 @@ const profileSchema = z.object({
   shipLimitDelivery: shipLimit,
   shipLimitSelf: shipLimit,
   shipLimitPickup: shipLimit,
-  // お試しの量：0.5〜10kg（g の整数に変えてから確かめる）
-  trialAmount: z
-    .string()
-    .transform((text, ctx) => {
-      const grams = kgTextToGrams(text);
-      if (grams === null) {
-        ctx.addIssue({ code: "custom", message: "0.1kg 単位の数字で入力してください（例：0.5）" });
-        return z.NEVER;
-      }
-      return grams;
-    })
-    .pipe(z.number().min(500, "0.5kg 以上にしてください").max(10000, "10kg 以内にしてください")),
 });
 
 // 送料・配達料（円）：空なら「なし」。入れるなら 0〜100,000 の整数
@@ -83,7 +71,7 @@ const feeSchema = z.object({
 });
 
 const fields = [
-  "prefecture", "city", "items", "commitment", "shipLimitDelivery", "shipLimitSelf", "shipLimitPickup", "trialAmount",
+  "prefecture", "city", "items", "commitment", "shipLimitDelivery", "shipLimitSelf", "shipLimitPickup",
   "band1Kg", "band1Yen", "band2Kg", "band2Yen", "band3Kg", "band3Yen", "selfDeliveryYen", "pickupPlace",
 ] as const;
 
@@ -140,7 +128,7 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
     return { errors: { paymentMethods: ["代金引換は宅配のときだけ使えます。宅配の送料を入れるか、代金引換を外してください"] }, values };
   }
 
-  const { trialAmount, ...rest } = parsed.data;
+  const rest = parsed.data;
   // 府県と市区町村の組み合わせが、一覧にあるものか確かめる
   if (!findMunicipality(rest.prefecture, rest.city)) {
     return { errors: { city: ["一覧から市区町村を選んでください"] }, values };
@@ -149,7 +137,6 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
   const fee = feeParsed.data;
   const data = {
     ...rest,
-    trialAmountG: trialAmount,
     deliveryBand1MaxG: fee.band1Kg,
     deliveryBand1Yen: fee.band1Yen,
     deliveryBand2MaxG: fee.band2Kg,

@@ -26,7 +26,6 @@ const fieldNames: Record<string, string> = {
   shipLimitDelivery: "1回の出荷（宅配発送）",
   shipLimitSelf: "1回の出荷（自分で配達）",
   shipLimitPickup: "1回の出荷（引き取り）",
-  trialAmount: "お試しの量",
   band1Kg: "宅配発送の送料（1行目）",
   band1Yen: "宅配発送の送料（1行目）",
   band2Kg: "宅配発送の送料（2行目）",
@@ -73,11 +72,6 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
           <Field label="引き取り" name="shipLimitPickup" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitPickup} errors={state.errors?.shipLimitPickup} />
         </div>
       </fieldset>
-
-      <div className="flex flex-col gap-1">
-        <Field label="お試しの量（kg）" name="trialAmount" inputMode="decimal" defaultValue={values.trialAmount} errors={state.errors?.trialAmount} />
-        <p className="text-xs text-muted">まだあなたから買ったことがないお店が、1回だけこの量で買えます（値段はいつもと同じ）。</p>
-      </div>
 
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-sm font-bold">宅配発送の送料（重さごと、3行まで）</legend>

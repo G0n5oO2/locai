@@ -42,7 +42,6 @@ const orderSchema = z.object({
   deliveryDate: dateField("納品日を選んでください"),
   useDate: dateField("使用日を入力してください"),
   showUseDate: z.string().transform((v) => v === "on"),
-  isTrial: z.string().transform((v) => v === "on"),
   requestKey: z.uuid(),
   // 支払方法（農家さんが設定していないときは空で届く）
   paymentMethod: z.union([z.literal("").transform(() => null), paymentMethodSchema]),
@@ -52,7 +51,7 @@ export async function sendOrder(_state: OrderFormState, formData: FormData): Pro
   // 誰の申し込みかは、ログイン中の飲食店で決める
   const user = await requireBuyer();
   const values = Object.fromEntries(
-    ["listingId", "quantity", "method", "deliveryDate", "useDate", "showUseDate", "isTrial", "requestKey", "paymentMethod"].map((f) => [f, String(formData.get(f) ?? "")]),
+    ["listingId", "quantity", "method", "deliveryDate", "useDate", "showUseDate", "requestKey", "paymentMethod"].map((f) => [f, String(formData.get(f) ?? "")]),
   );
   const parsed = orderSchema.safeParse(values);
   if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors, values };
@@ -67,7 +66,6 @@ export async function sendOrder(_state: OrderFormState, formData: FormData): Pro
     useDate: d.useDate,
     showUseDate: d.showUseDate,
     requestKey: d.requestKey,
-    isTrial: d.isTrial,
     paymentMethod: d.paymentMethod,
   });
   if (!result.ok) return { message: result.message, values };

@@ -82,8 +82,6 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
         <dd className="whitespace-pre-wrap">{profile.commitment}</dd>
         <dt className="text-muted">1回の出荷</dt>
         <dd>宅配 {profile.shipLimitDelivery}件・配達 {profile.shipLimitSelf}件・引き取り {profile.shipLimitPickup}件まで</dd>
-        <dt className="text-muted">お試しの量</dt>
-        <dd>{gramsToKgText(profile.trialAmountG)}kg</dd>
         <dt className="text-muted">宅配の送料</dt>
         <dd>
           {deliveryBands(profile).length === 0

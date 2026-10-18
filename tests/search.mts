@@ -53,10 +53,10 @@ try {
   check("納品日が早い順の一番上は、一番早く届く出品", r.early[0]?.listingId === listings[2].id);
   check("お試しで買ったことがないうちは、「お試しを利用した農家」は空", r.trial.length === 0);
 
-  // B からお試しで買ったことにする（お試しの申し込みを作り、販売確定にする）
-  const t = await placeOrder({ buyerId: buyer, listingId: listings[3].id, quantityG: 1000, method: "delivery", deliveryDate: listings[3].deliverFrom, useDate: listings[3].deliverFrom, showUseDate: false, requestKey: randomUUID(), isTrial: true });
+  // B からお試しで買ったことにする（申し込みを作り、お試しの印を付けて販売確定にする）
+  const t = await placeOrder({ buyerId: buyer, listingId: listings[3].id, quantityG: 1000, method: "delivery", deliveryDate: listings[3].deliverFrom, useDate: listings[3].deliverFrom, showUseDate: false, requestKey: randomUUID() });
   if (!t.ok) throw new Error(t.message);
-  await prisma.order.update({ where: { id: t.orderId }, data: { status: "confirmed" } });
+  await prisma.order.update({ where: { id: t.orderId }, data: { status: "confirmed", isTrial: true } }); // テストなので、お試しで買ったことにする
   const r2 = await search();
   check("お試しで買った農家さんの出品だけが「お試しを利用した農家」に出る", owners(r2.trial) === "B", owners(r2.trial));
 

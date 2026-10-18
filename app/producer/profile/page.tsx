@@ -23,7 +23,7 @@ async function ProfileEditor() {
   const profile = await prisma.producerProfile.findUnique({ where: { userId: user.id } });
 
   const citiesByPrefecture = Object.fromEntries(prefectures.map((p) => [p, citiesOf(p)]));
-  // 初回は、出荷件数を10件、お試しの量を0.5kg にしておく
+  // 初回は、出荷件数を10件にしておく
   const initial = profile
     ? {
         prefecture: profile.prefecture,
@@ -33,7 +33,6 @@ async function ProfileEditor() {
         shipLimitDelivery: String(profile.shipLimitDelivery),
         shipLimitSelf: String(profile.shipLimitSelf),
         shipLimitPickup: String(profile.shipLimitPickup),
-        trialAmount: gramsToKgText(profile.trialAmountG),
         band1Kg: profile.deliveryBand1MaxG === null ? "" : gramsToKgText(profile.deliveryBand1MaxG),
         band1Yen: profile.deliveryBand1Yen?.toString() ?? "",
         band2Kg: profile.deliveryBand2MaxG === null ? "" : gramsToKgText(profile.deliveryBand2MaxG),
@@ -44,7 +43,7 @@ async function ProfileEditor() {
         pickupPlace: profile.pickupPlace ?? "",
         paymentMethods: profile.paymentMethods.join(","),
       }
-    : { shipLimitDelivery: "10", shipLimitSelf: "10", shipLimitPickup: "10", trialAmount: "0.5" };
+    : { shipLimitDelivery: "10", shipLimitSelf: "10", shipLimitPickup: "10" };
 
   return <ProfileForm citiesByPrefecture={citiesByPrefecture} initial={initial} />;
 }

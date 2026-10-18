@@ -4,7 +4,7 @@
 
 import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
-import { placeOrder, trialQuantityFor } from "../lib/orders";
+import { placeOrder } from "../lib/orders";
 import { acceptProposal, approveOrder, cancelOrder, declineOrder, proposeChange, refuseProposal } from "../lib/order-flow";
 import { jstDateText, parseDate } from "../lib/datetime";
 
@@ -97,21 +97,6 @@ try {
   const r13 = await cancelOrder(buyer, o1);
   check("販売確定のあとは取り消せない", !r13.ok, r13.ok ? "" : r13.message);
 
-  // ===== お試し =====
-  check("お試しの量：注文単位の倍数ならそのまま", trialQuantityFor(500, 500) === 500);
-  check("お試しの量：倍数でなければ注文単位1つ分", trialQuantityFor(500, 1000) === 1000 && trialQuantityFor(1500, 1000) === 1000);
-  const trial = (buyerId: string) =>
-    placeOrder({ buyerId, listingId: listing.id, quantityG: 9000, method: "delivery", deliveryDate: listing.deliverFrom, useDate: listing.deliverFrom, showUseDate: false, requestKey: randomUUID(), isTrial: true });
-  const t1 = await trial(otherBuyer);
-  const t1Order = t1.ok ? await prisma.order.findUniqueOrThrow({ where: { id: t1.orderId } }) : null;
-  check("買ったことがないお店はお試しできる（数量はサーバーが決める）", t1.ok && t1Order?.isTrial === true && t1Order.quantityG === 1000, t1Order ? `${t1Order.quantityG}g` : "");
-  const t2 = await trial(otherBuyer);
-  check("返事待ちのお試しがあるあいだは、もう1つ送れない", !t2.ok, t2.ok ? "" : t2.message);
-  const t3 = await trial(buyer);
-  check("販売確定したことがあるお店は、お試しできない", !t3.ok, t3.ok ? "" : t3.message);
-  if (t1.ok) await declineOrder(producer, t1.orderId);
-  const t4 = await trial(otherBuyer);
-  check("お試しが見送られたら、もう一度お試しできる", t4.ok);
 } finally {
   await prisma.listing.delete({ where: { id: listing.id } });
   await prisma.$disconnect();
