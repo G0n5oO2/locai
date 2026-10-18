@@ -63,3 +63,32 @@ export async function totalUnread(userId: string): Promise<number> {
       )`;
   return rows[0]?.n ?? 0;
 }
+
+// メッセージの画面に出す、注文ごとのやりとりの一覧（第2版 4-3・4-4「メッセージ」）
+// 出すのは、自分が当事者の注文のうち、やりとりできる注文すべてと、メッセージがある終わった注文（不変条件4）
+export async function messageThreads(userId: string, side: "buyer" | "producer") {
+  const mine = side === "buyer" ? { buyerId: userId } : { listing: { producerId: userId } };
+  const orders = await prisma.order.findMany({
+    where: { ...mine, OR: [{ status: { in: [...MESSAGE_OPEN_STATUSES] } }, { messages: { some: {} } }] },
+    include: {
+      listing: { select: { vegetable: true, producer: { select: { name: true } } } },
+      buyer: { select: { name: true } },
+      // 最後のメッセージ（書き出しと日時を出すため）
+      messages: { orderBy: { createdAt: "desc" }, take: 1, select: { body: true, createdAt: true } },
+    },
+  });
+  const unread = await unreadCounts(userId, orders.map((o) => ({ id: o.id, readAt: side === "buyer" ? o.buyerReadAt : o.producerReadAt })));
+  return orders
+    .map((o) => ({
+      orderId: o.id,
+      // 相手の名前（お店から見たら農家さん、農家さんから見たらお店）
+      partnerName: side === "buyer" ? o.listing.producer.name : o.buyer.name,
+      vegetable: o.listing.vegetable,
+      status: o.status,
+      lastMessage: o.messages[0] ?? null,
+      unread: unread.get(o.id) ?? 0,
+      // 並べる順番：最後にメッセージが来た日時（まだなければ、申し込んだ日時）
+      sortAt: (o.messages[0]?.createdAt ?? o.createdAt).getTime(),
+    }))
+    .sort((a, b) => b.sortAt - a.sortAt);
+}

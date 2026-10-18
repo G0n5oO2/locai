@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { placeOrder } from "../lib/orders";
 import { cancelOrder } from "../lib/order-flow";
-import { sendMessage, totalUnread } from "../lib/messages";
+import { messageThreads, sendMessage, totalUnread } from "../lib/messages";
 import { jstDateText, parseDate } from "../lib/datetime";
 
 const day = 24 * 60 * 60 * 1000;
@@ -58,6 +58,15 @@ try {
   await cancelOrder(buyer, ended);
   const r3 = await sendMessage(buyer, ended, "取り消したあと");
   check("終わった注文には送れない", !r3.ok, r3.ok ? "" : r3.message);
+
+  // メッセージの画面の一覧（第2版）
+  const ids = async (userId: string, side: "buyer" | "producer") => (await messageThreads(userId, side)).map((t) => t.orderId);
+  check("お店の一覧に、やりとりできる注文が出る", (await ids(buyer, "buyer")).includes(o));
+  check("農家さんの一覧に、やりとりできる注文が出る", (await ids(producer, "producer")).includes(o));
+  check("メッセージがない終わった注文は、一覧に出ない", !(await ids(buyer, "buyer")).includes(ended));
+  check("ほかのお店・ほかの農家さんの一覧には出ない", !(await ids(otherBuyer, "buyer")).includes(o) && !(await ids(otherProducer, "producer")).includes(o));
+  const top = (await messageThreads(producer, "producer")).find((t) => t.orderId === o);
+  check("相手の名前は、農家さんから見るとお店の名前", top?.partnerName === (await prisma.user.findUniqueOrThrow({ where: { id: buyer } })).name);
 
   // 1分に5件まで（送った人ごとに数える。お店はもう1件送っているので、あと4件で上限）
   const results = [];
