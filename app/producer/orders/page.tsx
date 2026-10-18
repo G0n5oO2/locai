@@ -5,20 +5,17 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { ListingTabs } from "../listing-tabs";
+import { ProducerOrderCard } from "./order-card";
 import { SalesSummary } from "./sales-summary";
 import { expireOverdue } from "@/lib/availability";
 import { methodLabel, type DeliveryMethod } from "@/lib/burden";
-import { formatDate, formatJstDateTime } from "@/lib/datetime";
+import { formatDate } from "@/lib/datetime";
 import { unreadCounts } from "@/lib/messages";
 import { dateShiftCounts } from "@/lib/order-flow";
-import { orderStatusLabel } from "@/lib/order-status";
-import { paymentLabel } from "@/lib/payment";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
 import { checksFor } from "@/lib/order-check-facts";
-import { OrderButtons } from "./order-buttons";
-import { OrderChecks } from "./order-checks";
 
 export default function ProducerOrdersPage() {
   return (
@@ -111,25 +108,26 @@ async function ProducerOrders() {
       {[...days.entries()].map(([day, list]) => {
         // その日の件数を、受け渡し方法ごとに数えて、基準と比べる
         const counts = (["delivery", "self", "pickup"] as DeliveryMethod[])
-          .map((m) => ({ method: m, count: list.filter((o) => o.method === m).length }))
+          // お試しの申し込みは一覧には出さない（お試しのタブで見る）が、その日に届ける件数には数える（第2版）
+          .map((m) => ({ method: m, count: list.filter((o) => o.method === m).length, trial: list.filter((o) => o.method === m && o.isTrial).length }))
           .filter((c) => c.count > 0);
         return (
           <section key={day} className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <h2 className="text-lg font-bold">{formatDate(new Date(day))} の納品</h2>
-              {counts.map(({ method, count }) => {
+              {counts.map(({ method, count, trial }) => {
                 const over = count - limitOf[method];
                 // 基準を超えた日は、提案の候補を並べる（設計メモ2章）
                 // 候補：使用日を見せていて、使用日に余裕がある回答待ちのお店
                 // 順番：ずらされた回数が少ないお店 → 回数が同じなら、使用日に余裕があるお店
                 const candidates = list
-                  .filter((o) => o.method === method && o.status === "pending" && o.showUseDate && o.useDate > o.deliveryDate)
+                  .filter((o) => !o.isTrial && o.method === method && o.status === "pending" && o.showUseDate && o.useDate > o.deliveryDate)
                   .map((o) => ({ o, shifts: shiftCount.get(o.buyerId) ?? 0, slackDays: Math.round((o.useDate.getTime() - o.deliveryDate.getTime()) / 86_400_000) }))
                   .sort((a, b) => a.shifts - b.shifts || b.slackDays - a.slackDays);
                 return (
                   <div key={method} className="flex flex-col gap-1">
                     <p className={`text-sm ${over > 0 ? "font-bold text-red-700 dark:text-red-400" : "text-muted"}`}>
-                      {methodLabel[method]} {count}件（あなたの基準：{limitOf[method]}件まで）{over > 0 && ` → ${over}件超えています`}
+                      {methodLabel[method]} {count}件{trial > 0 && `（お試し ${trial}件を含む）`}（あなたの基準：{limitOf[method]}件まで）{over > 0 && ` → ${over}件超えています`}
                     </p>
                     {over > 0 && (
                       <div className="rounded-xl bg-earth-soft p-3 text-sm">
@@ -156,54 +154,8 @@ async function ProducerOrders() {
             </div>
             {/* パソコンの幅では、カードを横に並べる */}
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {list.map((o) => (
-                <article key={o.id} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4 text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    {/* お店の名前は、申し込んだ相手にだけ見える */}
-                    <p className="font-bold">{o.buyer.name}</p>
-                    <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${o.status === "confirmed" ? "bg-earth text-white" : "bg-earth-soft text-earth"}`}>
-                      {orderStatusLabel[o.status]}
-                    </span>
-                  </div>
-                  <p>
-                    {o.listing.vegetable} {gramsToKgText(o.quantityG)}kg・{methodLabel[o.method]}
-                    {o.isTrial && "・お試し"}
-                  </p>
-                  <p>
-                    商品代 {o.itemYen.toLocaleString()}円／送料・配達料 {o.shippingYen.toLocaleString()}円
-                  </p>
-                  <p>支払方法：{o.paymentMethod ? paymentLabel[o.paymentMethod] : "メッセージで相談"}</p>
-                  <Link href={`/orders/${o.id}`} className="font-bold text-earth underline">
-                    注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
-                  </Link>
-                  {/* 使用日は、お店が見せてよいとしたときだけ */}
-                  {o.showUseDate && <p className="text-muted">お店の使用日：{formatDate(o.useDate)}</p>}
-                  {o.buyer.buyerProfile && <p className="text-muted">お店の地域：{o.buyer.buyerProfile.prefecture} {o.buyer.buyerProfile.city}</p>}
-                  {/* 届け先の住所は、販売確定した注文にだけ見せる（不変条件4） */}
-                  {o.status === "confirmed" && o.method !== "pickup" && o.buyer.buyerProfile && (
-                    <p>届け先：{o.buyer.buyerProfile.address}</p>
-                  )}
-                  {o.status === "pending" && (
-                    <>
-                      <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
-                      <OrderChecks orderId={o.id} checks={checks.get(o.id) ?? []} />
-                      <OrderButtons orderId={o.id} />
-                      <Link href={`/producer/orders/${o.id}/propose`} className="text-center font-bold text-earth underline">
-                        条件の変更を提案する
-                      </Link>
-                    </>
-                  )}
-                  {o.status === "change_pending" && o.proposedDeliveryDate && o.proposedQuantityG !== null && (
-                    <div className="rounded-xl bg-earth-soft p-3">
-                      <p className="font-bold">提案中（お店の返事待ち）</p>
-                      <p>
-                        納品日 {formatDate(o.deliveryDate)} → {formatDate(o.proposedDeliveryDate)}／数量 {gramsToKgText(o.quantityG)}kg → {gramsToKgText(o.proposedQuantityG)}kg
-                      </p>
-                      <p>断られたら：{o.confirmIfRefused ? "元の条件で販売確定" : "見送り"}</p>
-                      <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
-                    </div>
-                  )}
-                </article>
+              {list.filter((o) => !o.isTrial).map((o) => (
+                <ProducerOrderCard key={o.id} order={o} unread={unread.get(o.id) ?? 0} checks={checks.get(o.id) ?? []} />
               ))}
             </div>
           </section>

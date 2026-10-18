@@ -2,9 +2,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { closeTrialItem } from "@/app/actions/trial";
+import { ProducerOrderCard } from "@/app/producer/orders/order-card";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { expireOverdue, usedAmounts } from "@/lib/availability";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
+import { unreadCounts } from "@/lib/messages";
+import { checksFor } from "@/lib/order-check-facts";
 import { prisma } from "@/lib/prisma";
 import { requireProducer } from "@/lib/session";
 
@@ -39,7 +42,45 @@ async function Trial({ searchParams }: PageProps<"/producer/trial">) {
           </Link>
         ))}
       </nav>
-      {current === "items" ? <TrialItems producerId={user.id} /> : <p className="text-muted">お試しの申し込みの一覧は、次のステップで作ります。</p>}
+      {current === "items" ? <TrialItems producerId={user.id} /> : <TrialRequests producerId={user.id} />}
+    </div>
+  );
+}
+
+// 届いたお試しの申し込み（返事待ち・条件変更の確認待ち・販売確定）。納品日の近い順
+// 承認・見送り・条件の変更は、ふつうの申し込みと同じ流れ（第2版：新しい流れを作らない）
+async function TrialRequests({ producerId }: { producerId: string }) {
+  await expireOverdue(prisma);
+  // 自分のお試し食材への申し込みだけを読む（他人の注文は見えない）
+  const orders = await prisma.order.findMany({
+    where: { isTrial: true, listing: { producerId }, status: { in: ["pending", "change_pending", "confirmed"] } },
+    orderBy: [{ deliveryDate: "asc" }, { createdAt: "asc" }],
+    include: {
+      listing: { select: { vegetable: true } },
+      buyer: { select: { name: true, buyerProfile: { select: { prefecture: true, city: true, address: true } } } },
+    },
+  });
+  const unread = await unreadCounts(producerId, orders.map((o) => ({ id: o.id, readAt: o.producerReadAt })));
+  // 返事待ちの申し込みの確認ポイント（ふつうの申し込みと同じ）
+  const checks = new Map<string, string[]>();
+  for (const o of orders.filter((x) => x.status === "pending")) {
+    const found = await checksFor(producerId, o.id);
+    if (found) checks.set(o.id, found.checks);
+  }
+  const waiting = orders.filter((o) => o.status === "pending").length;
+
+  return (
+    <div className="flex flex-col gap-3">
+      {orders.length === 0 ? (
+        <p className="text-muted">お試しの申し込みは、まだ届いていません。</p>
+      ) : (
+        <p className="text-sm text-muted">返事待ち {waiting}件。注文管理の「1日の出荷件数」には、お試しの申し込みも数えています。</p>
+      )}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {orders.map((o) => (
+          <ProducerOrderCard key={o.id} order={o} unread={unread.get(o.id) ?? 0} checks={checks.get(o.id) ?? []} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { parseDate } from "@/lib/datetime";
 import { acceptProposal, approveOrder, cancelOrder, declineOrder, proposeChange, refuseProposal, type FlowResult } from "@/lib/order-flow";
@@ -55,7 +56,9 @@ export async function proposeAction(_state: FlowState, formData: FormData): Prom
 
   const result = await proposeChange(user.id, orderId.data, { newDeliveryDate, newQuantityG, confirmIfRefused: fallback === "yes" });
   if (!result.ok) return { message: result.message };
-  redirect("/producer/orders");
+  // お試しの申し込みは、お試しのタブに戻る（第2版：お試しの申し込みは、お試しのタブで見る）
+  const order = await prisma.order.findUnique({ where: { id: orderId.data }, select: { isTrial: true } });
+  redirect(order?.isTrial ? "/producer/trial" : "/producer/orders");
 }
 
 // 提案に同意（飲食店だけ）
