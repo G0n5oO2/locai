@@ -2,13 +2,13 @@
 // 仕入れ条件の入力と、検索結果の表示（探す処理はサーバー側の search で行う）
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { search, type SearchFormState } from "@/app/actions/search";
 import { Field } from "@/app/ui/field";
 import { methodLabel } from "@/lib/burden";
 import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { gramsToKgText } from "@/lib/quantity";
-import type { Candidate } from "@/lib/search";
+import type { Candidate, SortKey } from "@/lib/search";
 import { PublishWanted } from "./publish-wanted";
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
@@ -18,7 +18,10 @@ export function SearchForm({ area }: { area: string }) {
   const [state, action, pending] = useActionState<SearchFormState, FormData>(search, {});
   const v = state.values ?? {};
   const r = state.result;
-  const count = r ? r.repeat.length + r.matched.length + r.newcomers.length : 0;
+  // どの並べ方も中身は同じ（並び順が違うだけ）なので、件数はランダムの数で数える
+  const count = r ? r.random.length : 0;
+  // 今見ている並べ方（最初はランダム）
+  const [sort, setSort] = useState<SortKey>("random");
 
   return (
     <div className="flex flex-col gap-6">
@@ -59,10 +62,27 @@ export function SearchForm({ area }: { area: string }) {
             <PublishWanted key={JSON.stringify(v)} values={v} />
           ) : (
             <>
-              <Group title="前に買った農家さん" list={r.repeat} useDate={v.useDate} />
-              <Group title="条件に合う農家さん" list={r.matched} useDate={v.useDate} />
-              <Group title="新しい農家さん" list={r.newcomers} useDate={v.useDate} />
-              <p className="text-xs text-muted">並び順は、これまでに表示された回数が少ない農家さんからです（人気順ではありません）。</p>
+              {/* 並べ方の切り替え（押すと、同じ候補を別の順番で見られる） */}
+              <div role="tablist" aria-label="並べ方" className="flex flex-wrap gap-2">
+                {sortTabs.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={sort === t.key}
+                    onClick={() => setSort(t.key)}
+                    className={`rounded-full border px-4 py-2 text-sm font-bold ${sort === t.key ? "border-leaf bg-leaf text-white" : "border-line bg-surface text-muted"}`}
+                  >
+                    {t.label}（{r[t.key].length}）
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted">{sortTabs.find((t) => t.key === sort)!.note}</p>
+              {r[sort].length === 0 ? (
+                <p className="text-sm text-muted">お試しで買ったことがある農家さんの出品は、今回の条件の中にはありません。</p>
+              ) : (
+                <Group list={r[sort]} useDate={v.useDate} />
+              )}
             </>
           )}
         </section>
@@ -71,11 +91,18 @@ export function SearchForm({ area }: { area: string }) {
   );
 }
 
-function Group({ title, list, useDate }: { title: string; list: Candidate[]; useDate?: string }) {
-  if (list.length === 0) return null;
+// 並べ方の項目（並び順はアプリの決まりで決める。人気順や AI では決めない：不変条件5・6）
+const sortTabs: { key: SortKey; label: string; note: string }[] = [
+  { key: "random", label: "ランダム", note: "前に買ったことがあるかに関係なく、毎回ばらばらに並べています。" },
+  { key: "cheap", label: "安い順", note: "送料込みの合計金額が安い順です。" },
+  { key: "early", label: "納品日が早い順", note: "届けられる最初の日が早い順です。" },
+  { key: "trial", label: "お試しを利用した農家", note: "前にお試しで買ったことがある農家さんの出品です。" },
+];
+
+function Group({ list, useDate }: { list: Candidate[]; useDate?: string }) {
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-lg font-bold">{title}</h2>
+      <p className="text-xs text-muted">同じ農家さんの出品は、続けて並ばないようにしています。</p>
       {/* パソコンの幅では、候補を横に並べる */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {list.map((c) => (

@@ -1,5 +1,6 @@
 // 出品を探す（飲食店の条件に、すべて合う出品だけを出す）
-// 並び順：3つの枠に分け、それぞれの中で「表示された回数が少ない農家さん」から（不変条件6）
+// 並び順：4つの並べ方（ランダム・安い順・納品日が早い順・お試しを利用した農家さん）を、アプリが決める（第2版 4-4、不変条件5・6）
+// どの並べ方でも、同じ農家さんの出品が続けて並ばないようにする
 import "server-only";
 import type { DeliveryMethod } from "./burden";
 import { expireOverdue, usedAmounts } from "./availability";
@@ -46,14 +47,38 @@ export type Candidate = {
   requestCount: number; // 返事待ちの件数
 };
 
-export type SearchResult = { repeat: Candidate[]; matched: Candidate[]; newcomers: Candidate[] };
+// 4つの並べ方。中身はどれも「条件に合う出品」で、並び順だけが違う（お試しは、その中の一部）
+export type SearchResult = { random: Candidate[]; cheap: Candidate[]; early: Candidate[]; trial: Candidate[] };
+export type SortKey = keyof SearchResult;
 
-// 1つの枠の中で、同じ農家さんの出品は2件まで
-const PER_PRODUCER_LIMIT = 2;
+const emptyResult: SearchResult = { random: [], cheap: [], early: [], trial: [] };
+
+// 並べ替えたい順のまま、同じ農家さんが続かないように並べ直す
+// 前と違う農家さんのうち、一番前にあるものを順に取り出す。どうしても続いてしまうとき（残りが1人の農家さんだけ）は、そのまま後ろに並べる
+function noRepeatInRow<T extends { producerId: string }>(list: T[]): T[] {
+  const rest = [...list];
+  const result: T[] = [];
+  while (rest.length > 0) {
+    const last = result.at(-1)?.producerId;
+    const i = rest.findIndex((c) => c.producerId !== last);
+    result.push(rest.splice(i === -1 ? 0 : i, 1)[0]);
+  }
+  return result;
+}
+
+// ばらばらに並べる（同じ値どうしの順番も、毎回くじ引きで決める）
+function shuffle<T>(list: T[]): T[] {
+  const copy = [...list];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 export async function searchListings(input: SearchInput): Promise<SearchResult> {
   const buyerPlace = findMunicipality(input.buyerPrefecture, input.buyerCity);
-  if (!buyerPlace) return { repeat: [], matched: [], newcomers: [] };
+  if (!buyerPlace) return emptyResult;
 
   // 回答期限を過ぎた返事待ちは、先に期限切れにして、仮押さえを解除しておく
   await expireOverdue(prisma);
@@ -121,40 +146,23 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
   }
 
   const producerIds = [...new Set(candidates.map((c) => c.producerId))];
-  // 前に買った農家さん：このお店と販売確定したことがある
-  const repeatRows = await prisma.order.findMany({
-    where: { buyerId: input.buyerId, status: "confirmed", listing: { producerId: { in: producerIds } } },
+  // お試しを利用した農家さん：このお店が、お試しで買ったことがある（お試しが販売確定した）
+  const trialRows = await prisma.order.findMany({
+    where: { buyerId: input.buyerId, isTrial: true, status: "confirmed", listing: { producerId: { in: producerIds } } },
     select: { listing: { select: { producerId: true } } },
   });
-  const repeatIds = new Set(repeatRows.map((r) => r.listing.producerId));
-  // 新しい農家さん：まだ1回も販売確定していない
-  const soldRows = await prisma.order.findMany({
-    where: { status: "confirmed", listing: { producerId: { in: producerIds } } },
-    select: { listing: { select: { producerId: true } } },
-  });
-  const soldIds = new Set(soldRows.map((r) => r.listing.producerId));
-  // 表示された回数
-  const exposures = await prisma.producerExposure.findMany({ where: { producerId: { in: producerIds } } });
-  const countOf = new Map(exposures.map((e) => [e.producerId, e.count]));
+  const trialIds = new Set(trialRows.map((r) => r.listing.producerId));
 
-  // 表示回数が少ない順に並べ、同じ農家さんは2件までにする
-  function arrange(list: typeof candidates) {
-    const sorted = [...list].sort((a, b) => (countOf.get(a.producerId) ?? 0) - (countOf.get(b.producerId) ?? 0));
-    const perProducer = new Map<string, number>();
-    return sorted.filter((c) => {
-      const n = perProducer.get(c.producerId) ?? 0;
-      perProducer.set(c.producerId, n + 1);
-      return n < PER_PRODUCER_LIMIT;
-    });
-  }
-  const repeat = arrange(candidates.filter((c) => repeatIds.has(c.producerId)));
-  const newcomers = arrange(candidates.filter((c) => !repeatIds.has(c.producerId) && !soldIds.has(c.producerId)));
-  const matched = arrange(candidates.filter((c) => !repeatIds.has(c.producerId) && soldIds.has(c.producerId)));
+  // 先にばらばらにしておくと、金額や日付が同じ出品どうしの順番もくじ引きになる（いつも同じ農家さんが上に来ない）
+  const base = shuffle(candidates);
+  const random = noRepeatInRow(base);
+  const cheap = noRepeatInRow([...base].sort((a, b) => a.totalYen - b.totalYen));
+  const early = noRepeatInRow([...base].sort((a, b) => a.earliestDelivery.localeCompare(b.earliestDelivery)));
+  const trial = noRepeatInRow(base.filter((c) => trialIds.has(c.producerId)));
 
-  // 表示した農家さんの「表示された回数」を1つ増やす
-  const shown = [...new Set([...repeat, ...matched, ...newcomers].map((c) => c.producerId))];
+  // 表示した農家さんの「表示された回数」を1つ増やす（露出の偏りを確かめるための記録。不変条件6）
   await Promise.all(
-    shown.map((producerId) =>
+    producerIds.map((producerId) =>
       prisma.producerExposure.upsert({
         where: { producerId },
         create: { producerId, count: 1 },
@@ -170,5 +178,5 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
       delete copy.producerId;
       return copy as Candidate;
     });
-  return { repeat: strip(repeat), matched: strip(matched), newcomers: strip(newcomers) };
+  return { random: strip(random), cheap: strip(cheap), early: strip(early), trial: strip(trial) };
 }
