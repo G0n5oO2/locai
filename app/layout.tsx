@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { AppNav } from "./ui/app-nav";
 
 // 日本語のフォント。日本語は文字の種類が多く subsets が使えないため、先読み（preload）はしない
 const notoSansJP = Noto_Sans_JP({
@@ -21,7 +22,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className={`${notoSansJP.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/* ナビゲーションバー（ログインしている人だけ。スマホは下、パソコンは上に出る） */}
+        <AppNav />
+      </body>
     </html>
   );
 }
