@@ -26,7 +26,7 @@ async function Listings() {
   const user = await requireProducer();
   // 自分の出品だけを読む（他人の出品は見えない）
   const listings = await prisma.listing.findMany({
-    where: { producerId: user.id },
+    where: { producerId: user.id, isTrial: false }, // お試し食材は、お試しのタブで見る
     orderBy: { createdAt: "desc" },
     include: { notices: { select: { buyerId: true } } },
   });

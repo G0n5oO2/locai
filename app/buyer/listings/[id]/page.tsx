@@ -35,7 +35,8 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
     where: { id },
     include: { producer: { select: { name: true, profile: true } } },
   });
-  if (!listing || listing.status !== "open" || listing.acceptUntil <= new Date() || !listing.producer.profile) notFound();
+  // お試し食材は、お試しの画面から申し込む
+  if (!listing || listing.isTrial || listing.status !== "open" || listing.acceptUntil <= new Date() || !listing.producer.profile) notFound();
   const profile = listing.producer.profile;
 
   const today = parseDate(jstDateText(new Date()))!;

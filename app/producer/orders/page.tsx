@@ -55,7 +55,7 @@ async function ProducerOrders() {
 
   // 受付中の出品ごとの集計（販売可能／購入希望／全件承認した場合の残量）
   const listings = await prisma.listing.findMany({
-    where: { producerId: user.id, status: "open" },
+    where: { producerId: user.id, status: "open", isTrial: false },
     orderBy: { createdAt: "desc" },
     include: { orders: { where: { status: { in: ["pending", "change_pending", "confirmed"] } }, select: { status: true, quantityG: true } } },
   });

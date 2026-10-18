@@ -88,6 +88,7 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
   const listings = await prisma.listing.findMany({
     where: {
       status: "open",
+      isTrial: false, // お試し食材は、お試しのタブにだけ出す
       acceptUntil: { gt: now },
       vegetable: { contains: input.vegetable, mode: "insensitive" },
       [methodColumn[input.method]]: true,

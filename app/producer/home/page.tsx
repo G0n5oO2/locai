@@ -52,7 +52,10 @@ async function Amounts() {
             <li key={l.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
               <div className="flex items-center justify-between gap-2">
                 {/* 食材名は利用者が入力したものなので、テキストとしてそのまま表示する */}
-                <p className="text-lg font-bold">{l.vegetable}</p>
+                <p className="text-lg font-bold">
+                  {l.vegetable}
+                  {l.isTrial && <span className="ml-2 rounded-full bg-leaf-soft px-2 py-0.5 text-xs font-medium text-leaf">お試し</span>}
+                </p>
                 <p className="text-sm text-muted">出品 {gramsToKgText(l.totalG)}kg</p>
               </div>
               <AmountBar totalG={l.totalG} confirmedG={u.confirmedG} reservedG={u.reservedG} />
