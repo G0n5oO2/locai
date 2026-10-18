@@ -71,8 +71,8 @@ export async function messageThreads(userId: string, side: "buyer" | "producer")
   const orders = await prisma.order.findMany({
     where: { ...mine, OR: [{ status: { in: [...MESSAGE_OPEN_STATUSES] } }, { messages: { some: {} } }] },
     include: {
-      listing: { select: { vegetable: true, producer: { select: { name: true } } } },
-      buyer: { select: { name: true } },
+      listing: { select: { vegetable: true, producer: { select: { id: true, name: true } } } },
+      buyer: { select: { id: true, name: true } },
       // 最後のメッセージ（書き出しと日時を出すため）
       messages: { orderBy: { createdAt: "desc" }, take: 1, select: { body: true, createdAt: true } },
     },
@@ -81,7 +81,8 @@ export async function messageThreads(userId: string, side: "buyer" | "producer")
   return orders
     .map((o) => ({
       orderId: o.id,
-      // 相手の名前（お店から見たら農家さん、農家さんから見たらお店）
+      // 相手（お店から見たら農家さん、農家さんから見たらお店）
+      partnerId: side === "buyer" ? o.listing.producer.id : o.buyer.id,
       partnerName: side === "buyer" ? o.listing.producer.name : o.buyer.name,
       vegetable: o.listing.vegetable,
       status: o.status,
@@ -91,4 +92,23 @@ export async function messageThreads(userId: string, side: "buyer" | "producer")
       sortAt: (o.messages[0]?.createdAt ?? o.createdAt).getTime(),
     }))
     .sort((a, b) => b.sortAt - a.sortAt);
+}
+
+// メッセージの画面の最初の一覧：相手（お店・農家さん）ごとにまとめる
+// 未読は合計し、最後のメッセージは一番新しいものを出す。並びは、最後にメッセージが来た順
+export async function messagePartners(userId: string, side: "buyer" | "producer") {
+  const threads = await messageThreads(userId, side);
+  const partners = new Map<string, { partnerId: string; partnerName: string; orderCount: number; unread: number; lastMessage: { body: string; createdAt: Date } | null; sortAt: number }>();
+  // threads は新しい順なので、相手ごとに最初に出てきたものが一番新しい
+  for (const t of threads) {
+    const p = partners.get(t.partnerId);
+    if (!p) {
+      partners.set(t.partnerId, { partnerId: t.partnerId, partnerName: t.partnerName, orderCount: 1, unread: t.unread, lastMessage: t.lastMessage, sortAt: t.sortAt });
+    } else {
+      p.orderCount += 1;
+      p.unread += t.unread;
+      if (!p.lastMessage && t.lastMessage) p.lastMessage = t.lastMessage;
+    }
+  }
+  return [...partners.values()];
 }

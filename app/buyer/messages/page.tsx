@@ -1,7 +1,7 @@
-// メッセージ（第2版 4-4）。注文ごとのやりとりの一覧
+// メッセージ（第2版 4-4）。相手（お店・農家さん）ごとのやりとりの一覧
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
-import { MessageList } from "@/app/ui/message-list";
+import { PartnerList } from "@/app/ui/message-list";
 import { requireBuyer } from "@/lib/session";
 
 export default function MessagesPage() {
@@ -17,5 +17,5 @@ export default function MessagesPage() {
 async function Threads() {
   // ログインしていない人・立場が違う人は、ここで別の画面へ移動する
   const user = await requireBuyer();
-  return <MessageList userId={user.id} side="buyer" />;
+  return <PartnerList userId={user.id} side="buyer" />;
 }

@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { placeOrder } from "../lib/orders";
 import { cancelOrder } from "../lib/order-flow";
-import { messageThreads, sendMessage, totalUnread } from "../lib/messages";
+import { messagePartners, messageThreads, sendMessage, totalUnread } from "../lib/messages";
 import { jstDateText, parseDate } from "../lib/datetime";
 
 const day = 24 * 60 * 60 * 1000;
@@ -67,6 +67,13 @@ try {
   check("ほかのお店・ほかの農家さんの一覧には出ない", !(await ids(otherBuyer, "buyer")).includes(o) && !(await ids(otherProducer, "producer")).includes(o));
   const top = (await messageThreads(producer, "producer")).find((t) => t.orderId === o);
   check("相手の名前は、農家さんから見るとお店の名前", top?.partnerName === (await prisma.user.findUniqueOrThrow({ where: { id: buyer } })).name);
+
+  // 相手ごとにまとめる（同じ農家さんへの注文は1つにまとまる）
+  const second = await newOrder();
+  const mineForBuyer = (await messageThreads(buyer, "buyer")).filter((t) => t.partnerId === producer).length;
+  const grouped = (await messagePartners(buyer, "buyer")).filter((p) => p.partnerId === producer);
+  check("同じ農家さんへの注文は、1つにまとまる", grouped.length === 1 && grouped[0].orderCount === mineForBuyer && (await ids(buyer, "buyer")).includes(second));
+  check("ほかのお店の一覧には、その農家さんとのまとまりは出ない（注文がなければ）", !(await messagePartners(otherBuyer, "buyer")).some((p) => p.partnerId === producer) || (await messageThreads(otherBuyer, "buyer")).some((t) => t.partnerId === producer));
 
   // 1分に5件まで（送った人ごとに数える。お店はもう1件送っているので、あと4件で上限）
   const results = [];
