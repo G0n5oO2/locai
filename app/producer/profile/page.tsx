@@ -42,6 +42,7 @@ async function ProfileEditor() {
         band3Yen: profile.deliveryBand3Yen?.toString() ?? "",
         selfDeliveryYen: profile.selfDeliveryYen?.toString() ?? "",
         pickupPlace: profile.pickupPlace ?? "",
+        paymentMethods: profile.paymentMethods.join(","),
       }
     : { shipLimitDelivery: "10", shipLimitSelf: "10", shipLimitPickup: "10", trialAmount: "0.5" };
 

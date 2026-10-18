@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { deliveryBands } from "@/lib/fees";
 import { methodLabel } from "@/lib/burden";
+import { paymentLabel } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 
 const roleLabel = { producer: "生産者", buyer: "飲食店" } as const;
@@ -93,6 +94,8 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
         <dd>{profile.selfDeliveryYen === null ? "配達しない" : `${profile.selfDeliveryYen.toLocaleString()}円（1件あたり）`}</dd>
         <dt className="text-muted">引き取り</dt>
         <dd>{profile.pickupPlace === null ? "引き取りなし" : profile.pickupPlace}</dd>
+        <dt className="text-muted">支払方法</dt>
+        <dd>{profile.paymentMethods.length === 0 ? "まだ設定していません（お店とはメッセージで相談）" : profile.paymentMethods.map((m) => paymentLabel[m]).join("、")}</dd>
       </dl>
       <Link href="/producer/profile" className="rounded-xl border border-line px-4 py-3 text-center font-bold">
         プロフィールを編集する

@@ -4,6 +4,7 @@
 import { useActionState } from "react";
 import { saveProfile, type ProfileFormState } from "@/app/actions/profile";
 import { Field } from "@/app/ui/field";
+import { paymentLabel, paymentMethods, paymentNote } from "@/lib/payment";
 import { RegionSelect } from "@/app/ui/region-select";
 
 type Props = {
@@ -16,9 +17,32 @@ type Props = {
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 
+// 保存ボタンの下に、直すところをまとめて出すときの欄の名前
+const fieldNames: Record<string, string> = {
+  prefecture: "畑の地域（府県）",
+  city: "畑の地域（市区町村）",
+  items: "栽培している品目",
+  commitment: "栽培のこだわり",
+  shipLimitDelivery: "1回の出荷（宅配発送）",
+  shipLimitSelf: "1回の出荷（自分で配達）",
+  shipLimitPickup: "1回の出荷（引き取り）",
+  trialAmount: "お試しの量",
+  band1Kg: "宅配発送の送料（1行目）",
+  band1Yen: "宅配発送の送料（1行目）",
+  band2Kg: "宅配発送の送料（2行目）",
+  band2Yen: "宅配発送の送料（2行目）",
+  band3Kg: "宅配発送の送料（3行目）",
+  band3Yen: "宅配発送の送料（3行目）",
+  selfDeliveryYen: "自分で配達するときの料金",
+  pickupPlace: "引き取りの場所",
+  paymentMethods: "受け付ける支払方法",
+};
+
 export function ProfileForm({ citiesByPrefecture, initial }: Props) {
   const [state, action, pending] = useActionState<ProfileFormState, FormData>(saveProfile, {});
   const values = state.values ?? initial;
+  // 選んである支払方法（「cash,transfer」のように「,」でつないで持っている）
+  const checkedPayments = (values.paymentMethods ?? "").split(",");
 
   return (
     <form action={action} className="flex flex-col gap-6">
@@ -73,9 +97,38 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         <p className="text-xs text-muted">販売確定したお店にだけ表示します。</p>
       </div>
 
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-bold">受け付ける支払方法（1つ以上）</legend>
+        <p className="text-xs text-muted">お店は、ここで選んだ方法の中から選びます。支払い自体は、アプリの外で行います。</p>
+        {paymentMethods.map((m) => (
+          <label key={m} className="flex items-start gap-2 rounded-xl border border-line bg-surface p-3">
+            <input type="checkbox" name="paymentMethods" value={m} defaultChecked={checkedPayments.includes(m)} className="mt-1" />
+            <span className="flex flex-col">
+              <span className="font-bold">{paymentLabel[m]}</span>
+              <span className="text-xs text-muted">{paymentNote[m]}</span>
+            </span>
+          </label>
+        ))}
+        {state.errors?.paymentMethods && <p className={errorClass}>{state.errors.paymentMethods[0]}</p>}
+      </fieldset>
+
       <button type="submit" disabled={pending} className="rounded-xl bg-earth px-4 py-3 font-bold text-white disabled:opacity-60">
         {pending ? "保存しています…" : "保存する"}
       </button>
+
+      {/* 直すところがあれば、ボタンのすぐ下にまとめて出す（上のほうの欄のエラーにも気づけるように） */}
+      {state.errors && Object.keys(state.errors).length > 0 && (
+        <div role="alert" className="flex flex-col gap-1 rounded-xl border border-red-700 p-3 dark:border-red-400">
+          <p className="text-sm font-bold text-red-700 dark:text-red-400">保存できませんでした。次のところを直してください。</p>
+          <ul className="flex list-disc flex-col gap-1 pl-5">
+            {Object.entries(state.errors).map(([key, messages]) => (
+              <li key={key} className={errorClass}>
+                {fieldNames[key] ?? key}：{messages?.[0]}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </form>
   );
 }

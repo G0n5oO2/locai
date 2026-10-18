@@ -25,7 +25,8 @@ export function RegionSelect({ legend, note, citiesByPrefecture, defaultPrefectu
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="mb-1 text-sm font-bold">{legend}</legend>
-      <select name="prefecture" value={prefecture} onChange={(e) => setPrefecture(e.target.value)} className={inputClass} aria-label="府県">
+      {/* 送信のあとフォームが元に戻されても、選んだ府県が消えないように、defaultValue で持つ */}
+      <select name="prefecture" defaultValue={defaultPrefecture ?? ""} onChange={(e) => setPrefecture(e.target.value)} className={inputClass} aria-label="府県">
         <option value="">府県を選ぶ</option>
         {Object.keys(citiesByPrefecture).map((p) => (
           <option key={p} value={p}>{p}</option>

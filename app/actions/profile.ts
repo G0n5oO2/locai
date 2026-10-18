@@ -4,6 +4,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { paymentMethodSchema } from "@/lib/payment";
 import { kgTextToGrams } from "@/lib/quantity";
 import { findMunicipality } from "@/lib/region";
 import { requireProducer } from "@/lib/session";
@@ -110,11 +111,20 @@ function checkBands(fee: z.infer<typeof feeSchema>) {
   return errors;
 }
 
+// 受け付ける支払方法：1つ以上、同じものは1回だけ
+const paymentsSchema = z
+  .array(paymentMethodSchema)
+  .min(1, "受け付ける支払方法を1つ以上選んでください")
+  .transform((list) => [...new Set(list)]);
+
 export async function saveProfile(_state: ProfileFormState, formData: FormData): Promise<ProfileFormState> {
   // 誰のプロフィールかは、画面から送られた値ではなく、ログイン中の人で決める（他人のものを書き換えられないように）
   const user = await requireProducer();
 
-  const values = Object.fromEntries(fields.map((f) => [f, String(formData.get(f) ?? "")]));
+  const values: Record<string, string> = Object.fromEntries(fields.map((f) => [f, String(formData.get(f) ?? "")]));
+  // 支払方法はチェックボックスなので、選ばれたものをすべて受け取る（画面に戻すときは「,」でつなぐ）
+  const paymentInput = formData.getAll("paymentMethods").map(String);
+  values.paymentMethods = paymentInput.join(",");
   const parsed = profileSchema.safeParse(values);
   if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors, values };
 
@@ -122,6 +132,13 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
   if (!feeParsed.success) return { errors: z.flattenError(feeParsed.error).fieldErrors, values };
   const bandErrors = checkBands(feeParsed.data);
   if (Object.keys(bandErrors).length > 0) return { errors: bandErrors, values };
+
+  const payments = paymentsSchema.safeParse(paymentInput);
+  if (!payments.success) return { errors: { paymentMethods: [payments.error.issues[0].message] }, values };
+  // 代金引換は宅配のときだけ使うので、宅配の送料がないのに選んでいたら直してもらう
+  if (payments.data.includes("cod") && feeParsed.data.band1Kg === null) {
+    return { errors: { paymentMethods: ["代金引換は宅配のときだけ使えます。宅配の送料を入れるか、代金引換を外してください"] }, values };
+  }
 
   const { trialAmount, ...rest } = parsed.data;
   // 府県と市区町村の組み合わせが、一覧にあるものか確かめる
@@ -141,6 +158,7 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
     deliveryBand3Yen: fee.band3Yen,
     selfDeliveryYen: fee.selfDeliveryYen,
     pickupPlace: fee.pickupPlace === "" ? null : fee.pickupPlace,
+    paymentMethods: payments.data,
   };
   // 初回は作る、2回目からは更新する
   await prisma.producerProfile.upsert({
