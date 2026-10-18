@@ -12,7 +12,7 @@ import { LeftoverPanel } from "./leftover-panel";
 
 export default function ListingsPage() {
   return (
-    <AuthShell title="出品一覧">
+    <AuthShell title="出品一覧" wide>
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <Listings />
       </Suspense>
@@ -49,11 +49,12 @@ async function Listings() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/producer/listings/new" className="rounded-xl bg-earth px-4 py-3 text-center font-bold text-white">
+      <Link href="/producer/listings/new" className="rounded-xl bg-earth px-4 py-3 md:w-fit md:px-8 text-center font-bold text-white">
         新しく出品する
       </Link>
       {listings.length === 0 && <p className="text-muted">まだ出品はありません。</p>}
-      <ul className="flex flex-col gap-3">
+      {/* パソコンの幅では、カードを横に並べる */}
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {listings.map((l) => (
           <li key={l.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
             <div className="flex items-center justify-between gap-2">

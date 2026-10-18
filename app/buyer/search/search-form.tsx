@@ -22,7 +22,8 @@ export function SearchForm({ area }: { area: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <form action={action} className="flex flex-col gap-4">
+      {/* 入力の部分は、パソコンでも読みやすい幅のまま */}
+      <form action={action} className="flex flex-col gap-4 md:max-w-md">
         <Field label="食材（空なら種類を問わない）" name="vegetable" maxLength={50} placeholder="例：賀茂茄子" defaultValue={v.vegetable} errors={state.errors?.vegetable} />
         <div className="grid grid-cols-2 gap-3">
           <Field label="希望数量（kg）" name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
@@ -75,9 +76,12 @@ function Group({ title, list, useDate }: { title: string; list: Candidate[]; use
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-bold">{title}</h2>
-      {list.map((c) => (
-        <CandidateCard key={c.listingId} c={c} useDate={useDate ?? ""} />
-      ))}
+      {/* パソコンの幅では、候補を横に並べる */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {list.map((c) => (
+          <CandidateCard key={c.listingId} c={c} useDate={useDate ?? ""} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { SearchForm } from "./search-form";
 
 export default function SearchPage() {
   return (
-    <AuthShell title="仕入れ候補を探す">
+    <AuthShell title="仕入れ候補を探す" wide>
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <Search />
       </Suspense>

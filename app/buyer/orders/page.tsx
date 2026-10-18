@@ -15,7 +15,7 @@ import { CloseWantedButton } from "./close-wanted-button";
 
 export default function BuyerOrdersPage() {
   return (
-    <AuthShell title="自分の注文">
+    <AuthShell title="自分の注文" wide>
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <Orders />
       </Suspense>
@@ -46,7 +46,7 @@ async function Orders() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/buyer/search" className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">
+      <Link href="/buyer/search" className="rounded-xl bg-leaf px-4 py-3 md:w-fit md:px-8 text-center font-bold text-white">
         仕入れ候補を探す
       </Link>
       {wanted.length > 0 && (
@@ -65,7 +65,8 @@ async function Orders() {
         </section>
       )}
       {orders.length === 0 && <p className="text-muted">まだ注文はありません。</p>}
-      <ul className="flex flex-col gap-3">
+      {/* パソコンの幅では、カードを横に並べる */}
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {orders.map((o) => (
           <li key={o.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
             <div className="flex items-center justify-between gap-2">

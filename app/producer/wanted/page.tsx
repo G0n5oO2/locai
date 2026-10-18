@@ -12,7 +12,7 @@ import { nearWanted } from "@/lib/wanted";
 
 export default function WantedPage() {
   return (
-    <AuthShell title="近くの「探しています」">
+    <AuthShell title="近くの「探しています」" wide>
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <WantedList />
       </Suspense>
@@ -31,21 +31,24 @@ async function WantedList() {
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted">畑（{profile.prefecture} {profile.city}）から70km以内のお店です。お店の名前や住所は表示されません。</p>
       {wanted.length === 0 && <p className="text-muted">今は、近くに「探しています」はありません。</p>}
-      {wanted.map((w) => (
-        <div key={w.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
-          <p className="font-bold">
-            {w.vegetable}
-            {kindLabel[w.kind]}・{gramsToKgText(w.quantityG)}kg
-          </p>
-          {w.substitutes.length > 0 && <p>代わりにOK：{w.substitutes.join("、")}</p>}
-          <p className="text-muted">
-            使用日 {formatDate(new Date(w.useDate))}・{methodLabel[w.method]}・{w.area}
-          </p>
-          <Link href={`/producer/listings/new${w.vegetable ? `?vegetable=${encodeURIComponent(w.vegetable)}` : ""}`} className="mt-1 font-bold text-earth underline">
-            これに応えて出品する
-          </Link>
-        </div>
-      ))}
+      {/* パソコンの幅では、カードを横に並べる */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {wanted.map((w) => (
+          <div key={w.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
+            <p className="font-bold">
+              {w.vegetable}
+              {kindLabel[w.kind]}・{gramsToKgText(w.quantityG)}kg
+            </p>
+            {w.substitutes.length > 0 && <p>代わりにOK：{w.substitutes.join("、")}</p>}
+            <p className="text-muted">
+              使用日 {formatDate(new Date(w.useDate))}・{methodLabel[w.method]}・{w.area}
+            </p>
+            <Link href={`/producer/listings/new${w.vegetable ? `?vegetable=${encodeURIComponent(w.vegetable)}` : ""}`} className="mt-1 font-bold text-earth underline">
+              これに応えて出品する
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

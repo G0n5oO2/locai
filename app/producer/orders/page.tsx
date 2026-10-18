@@ -19,7 +19,7 @@ import { OrderChecks } from "./order-checks";
 
 export default function ProducerOrdersPage() {
   return (
-    <AuthShell title="申し込みの一覧">
+    <AuthShell title="申し込みの一覧" wide>
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <ProducerOrders />
       </Suspense>
@@ -146,54 +146,57 @@ async function ProducerOrders() {
                 );
               })}
             </div>
-            {list.map((o) => (
-              <article key={o.id} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  {/* お店の名前は、申し込んだ相手にだけ見える */}
-                  <p className="font-bold">{o.buyer.name}</p>
-                  <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${o.status === "confirmed" ? "bg-earth text-white" : "bg-earth-soft text-earth"}`}>
-                    {orderStatusLabel[o.status]}
-                  </span>
-                </div>
-                <p>
-                  {o.listing.vegetable} {gramsToKgText(o.quantityG)}kg・{methodLabel[o.method]}
-                  {o.isTrial && "・お試し"}
-                </p>
-                <p>
-                  商品代 {o.itemYen.toLocaleString()}円／送料・配達料 {o.shippingYen.toLocaleString()}円
-                </p>
-                <Link href={`/orders/${o.id}`} className="font-bold text-earth underline">
-                  注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
-                </Link>
-                {/* 使用日は、お店が見せてよいとしたときだけ */}
-                {o.showUseDate && <p className="text-muted">お店の使用日：{formatDate(o.useDate)}</p>}
-                {o.buyer.buyerProfile && <p className="text-muted">お店の地域：{o.buyer.buyerProfile.prefecture} {o.buyer.buyerProfile.city}</p>}
-                {/* 届け先の住所は、販売確定した注文にだけ見せる（不変条件4） */}
-                {o.status === "confirmed" && o.method !== "pickup" && o.buyer.buyerProfile && (
-                  <p>届け先：{o.buyer.buyerProfile.address}</p>
-                )}
-                {o.status === "pending" && (
-                  <>
-                    <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
-                    <OrderChecks orderId={o.id} checks={checks.get(o.id) ?? []} />
-                    <OrderButtons orderId={o.id} />
-                    <Link href={`/producer/orders/${o.id}/propose`} className="text-center font-bold text-earth underline">
-                      条件の変更を提案する
-                    </Link>
-                  </>
-                )}
-                {o.status === "change_pending" && o.proposedDeliveryDate && o.proposedQuantityG !== null && (
-                  <div className="rounded-xl bg-earth-soft p-3">
-                    <p className="font-bold">提案中（お店の返事待ち）</p>
-                    <p>
-                      納品日 {formatDate(o.deliveryDate)} → {formatDate(o.proposedDeliveryDate)}／数量 {gramsToKgText(o.quantityG)}kg → {gramsToKgText(o.proposedQuantityG)}kg
-                    </p>
-                    <p>断られたら：{o.confirmIfRefused ? "元の条件で販売確定" : "見送り"}</p>
-                    <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
+            {/* パソコンの幅では、カードを横に並べる */}
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {list.map((o) => (
+                <article key={o.id} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    {/* お店の名前は、申し込んだ相手にだけ見える */}
+                    <p className="font-bold">{o.buyer.name}</p>
+                    <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${o.status === "confirmed" ? "bg-earth text-white" : "bg-earth-soft text-earth"}`}>
+                      {orderStatusLabel[o.status]}
+                    </span>
                   </div>
-                )}
-              </article>
-            ))}
+                  <p>
+                    {o.listing.vegetable} {gramsToKgText(o.quantityG)}kg・{methodLabel[o.method]}
+                    {o.isTrial && "・お試し"}
+                  </p>
+                  <p>
+                    商品代 {o.itemYen.toLocaleString()}円／送料・配達料 {o.shippingYen.toLocaleString()}円
+                  </p>
+                  <Link href={`/orders/${o.id}`} className="font-bold text-earth underline">
+                    注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
+                  </Link>
+                  {/* 使用日は、お店が見せてよいとしたときだけ */}
+                  {o.showUseDate && <p className="text-muted">お店の使用日：{formatDate(o.useDate)}</p>}
+                  {o.buyer.buyerProfile && <p className="text-muted">お店の地域：{o.buyer.buyerProfile.prefecture} {o.buyer.buyerProfile.city}</p>}
+                  {/* 届け先の住所は、販売確定した注文にだけ見せる（不変条件4） */}
+                  {o.status === "confirmed" && o.method !== "pickup" && o.buyer.buyerProfile && (
+                    <p>届け先：{o.buyer.buyerProfile.address}</p>
+                  )}
+                  {o.status === "pending" && (
+                    <>
+                      <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
+                      <OrderChecks orderId={o.id} checks={checks.get(o.id) ?? []} />
+                      <OrderButtons orderId={o.id} />
+                      <Link href={`/producer/orders/${o.id}/propose`} className="text-center font-bold text-earth underline">
+                        条件の変更を提案する
+                      </Link>
+                    </>
+                  )}
+                  {o.status === "change_pending" && o.proposedDeliveryDate && o.proposedQuantityG !== null && (
+                    <div className="rounded-xl bg-earth-soft p-3">
+                      <p className="font-bold">提案中（お店の返事待ち）</p>
+                      <p>
+                        納品日 {formatDate(o.deliveryDate)} → {formatDate(o.proposedDeliveryDate)}／数量 {gramsToKgText(o.quantityG)}kg → {gramsToKgText(o.proposedQuantityG)}kg
+                      </p>
+                      <p>断られたら：{o.confirmIfRefused ? "元の条件で販売確定" : "見送り"}</p>
+                      <p className="text-muted">回答期限：{formatJstDateTime(o.answerUntil)}</p>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
           </section>
         );
       })}
