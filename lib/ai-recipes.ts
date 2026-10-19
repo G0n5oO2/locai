@@ -3,9 +3,8 @@
 import "server-only";
 import { z } from "zod";
 import { askJson } from "./ai";
+import type { Genre } from "./recipe-genres";
 
-export const GENRES = ["すべて", "和食", "洋食", "中華"] as const;
-export type Genre = (typeof GENRES)[number];
 export type RecipeIdea = { name: string; description: string; amount: string };
 
 const answerSchema = z.object({

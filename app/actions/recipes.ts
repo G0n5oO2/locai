@@ -1,7 +1,8 @@
 "use server";
 // 旬の野菜の料理の案を AI に頼む（サーバー側で動く）。外から直接呼ばれても、ログイン中の飲食店しか使えない
 import { z } from "zod";
-import { GENRES, suggestRecipes, type RecipeIdea } from "@/lib/ai-recipes";
+import { suggestRecipes, type RecipeIdea } from "@/lib/ai-recipes";
+import { GENRES } from "@/lib/recipe-genres";
 import { requireBuyer } from "@/lib/session";
 
 export async function recipeAction(vegetable: string, genre: string): Promise<{ recipes?: RecipeIdea[]; message?: string }> {

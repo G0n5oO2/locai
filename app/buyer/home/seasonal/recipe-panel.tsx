@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { recipeAction } from "@/app/actions/recipes";
 import type { RecipeIdea } from "@/lib/ai-recipes";
-
-const genres = ["すべて", "和食", "洋食", "中華"] as const;
+import { GENRES as genres } from "@/lib/recipe-genres";
 
 export function RecipePanel({ vegetable }: { vegetable: string }) {
   const [genre, setGenre] = useState<(typeof genres)[number]>("すべて");
@@ -42,8 +41,9 @@ export function RecipePanel({ vegetable }: { vegetable: string }) {
           <ul className="grid gap-3 md:grid-cols-3">
             {result.recipes.map((r) => (
               // AI の文は、テキストとしてそのまま表示する
-              <li key={r.name} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
-                <p className="text-base font-bold">{r.name}</p>
+              <li key={r.name} className="flex flex-col gap-2 rounded-2xl bg-surface p-4 text-sm shadow-sm ring-1 ring-line">
+                <span className="w-fit rounded-full bg-leaf-soft px-2 py-0.5 text-xs font-bold text-leaf">{genre === "すべて" ? "おすすめ" : genre}</span>
+                <p className="text-lg font-bold leading-snug">{r.name}</p>
                 <p className="leading-6">{r.description}</p>
                 <p className="text-muted">使う量（目安）：{r.amount}</p>
               </li>

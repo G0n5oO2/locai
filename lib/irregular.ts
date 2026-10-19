@@ -1,5 +1,7 @@
-// 規格外の野菜の特集（第2版 4-4「ホーム」）
-// 出すのは：受付中のふつうの出品で「規格外」のもの、畑とお店が近く、最低注文量より残りがあるもの
+// 近くで受付中のふつうの出品を、特集のために集める（第2版 4-4「ホーム」）
+// - 規格外の野菜の特集：品の状態が「規格外」のもの
+// - 季節の野菜：名前に旬の野菜の名前を含むもの
+// 出すのは、畑とお店が近く、最低注文量より残りがあるものだけ
 // 並びはランダムで、同じ農家さんが続かないようにする（不変条件6：人気順にしない）
 import "server-only";
 import { expireOverdue, usedAmounts } from "./availability";
@@ -7,12 +9,20 @@ import { prisma } from "./prisma";
 import { findMunicipality, isNear } from "./region";
 import { noRepeatInRow, shuffle } from "./search";
 
-export async function irregularListings(buyerPrefecture: string, buyerCity: string) {
+type Filter = { quality?: "normal" | "irregular"; vegetableIncludes?: string };
+
+export async function featuredListings(buyerPrefecture: string, buyerCity: string, filter: Filter) {
   const shop = findMunicipality(buyerPrefecture, buyerCity);
   if (!shop) return [];
   await expireOverdue(prisma);
   const listings = await prisma.listing.findMany({
-    where: { isTrial: false, quality: "irregular", status: "open", acceptUntil: { gt: new Date() } },
+    where: {
+      isTrial: false,
+      status: "open",
+      acceptUntil: { gt: new Date() },
+      ...(filter.quality ? { quality: filter.quality } : {}),
+      ...(filter.vegetableIncludes ? { vegetable: { contains: filter.vegetableIncludes } } : {}),
+    },
     include: { producer: { select: { name: true, profile: true } } },
   });
   const used = await usedAmounts(prisma, listings.map((l) => l.id));
@@ -28,3 +38,10 @@ export async function irregularListings(buyerPrefecture: string, buyerCity: stri
   });
   return noRepeatInRow(shuffle(shown));
 }
+
+// 規格外の野菜の特集
+export function irregularListings(buyerPrefecture: string, buyerCity: string) {
+  return featuredListings(buyerPrefecture, buyerCity, { quality: "irregular" });
+}
+
+export type FeaturedListing = Awaited<ReturnType<typeof featuredListings>>[number];
