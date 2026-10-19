@@ -44,9 +44,10 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
   const [commitment, setCommitment] = useState(values.commitment ?? "");
   const [suggestion, setSuggestion] = useState<{ text?: string; message?: string } | null>(null);
   const [polishing, startPolish] = useTransition();
-  const polish = () =>
+  // previous を渡すと、前の案とは違う「別の案」を頼む
+  const polish = (previous?: string) =>
     startPolish(async () => {
-      setSuggestion(await polishCommitmentAction(commitment));
+      setSuggestion(await polishCommitmentAction(commitment, previous));
     });
   // 選んである支払方法（「cash,transfer」のように「,」でつないで持っている）
   const checkedPayments = (values.paymentMethods ?? "").split(",");
@@ -79,7 +80,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         />
         {state.errors?.commitment && <p className={errorClass}>{state.errors.commitment[0]}</p>}
         <p className="text-xs text-muted">箇条書きでかまいません。下のボタンで、AI が読みやすい文の案を出します。</p>
-        <button type="button" onClick={polish} disabled={polishing} className="w-fit rounded-xl border border-earth px-4 py-2 text-sm font-bold text-earth disabled:opacity-60">
+        <button type="button" onClick={() => polish()} disabled={polishing} className="w-fit rounded-xl border border-earth px-4 py-2 text-sm font-bold text-earth disabled:opacity-60">
           {polishing ? "AI が考えています…" : "AI で文に整える"}
         </button>
         {suggestion?.message && <p className="text-sm text-muted">{suggestion.message}</p>}
@@ -91,9 +92,13 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
             <p className="text-xs font-bold text-red-700 dark:text-red-400">
               AI は、あなたが書いていないことを足してしまうことがあります。内容が合っているか確かめてから使ってください。
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            {/* 「この文を使う」「別の案を出す」「使わない（閉じる）」の3つから選ぶ */}
+            <div className="grid grid-cols-3 gap-2">
               <button type="button" onClick={() => setSuggestion(null)} className="rounded-xl border border-line px-3 py-2 text-sm font-bold">
                 使わない
+              </button>
+              <button type="button" onClick={() => polish(suggestion.text)} disabled={polishing} className="rounded-xl border border-earth px-3 py-2 text-sm font-bold text-earth disabled:opacity-60">
+                {polishing ? "考えています…" : "別の案を出す"}
               </button>
               <button
                 type="button"

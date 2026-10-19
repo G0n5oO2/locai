@@ -159,11 +159,13 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
 
 // 栽培のこだわりを、AI に読みやすい文に整えてもらう（案を返すだけで、保存はしない）
 // 外から直接呼ばれても、ログイン中の生産者しか使えない
-export async function polishCommitmentAction(draft: string): Promise<{ text?: string; message?: string }> {
+// previous（前の案）を渡すと、別の言い方の案を出す
+export async function polishCommitmentAction(draft: string, previous?: string): Promise<{ text?: string; message?: string }> {
   const user = await requireProducer();
   const text = z.string().trim().min(1).max(500).safeParse(draft);
   if (!text.success) return { message: "先に、こだわりを箇条書きなどで入力してください（500文字まで）" };
-  const polished = await polishCommitment(user.id, text.data);
+  const before = previous === undefined ? undefined : z.string().trim().max(500).safeParse(previous);
+  const polished = await polishCommitment(user.id, text.data, before?.success ? before.data : undefined);
   // AI が使えないときは、案なしで続けられる
   if (!polished) return { message: "今は AI の案を出せませんでした。入力した文のまま保存できます" };
   return { text: polished };

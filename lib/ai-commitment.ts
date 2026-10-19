@@ -14,15 +14,17 @@ const jsonSchema = {
 };
 
 // AI に渡すのは、生産者が書いた「こだわり」の文だけ（名前や住所は渡さない）
-export async function polishCommitment(userId: string, draft: string): Promise<string | null> {
+// previous を渡すと、その案とは違う言い方の「別の案」を出す
+export async function polishCommitment(userId: string, draft: string, previous?: string): Promise<string | null> {
   const answer = await askJson({
     userId,
     task:
       "あなたは、農家さんのプロフィールの文を整える係です。データの「こだわりのメモ」は、農家さんが箇条書きなどで簡単に書いたものです。" +
       "これを、飲食店の人が読んで分かりやすい、ていねいな文（です・ます調、300文字くらいまで）に整えてください。" +
       "メモに書かれていることだけを使い、書かれていない事実（栽培方法・農薬や肥料・味・産地・受賞歴など）は絶対に足さないでください。" +
-      "大げさな言い方や、ほかの農家さんと比べる言い方もしないでください。",
-    data: { こだわりのメモ: draft },
+      "大げさな言い方や、ほかの農家さんと比べる言い方もしないでください。" +
+      (previous ? "データの「前の案」とは、文の組み立てや言い回しを変えた、別の案にしてください（内容はメモのまま）。" : ""),
+    data: previous ? { こだわりのメモ: draft, 前の案: previous } : { こだわりのメモ: draft },
     jsonSchema,
     schema: answerSchema,
   });
