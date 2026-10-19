@@ -28,7 +28,7 @@ async function Profile() {
   const user = await requireUser();
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-5">
+      <div className="flex flex-col gap-1 card p-5">
         <p className={`w-fit rounded-full px-3 py-0.5 text-sm font-medium ${user.role === "producer" ? "bg-earth-soft text-earth" : "bg-leaf-soft text-leaf"}`}>
           {roleLabel[user.role]}
         </p>
@@ -38,7 +38,7 @@ async function Profile() {
       {user.role === "producer" && <ProducerProfileSummary userId={user.id} />}
       {user.role === "buyer" && <BuyerProfileSummary userId={user.id} />}
       <form action={signOut}>
-        <button type="submit" className="w-full rounded-xl border border-line px-4 py-3 font-bold">
+        <button type="submit" className="w-full btn btn-plain">
           ログアウト
         </button>
       </form>
@@ -51,10 +51,10 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
   const profile = await prisma.producerProfile.findUnique({ where: { userId } });
   if (!profile) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-earth bg-earth-soft p-5">
+      <div className="flex flex-col gap-3 rounded-3xl border border-earth bg-earth-soft p-5">
         <p className="font-bold">はじめに、生産者プロフィールを作りましょう</p>
         <p className="text-sm text-muted">畑の地域やこだわりは、お店があなたを知る手がかりになります。</p>
-        <Link href="/producer/profile" className="rounded-xl bg-earth px-4 py-3 text-center font-bold text-white">
+        <Link href="/producer/profile" className="btn btn-earth">
           プロフィールを作る
         </Link>
       </div>
@@ -62,16 +62,16 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
   }
   return (
     <>
-    <Link href="/producer/orders" className="rounded-xl bg-earth px-4 py-3 text-center font-bold text-white">
+    <Link href="/producer/orders" className="btn btn-earth">
       申し込みの一覧
     </Link>
-    <Link href="/producer/listings" className="rounded-xl border border-earth px-4 py-3 text-center font-bold text-earth">
+    <Link href="/producer/listings" className="btn btn-outline-earth">
       出品一覧・新しく出品する
     </Link>
-    <Link href="/producer/wanted" className="rounded-xl border border-earth px-4 py-3 text-center font-bold text-earth">
+    <Link href="/producer/wanted" className="btn btn-outline-earth">
       近くの「探しています」
     </Link>
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+    <div className="flex flex-col gap-3 card p-5">
       <p className="font-bold">生産者プロフィール</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted">畑の地域</dt>
@@ -95,7 +95,7 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
         <dt className="text-muted">支払方法</dt>
         <dd>{profile.paymentMethods.length === 0 ? "まだ設定していません（お店とはメッセージで相談）" : profile.paymentMethods.map((m) => paymentLabel[m]).join("、")}</dd>
       </dl>
-      <Link href="/producer/profile" className="rounded-xl border border-line px-4 py-3 text-center font-bold">
+      <Link href="/producer/profile" className="btn btn-plain">
         プロフィールを編集する
       </Link>
     </div>
@@ -108,10 +108,10 @@ async function BuyerProfileSummary({ userId }: { userId: string }) {
   const profile = await prisma.buyerProfile.findUnique({ where: { userId } });
   if (!profile) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-leaf bg-leaf-soft p-5">
+      <div className="flex flex-col gap-3 rounded-3xl border border-leaf bg-leaf-soft p-5">
         <p className="font-bold">はじめに、お店のプロフィールを作りましょう</p>
         <p className="text-sm text-muted">お店の地域から、近くの農家さんの出品を探せるようになります。</p>
-        <Link href="/buyer/profile" className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">
+        <Link href="/buyer/profile" className="btn btn-leaf">
           プロフィールを作る
         </Link>
       </div>
@@ -119,14 +119,14 @@ async function BuyerProfileSummary({ userId }: { userId: string }) {
   }
   return (
     <>
-    <Link href="/buyer/search" className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">
+    <Link href="/buyer/search" className="btn btn-leaf">
       仕入れ候補を探す
     </Link>
-    <Link href="/buyer/orders" className="rounded-xl border border-leaf px-4 py-3 text-center font-bold text-leaf">
+    <Link href="/buyer/orders" className="btn btn-outline-leaf">
       自分の注文
     </Link>
     <BuyerNotices userId={userId} />
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+    <div className="flex flex-col gap-3 card p-5">
       <p className="font-bold">お店のプロフィール</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted">お店の地域</dt>
@@ -134,7 +134,7 @@ async function BuyerProfileSummary({ userId }: { userId: string }) {
         <dt className="text-muted">届け先</dt>
         <dd>{profile.address}</dd>
       </dl>
-      <Link href="/buyer/profile" className="rounded-xl border border-line px-4 py-3 text-center font-bold">
+      <Link href="/buyer/profile" className="btn btn-plain">
         プロフィールを編集する
       </Link>
     </div>
@@ -153,9 +153,9 @@ async function BuyerNotices({ userId }: { userId: string }) {
   if (notices.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="font-bold">お知らせ</h2>
+      <h2 className="section-title">お知らせ</h2>
       {notices.map(({ id, listing: l }) => (
-        <div key={id} className="flex flex-col gap-1 rounded-2xl border border-leaf bg-leaf-soft p-4 text-sm">
+        <div key={id} className="flex flex-col gap-1 rounded-3xl border border-leaf bg-leaf-soft p-4 text-sm">
           <p className="font-bold">あなたの「探しています」に合う出品があります</p>
           <p>
             {l.vegetable}・{gramsToKgText(l.unitG)}kg あたり {l.unitPriceYen.toLocaleString()}円（{l.producer.name}・{l.producer.profile?.prefecture} {l.producer.profile?.city}）
@@ -163,7 +163,7 @@ async function BuyerNotices({ userId }: { userId: string }) {
           <p className="text-muted">
             受け渡し：{[l.offersDelivery && methodLabel.delivery, l.offersSelf && methodLabel.self, l.offersPickup && methodLabel.pickup].filter(Boolean).join("／")}
           </p>
-          <Link href={`/buyer/listings/${l.id}`} className="mt-1 rounded-xl bg-leaf px-3 py-2 text-center font-bold text-white">
+          <Link href={`/buyer/listings/${l.id}`} className="mt-1 btn btn-sm btn-leaf">
             出品を見る
           </Link>
         </div>

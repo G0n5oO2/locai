@@ -45,7 +45,7 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
         </div>
         <p className="text-xs text-muted">お店の地域（{area}）から 70km 以内の農家さんの出品を探します。</p>
         {state.message && <p className={errorClass}>{state.message}</p>}
-        <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+        <button type="submit" disabled={pending} className="btn btn-leaf">
           {pending ? "探しています…" : "仕入れ候補を探す"}
         </button>
       </form>
@@ -53,7 +53,7 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
       {r && (
         <section aria-label="検索結果" className="flex flex-col gap-6">
           {count === 0 ? (
-            <div className="rounded-2xl border border-line bg-surface p-5 text-sm leading-6">
+            <div className="card p-5 text-sm leading-6">
               <p className="font-bold">条件に合う出品は、今はありません。</p>
               <p className="text-muted">数量・予算・使用日・受け取り方法を変えると、見つかるかもしれません。</p>
             </div>
@@ -117,7 +117,7 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
   // 1kg あたりの値段は、市場と比べるための参考（計算には使わない）
   const perKg = Math.round((c.unitPriceYen * 1000) / c.unitG);
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
+    <article className="flex flex-col gap-3 card p-4">
       <div className="flex flex-col gap-1">
         {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
         <p className="text-lg font-bold">{c.vegetable}</p>
@@ -167,7 +167,7 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
       {/* 探したときの条件を持って、購入希望の画面へ */}
       <Link
         href={`/buyer/listings/${c.listingId}?${new URLSearchParams({ quantity: gramsToKgText(c.quantityG), method: c.method, useDate })}`}
-        className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white"
+        className="btn btn-leaf"
       >
         この内容で購入希望へ進む
       </Link>

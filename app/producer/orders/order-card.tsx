@@ -19,7 +19,7 @@ export type ProducerOrder = Prisma.OrderGetPayload<{
 
 export function ProducerOrderCard({ order, unread, checks }: { order: ProducerOrder; unread: number; checks: string[] }) {
   return (
-    <article className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4 text-sm">
+    <article className="flex flex-col gap-2 card p-4 text-sm">
       <div className="flex items-center justify-between gap-2">
         {/* お店の名前は、申し込んだ相手にだけ見える */}
         <p className="font-bold">{order.buyer.name}</p>

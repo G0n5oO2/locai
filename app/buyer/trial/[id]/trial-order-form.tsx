@@ -97,7 +97,7 @@ export function TrialOrderForm({ listingId, requestKey, price, fees, methods, re
       </div>
 
       {/* 金額の目安（不変条件2：本当の金額は、送ったときにサーバーが計算する）。合計は大きく、色を変える */}
-      <div className="rounded-2xl bg-leaf-soft p-4 text-sm">
+      <div className="rounded-3xl bg-leaf-soft p-4 text-sm">
         {q && !("error" in q) ? (
           <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1">
             <dt>商品代</dt>
@@ -114,7 +114,7 @@ export function TrialOrderForm({ listingId, requestKey, price, fees, methods, re
 
       {state.message && <p className={errorClass}>{state.message}</p>}
       <p className="text-sm font-bold">送っただけでは、購入は決まりません。農家さんが承認すると「販売確定」になります。</p>
-      <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-leaf">
         {pending ? "送っています…" : "お試し希望を送る"}
       </button>
     </form>

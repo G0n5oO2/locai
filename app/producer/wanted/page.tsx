@@ -34,7 +34,7 @@ async function WantedList() {
       {/* パソコンの幅では、カードを横に並べる */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {wanted.map((w) => (
-          <div key={w.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
+          <div key={w.id} className="flex flex-col gap-1 card p-4 text-sm">
             <p className="font-bold">
               {w.vegetable}
               {kindLabel[w.kind]}・{gramsToKgText(w.quantityG)}kg

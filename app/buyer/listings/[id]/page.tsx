@@ -47,7 +47,7 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
+      <div className="flex flex-col gap-1 card p-4">
         {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
         <p className="text-lg font-bold">{listing.vegetable}</p>
         <p className="text-sm text-muted">

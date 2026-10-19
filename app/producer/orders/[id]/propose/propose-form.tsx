@@ -69,7 +69,7 @@ export function ProposeForm({ orderId, currentDateLabel, dateOptions, unitText, 
       </fieldset>
 
       {state.message && <p className={errorClass}>{state.message}</p>}
-      <button type="submit" disabled={pending} className="rounded-xl bg-earth px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-earth">
         {pending ? "提案を送っています…" : "提案を送る"}
       </button>
     </form>

@@ -27,7 +27,7 @@ async function Trial({ searchParams }: PageProps<"/producer/trial">) {
   const current = tab === "items" ? "items" : "requests";
   return (
     <div className="flex flex-col gap-4">
-      <nav aria-label="申し込みとお試し食材の切り替え" className="flex gap-2 rounded-2xl bg-surface p-1 md:w-fit">
+      <nav aria-label="申し込みとお試し食材の切り替え" className="card flex gap-2 rounded-full p-1 md:w-fit">
         {[
           { key: "requests", label: "申し込み", href: "/producer/trial" },
           { key: "items", label: "お試し食材", href: "/producer/trial?tab=items" },
@@ -36,7 +36,7 @@ async function Trial({ searchParams }: PageProps<"/producer/trial">) {
             key={t.key}
             href={t.href}
             aria-current={current === t.key ? "page" : undefined}
-            className={`flex-1 rounded-xl px-6 py-2 text-center font-bold md:flex-none ${current === t.key ? "bg-earth text-white" : "text-muted"}`}
+            className={`flex-1 rounded-full px-6 py-2 text-center font-bold md:flex-none ${current === t.key ? "bg-earth text-white" : "text-muted"}`}
           >
             {t.label}
           </Link>
@@ -94,7 +94,7 @@ async function TrialItems({ producerId }: { producerId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/producer/trial/new" className="rounded-xl bg-earth px-4 py-3 text-center font-bold text-white md:w-fit md:px-8">
+      <Link href="/producer/trial/new" className="btn btn-earth md:w-fit md:px-8">
         お試し食材を登録する
       </Link>
       {items.length === 0 && <p className="text-muted">まだお試し食材はありません。まだ買ったことがないお店に、少しだけ試してもらえます。</p>}
@@ -104,7 +104,7 @@ async function TrialItems({ producerId }: { producerId: string }) {
           const accepting = i.status === "open" && i.acceptUntil > now;
           const restG = Math.max(i.totalG - u.confirmedG - u.reservedG, 0);
           return (
-            <li key={i.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
+            <li key={i.id} className="flex flex-col gap-1 card p-4 text-sm">
               <div className="flex items-center justify-between gap-2">
                 {/* 食材名・説明は利用者が入力したものなので、テキストとしてそのまま表示する */}
                 <p className="text-lg font-bold">{i.vegetable}</p>
@@ -131,7 +131,7 @@ async function TrialItems({ producerId }: { producerId: string }) {
               {accepting && (
                 <form action={closeTrialItem} className="mt-2">
                   <input type="hidden" name="listingId" value={i.id} />
-                  <button type="submit" className="w-full rounded-xl border border-line px-3 py-2 font-bold">
+                  <button type="submit" className="w-full btn btn-sm btn-plain">
                     受付を終える（削除）
                   </button>
                 </form>

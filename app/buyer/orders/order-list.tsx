@@ -29,7 +29,7 @@ export async function BuyerOrderList({ userId, trial }: { userId: string; trial:
       {/* パソコンの幅では、カードを横に並べる */}
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {orders.map((o) => (
-          <li key={o.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
+          <li key={o.id} className="flex flex-col gap-1 card p-4">
             <div className="flex items-center justify-between gap-2">
               <p className="text-lg font-bold">{o.listing.vegetable}</p>
               <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${o.status === "confirmed" ? "bg-leaf text-white" : "bg-leaf-soft text-leaf"}`}>

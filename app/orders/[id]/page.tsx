@@ -46,7 +46,7 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
+      <div className="flex flex-col gap-1 card p-4 text-sm">
         <div className="flex items-center justify-between gap-2">
           <p className="text-lg font-bold">{order.listing.vegetable}</p>
           <span className="rounded-full bg-leaf-soft px-3 py-0.5 text-xs font-medium text-leaf">{orderStatusLabel[order.status]}</span>
@@ -71,13 +71,13 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold">メッセージ</h2>
+        <h2 className="section-title">メッセージ</h2>
         {order.messages.length === 0 && <p className="text-sm text-muted">まだメッセージはありません。</p>}
         <ul className="flex flex-col gap-2">
           {order.messages.map((m) => {
             const mine = m.senderId === user.id;
             return (
-              <li key={m.id} className={`flex max-w-[85%] flex-col gap-1 rounded-2xl p-3 text-sm ${mine ? "self-end bg-leaf-soft" : "self-start border border-line bg-surface"}`}>
+              <li key={m.id} className={`flex max-w-[85%] flex-col gap-1 rounded-3xl p-3 text-sm ${mine ? "self-end bg-leaf-soft" : "self-start border border-line bg-surface"}`}>
                 <span className="text-xs text-muted">
                   {mine ? "あなた" : m.sender.name}・{formatJstDateTime(m.createdAt)}
                 </span>

@@ -159,13 +159,13 @@ export function ListingForm({ limits, available, wanted, initialVegetable, initi
 
       {/* 出荷の負担が基準を超えたまま出品しようとしたときの注意書き */}
       {state.confirmOver && (
-        <div role="alertdialog" aria-labelledby="over-title" className="flex flex-col gap-3 rounded-2xl border-2 border-red-700 p-4 dark:border-red-400">
+        <div role="alertdialog" aria-labelledby="over-title" className="flex flex-col gap-3 rounded-3xl border-2 border-red-700 p-4 dark:border-red-400">
           <p id="over-title" className="font-bold">
             最大{state.confirmOver.maxCount}件の発送になる可能性があります。あなたの基準（{state.confirmOver.methodLabel}：{state.confirmOver.limit}件）を超えています。
           </p>
           <p className="text-sm">このまま出品しますか？</p>
           <div className="grid grid-cols-2 gap-3">
-            <a href="#minOrder" className="rounded-xl border border-line px-3 py-3 text-center font-bold">最低注文量を見直す</a>
+            <a href="#minOrder" className="btn btn-plain">最低注文量を見直す</a>
             <button type="submit" name="confirmOver" value="yes" disabled={pending} className="rounded-xl bg-red-700 px-3 py-3 font-bold text-white disabled:opacity-60">
               このまま出品する
             </button>
@@ -175,7 +175,7 @@ export function ListingForm({ limits, available, wanted, initialVegetable, initi
 
       {/* 送信中はボタンを押せなくして、二重の出品を防ぐ */}
       {!state.confirmOver && (
-        <button type="submit" disabled={pending} className="rounded-xl bg-earth px-4 py-3 font-bold text-white disabled:opacity-60">
+        <button type="submit" disabled={pending} className="btn btn-earth">
           {pending ? "出品しています…" : "出品する"}
         </button>
       )}

@@ -15,13 +15,13 @@ export function OrderButtons({ orderId }: { orderId: string }) {
       <div className="grid grid-cols-2 gap-2">
         <form action={approve}>
           <input type="hidden" name="orderId" value={orderId} />
-          <button type="submit" disabled={busy} className="w-full rounded-xl bg-earth px-3 py-2 font-bold text-white disabled:opacity-60">
+          <button type="submit" disabled={busy} className="w-full btn btn-sm btn-earth">
             {approving ? "承認しています…" : "承認する"}
           </button>
         </form>
         <form action={decline}>
           <input type="hidden" name="orderId" value={orderId} />
-          <button type="submit" disabled={busy} className="w-full rounded-xl border border-line px-3 py-2 font-bold disabled:opacity-60">
+          <button type="submit" disabled={busy} className="w-full btn btn-sm btn-plain">
             {declining ? "見送っています…" : "見送る"}
           </button>
         </form>

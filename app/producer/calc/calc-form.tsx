@@ -58,7 +58,7 @@ export function CalcForm() {
 
       {/* 共通：商品代（ここに入れると、下の全部に同じ商品代が入る） */}
       <section className="flex flex-col gap-3 md:max-w-md">
-        <h2 className="font-bold">野菜の単価と数量</h2>
+        <h2 className="section-title section-title-earth">野菜の単価と数量</h2>
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1 text-sm font-bold">
             単価（1kg あたりの円）
@@ -80,7 +80,7 @@ export function CalcForm() {
       {/* 受け渡し方法ごとの試算と、市場に出したときの試算を横に並べる */}
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {results.map((r) => (
-          <div key={r.key} className={`flex flex-col gap-3 rounded-2xl border bg-surface p-4 ${r.receipt !== null && r.receipt === best ? "border-earth" : "border-line"}`}>
+          <div key={r.key} className={`flex flex-col gap-3 rounded-3xl border bg-surface p-4 ${r.receipt !== null && r.receipt === best ? "border-earth" : "border-line"}`}>
             <h3 className="font-bold">{r.label}</h3>
             <p className="text-sm">商品代：{itemYen === null ? "—" : `${itemYen.toLocaleString()}円`}</p>
             {r.hasDelivery ? (
@@ -96,7 +96,7 @@ export function CalcForm() {
           </div>
         ))}
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-line bg-surface p-4">
+        <div className="flex flex-col gap-3 rounded-3xl border border-dashed border-line bg-surface p-4">
           <h3 className="font-bold">比べる：市場に出した場合</h3>
           <YenField label="市場での単価（1kg あたりの円）" value={marketPrice} onChange={setMarketPrice} invalid={marketPrice.trim() !== "" && (marketYen === null || marketYen === 0)} />
           <YenField label="出荷の費用（手数料・運賃など）" value={marketCost} onChange={setMarketCost} invalid={marketCostYen === null} />

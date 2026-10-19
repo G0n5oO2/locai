@@ -13,7 +13,7 @@ export function MessageForm({ orderId }: { orderId: string }) {
       <label htmlFor="body" className="text-sm font-bold">メッセージ（500文字まで）</label>
       <textarea id="body" name="body" rows={3} maxLength={500} placeholder="例：お支払いは振込でよいですか？" className="rounded-xl border border-line bg-surface px-3 py-3 text-base" />
       {state.message && <p className="text-sm text-red-700 dark:text-red-400">{state.message}</p>}
-      <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-leaf">
         {pending ? "送っています…" : "送る"}
       </button>
     </form>

@@ -93,7 +93,7 @@ export function TrialForm({ available }: { available: Record<DeliveryMethod, boo
 
       <p className="text-xs text-muted">写真は、あとで追加できるようにする予定です。</p>
 
-      <button type="submit" disabled={pending} className="rounded-xl bg-earth px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-earth">
         {pending ? "登録しています…" : "お試し食材を登録する"}
       </button>
 

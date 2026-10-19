@@ -52,7 +52,7 @@ async function Features() {
         <p className="text-sm">
           近くで出品あり：<strong className="text-xl text-leaf">{listedKinds}種類</strong>
         </p>
-        <span className="mt-auto rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white">旬の野菜を見る →</span>
+        <span className="mt-auto btn btn-leaf">旬の野菜を見る →</span>
       </Link>
 
       {/* 規格外の野菜の特集 */}
@@ -75,7 +75,7 @@ async function Features() {
             </p>
           )}
         </div>
-        <span className="mt-auto rounded-xl bg-earth px-4 py-3 text-center font-bold text-white">規格外の野菜を見る →</span>
+        <span className="mt-auto btn btn-earth">規格外の野菜を見る →</span>
       </Link>
     </div>
   );

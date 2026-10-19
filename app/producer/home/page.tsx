@@ -58,14 +58,14 @@ async function Amounts() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/producer/listings/new" className="rounded-xl bg-earth px-4 py-3 text-center font-bold text-white md:w-fit md:px-8">
+      <Link href="/producer/listings/new" className="btn btn-earth md:w-fit md:px-8">
         新しく出品する
       </Link>
       {groups.size === 0 && <p className="text-muted">今、受付中の出品や返事待ちの申し込みはありません。</p>}
       {/* パソコンの幅では、カードを横に並べる */}
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {[...groups.values()].map((g) => (
-          <li key={g.vegetable} className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-4">
+          <li key={g.vegetable} className="flex flex-col gap-4 card p-4">
             {/* 食材名は利用者が入力したものなので、テキストとしてそのまま表示する */}
             <p className="text-lg font-bold">{g.vegetable}</p>
             {g.normal.count > 0 && <AmountBlock kind="normal" totals={g.normal} />}

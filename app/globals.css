@@ -46,3 +46,46 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* ===== 形の決まり（第2版 4-1：ふっくら・立体的） =====
+   画面ごとに形を書かず、ここの名前（card・btn など）を使う。1か所直せば、全部の画面が変わる */
+@layer components {
+  /* カード：大きく丸く、やわらかい影で浮いて見える */
+  .card {
+    @apply rounded-3xl bg-surface shadow-[0_4px_16px_rgba(80,70,40,0.10)];
+  }
+
+  /* ボタン：丸い形。下の影で、押せるのが分かる。押すと少し沈む */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-full px-6 py-3 text-center font-bold transition-transform active:translate-y-0.5 disabled:opacity-60;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+  }
+  /* 色の付いたボタン（お店の画面は緑、農家さんの画面は茶色） */
+  .btn-leaf {
+    @apply bg-leaf text-white shadow-[0_3px_0_rgba(0,0,0,0.15)];
+  }
+  .btn-earth {
+    @apply bg-earth text-white shadow-[0_3px_0_rgba(0,0,0,0.15)];
+  }
+  /* 2番目のボタン（白地に色の枠） */
+  .btn-outline-leaf {
+    @apply bg-surface text-leaf ring-2 ring-leaf;
+  }
+  .btn-outline-earth {
+    @apply bg-surface text-earth ring-2 ring-earth;
+  }
+  /* 目立たせなくてよいボタン（もどる・取り消すなど） */
+  .btn-plain {
+    @apply bg-surface text-foreground ring-1 ring-line;
+  }
+
+  /* 見出し（画面の中のまとまり）：左に色の縦の線 */
+  .section-title {
+    @apply flex items-center gap-2 text-lg font-bold before:h-5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-leaf before:content-[''];
+  }
+  .section-title-earth {
+    @apply before:bg-earth;
+  }
+}

@@ -43,7 +43,7 @@ export function SignUpForm({ initialRole }: { initialRole: string }) {
       {state.message && <p className="text-sm text-red-700 dark:text-red-400">{state.message}</p>}
 
       {/* 送信中はボタンを押せなくして、二重登録を防ぐ */}
-      <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-leaf">
         {pending ? "登録しています…" : "登録する"}
       </button>
       <p className="text-center text-sm text-muted">

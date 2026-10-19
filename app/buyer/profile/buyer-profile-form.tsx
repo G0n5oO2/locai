@@ -30,7 +30,7 @@ export function BuyerProfileForm({ citiesByPrefecture, initial }: Props) {
         <Field label="届け先の住所" name="address" maxLength={200} autoComplete="street-address" defaultValue={values.address} errors={state.errors?.address} />
         <p className="text-xs text-muted">販売確定した相手の農家さんにだけ表示します。</p>
       </div>
-      <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-leaf">
         {pending ? "保存しています…" : "保存する"}
       </button>
     </form>

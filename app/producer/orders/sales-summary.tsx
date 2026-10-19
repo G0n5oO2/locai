@@ -16,7 +16,7 @@ export async function SalesSummary() {
     <section aria-label="売上のまとめ" className="flex flex-col gap-3">
       <p className="text-xs text-muted">販売確定した注文の商品代を、納品日の月で数えています（送料は含みません）。</p>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+        <div className="overflow-x-auto card">
           <table className="w-full text-sm">
             <caption className="px-3 pt-3 text-left font-bold">月別の売上（直近6か月）</caption>
             <thead>
@@ -41,7 +41,7 @@ export async function SalesSummary() {
           </table>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+        <div className="overflow-x-auto card">
           <table className="w-full text-sm">
             <caption className="px-3 pt-3 text-left font-bold">野菜別（売れ筋の順・直近6か月）</caption>
             <thead>

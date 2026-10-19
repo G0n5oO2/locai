@@ -69,7 +69,7 @@ export function LeftoverPanel({ listingId, vegetable, remainingG, expired, wante
                   <DaysChoice />
                 </>
               )}
-              <button type="submit" disabled={busy} className="rounded-xl bg-earth px-3 py-2 font-bold text-white disabled:opacity-60">
+              <button type="submit" disabled={busy} className="btn btn-sm btn-earth">
                 {notifying ? "知らせています…" : notifiedCount > 0 ? `新しく探しているお店 ${newCount}件に知らせる` : "探しているお店に出品を知らせる"}
               </button>
             </>
@@ -82,16 +82,16 @@ export function LeftoverPanel({ listingId, vegetable, remainingG, expired, wante
       <form action={keep} className="flex flex-col gap-2">
         <input type="hidden" name="listingId" value={listingId} />
         <DaysChoice />
-        <button type="submit" disabled={busy} className="rounded-xl border border-earth px-3 py-2 font-bold text-earth disabled:opacity-60">
+        <button type="submit" disabled={busy} className="btn btn-sm btn-outline-earth">
           {keeping ? "延ばしています…" : "販売を継続する（受付期限を延ばす）"}
         </button>
       </form>
-      <Link href={`/producer/listings/new?from=${listingId}`} className="rounded-xl border border-line px-3 py-2 text-center font-bold">
+      <Link href={`/producer/listings/new?from=${listingId}`} className="btn btn-sm btn-plain">
         条件を見直して再出品する
       </Link>
       <form action={close}>
         <input type="hidden" name="listingId" value={listingId} />
-        <button type="submit" disabled={busy} className="w-full rounded-xl border border-line px-3 py-2 font-bold disabled:opacity-60">
+        <button type="submit" disabled={busy} className="w-full btn btn-sm btn-plain">
           {closing ? "終了しています…" : "受付を終了する"}
         </button>
       </form>

@@ -69,7 +69,7 @@ export default function Home() {
           <h2 className="text-xl font-bold">登録から使いはじめるまで</h2>
           <ol className="grid gap-3 sm:grid-cols-3">
             {signupSteps.map((step, index) => (
-              <li key={step.title} className="flex flex-col items-center gap-2 rounded-2xl bg-surface p-4 text-center">
+              <li key={step.title} className="flex flex-col items-center gap-2 card p-4 text-center">
                 <span className="flex size-16 items-center justify-center rounded-full bg-leaf-soft text-leaf">{step.icon}</span>
                 <p className="font-bold">
                   {index + 1}. {step.title}
@@ -86,7 +86,7 @@ export default function Home() {
           {entrances.map((entrance) => (
             <div
               key={entrance.title}
-              className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5"
+              className="flex flex-col gap-4 card p-5"
             >
               <div className="flex flex-col gap-1">
                 <p
@@ -110,8 +110,8 @@ export default function Home() {
               </ul>
               <Link
                 href={`/signup?role=${entrance.role}`}
-                className={`rounded-xl px-4 py-3 text-center text-base font-bold text-white ${
-                  entrance.tone === "leaf" ? "bg-leaf" : "bg-earth"
+                className={`btn ${
+                  entrance.tone === "leaf" ? "btn-leaf" : "btn-earth"
                 }`}
               >
                 {entrance.title}
@@ -125,7 +125,7 @@ export default function Home() {
           <h2 className="text-xl font-bold">使い方</h2>
           <ol className="flex flex-col gap-3">
             {steps.map((step, index) => (
-              <li key={step.title} className="flex gap-4 rounded-2xl bg-surface p-4">
+              <li key={step.title} className="flex gap-4 card p-4">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-leaf text-sm font-bold text-white">
                   {index + 1}
                 </span>

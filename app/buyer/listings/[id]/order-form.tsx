@@ -104,7 +104,7 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       </label>
 
       {/* 金額の目安（不変条件2：本当の金額は、送ったときにサーバーが計算する） */}
-      <div className="rounded-2xl bg-leaf-soft p-4 text-sm">
+      <div className="rounded-3xl bg-leaf-soft p-4 text-sm">
         {q && !("error" in q) ? (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
             <dt>商品代</dt>
@@ -123,7 +123,7 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
 
       <p className="text-sm font-bold">送っただけでは、購入は決まりません。農家さんが承認すると「販売確定」になります。</p>
       {/* 送信中はボタンを押せなくして、二重送信を防ぐ（押してしまっても、目印で1件にまとめる） */}
-      <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-leaf">
         {pending ? "送っています…" : "購入希望を送る"}
       </button>
     </form>

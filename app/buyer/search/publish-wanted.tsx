@@ -20,11 +20,11 @@ export function PublishWanted({ values }: { values: Record<string, string> }) {
   }
 
   if (state.done) {
-    return <p className="rounded-2xl bg-leaf-soft p-4 text-sm font-bold">「探しています」として公開しました。近くの農家さんに、地域と条件だけが伝わります。</p>;
+    return <p className="rounded-3xl bg-leaf-soft p-4 text-sm font-bold">「探しています」として公開しました。近くの農家さんに、地域と条件だけが伝わります。</p>;
   }
 
   return (
-    <form action={action} className="flex flex-col gap-3 rounded-2xl border border-leaf bg-surface p-4 text-sm">
+    <form action={action} className="flex flex-col gap-3 rounded-3xl border border-leaf bg-surface p-4 text-sm">
       <p className="font-bold">この条件を「探しています」として、近くの農家さんに公開できます</p>
       <p className="text-muted">伝わるのは、地域・食材・希望数量・使用日・受け取り方法だけです。お店の名前・住所・予算は伝わりません。</p>
       {/* 探したときの条件をそのまま送る */}
@@ -56,7 +56,7 @@ export function PublishWanted({ values }: { values: Record<string, string> }) {
           <div className="flex flex-col gap-2 rounded-xl bg-leaf-soft p-3">
             <label htmlFor="usage" className="font-bold">料理の用途（任意・AI の提案に使います）</label>
             <input id="usage" name="usage" maxLength={50} placeholder="例：焼物、炊き合わせ" className={inputClass} />
-            <button type="submit" formAction={suggest} disabled={suggesting} className="rounded-xl border border-leaf bg-surface px-3 py-2 font-bold text-leaf disabled:opacity-60">
+            <button type="submit" formAction={suggest} disabled={suggesting} className="btn btn-sm btn-outline-leaf">
               {suggesting ? "AI が考えています…" : "AI に代わりの野菜を提案してもらう"}
             </button>
             {suggestState.message && <p className="text-xs">{suggestState.message}</p>}
@@ -85,7 +85,7 @@ export function PublishWanted({ values }: { values: Record<string, string> }) {
         </div>
       )}
       {state.message && <p className="text-red-700 dark:text-red-400">{state.message}</p>}
-      <button type="submit" disabled={pending} className="rounded-xl bg-leaf px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-leaf">
         {pending ? "公開しています…" : "「探しています」として公開する"}
       </button>
     </form>

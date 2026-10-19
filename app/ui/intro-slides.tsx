@@ -118,7 +118,7 @@ export function IntroSlides() {
           {slide.body.length > 0 && (
             <ul className="flex flex-col gap-3">
               {slide.body.map((line) => (
-                <li key={line} className="rounded-2xl bg-surface p-4 leading-7">
+                <li key={line} className="card p-4 leading-7">
                   {line}
                 </li>
               ))}
@@ -135,14 +135,14 @@ export function IntroSlides() {
           </div>
           <div className="flex gap-3">
             {index > 0 && (
-              <button type="button" onClick={() => setIndex(index - 1)} className="flex-1 rounded-xl border border-line px-4 py-3 font-bold">
+              <button type="button" onClick={() => setIndex(index - 1)} className="flex-1 btn btn-plain">
                 もどる
               </button>
             )}
             <button
               type="button"
               onClick={last ? finish : () => setIndex(index + 1)}
-              className="flex-1 rounded-xl bg-leaf px-4 py-3 font-bold text-white"
+              className="flex-1 btn btn-leaf"
             >
               {last ? "はじめる" : "つぎへ"}
             </button>
@@ -175,7 +175,7 @@ function Troubles() {
           <ul className="flex flex-1 flex-col gap-2" aria-label={`${t.who}の困りごと`}>
             {t.lines.map((line) => (
               // 吹き出し：左上に小さな三角を付けて、人物が話しているように見せる
-              <li key={line} className="relative rounded-2xl bg-surface px-3 py-2 text-sm leading-6 shadow-sm">
+              <li key={line} className="relative card px-3 py-2 text-sm leading-6 shadow-sm">
                 <span aria-hidden className="absolute top-3 -left-1.5 size-3 rotate-45 bg-surface" />
                 {line}
               </li>
@@ -255,7 +255,7 @@ function Connect() {
       </div>
       <ol className="flex flex-col gap-2">
         {features.map((f, i) => (
-          <li key={f} className="flex items-start gap-3 rounded-2xl bg-surface p-3 text-sm leading-6">
+          <li key={f} className="flex items-start gap-3 card p-3 text-sm leading-6">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-leaf text-sm font-bold text-white">{i + 1}</span>
             {f}
           </li>

@@ -19,13 +19,13 @@ export function BuyerOrderButtons({ orderId, canRespond, refuseLabel }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <form action={accept}>
             <input type="hidden" name="orderId" value={orderId} />
-            <button type="submit" disabled={busy} className="w-full rounded-xl bg-leaf px-3 py-2 font-bold text-white disabled:opacity-60">
+            <button type="submit" disabled={busy} className="w-full btn btn-sm btn-leaf">
               {accepting ? "送っています…" : "提案に同意する"}
             </button>
           </form>
           <form action={refuse}>
             <input type="hidden" name="orderId" value={orderId} />
-            <button type="submit" disabled={busy} className="w-full rounded-xl border border-line px-3 py-2 font-bold disabled:opacity-60">
+            <button type="submit" disabled={busy} className="w-full btn btn-sm btn-plain">
               {refusing ? "送っています…" : refuseLabel}
             </button>
           </form>

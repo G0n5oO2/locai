@@ -70,7 +70,7 @@ async function Propose({ params }: PageProps<"/producer/orders/[id]/propose">) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-line bg-surface p-4 text-sm">
+      <div className="card p-4 text-sm">
         <p className="font-bold">{order.buyer.name}</p>
         <p>
           {order.listing.vegetable} {gramsToKgText(order.quantityG)}kg・{methodLabel[method]}・納品 {formatDate(order.deliveryDate)}

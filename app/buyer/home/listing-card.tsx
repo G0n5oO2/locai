@@ -11,11 +11,11 @@ export function ListingCard({ item }: { item: FeaturedListing }) {
   // 1kg あたりの値段は、比べるための参考（計算には使わない）
   const perKg = Math.round((l.unitPriceYen * 1000) / l.unitG);
   return (
-    <Link href={`/buyer/listings/${l.id}`} className="relative flex h-full flex-col gap-3 overflow-hidden rounded-3xl bg-surface p-4 shadow-sm ring-1 ring-line transition-transform hover:-translate-y-0.5">
+    <Link href={`/buyer/listings/${l.id}`} className="relative flex h-full flex-col gap-3 overflow-hidden card p-4 transition-transform hover:-translate-y-0.5">
       {/* 右上の印（規格外か通常品か） */}
       <span className={`absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-bold text-white ${irregular ? "bg-earth" : "bg-leaf"}`}>{irregular ? "規格外" : "通常品"}</span>
       {/* 出品の写真は、写真のステップで作る。それまでは絵を出す */}
-      <div className={`flex justify-center rounded-2xl py-2 ${irregular ? "bg-earth-soft" : "bg-leaf-soft"}`}>{irregular ? <IrregularArt /> : <VegIcon name={l.vegetable} />}</div>
+      <div className={`flex justify-center rounded-3xl py-2 ${irregular ? "bg-earth-soft" : "bg-leaf-soft"}`}>{irregular ? <IrregularArt /> : <VegIcon name={l.vegetable} />}</div>
       <div>
         {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
         <p className="text-xl font-bold">{l.vegetable}</p>
@@ -39,7 +39,7 @@ export function ListingCard({ item }: { item: FeaturedListing }) {
         <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${irregular ? "bg-earth-soft text-earth" : "bg-leaf-soft text-leaf"}`}>1kg 約{perKg.toLocaleString()}円</span>
       </div>
       <p className="text-xs text-muted">最低 {gramsToKgText(l.minOrderG)}kg から</p>
-      <span className={`mt-auto rounded-xl px-4 py-3 text-center font-bold text-white ${irregular ? "bg-earth" : "bg-leaf"}`}>詳しく見る・希望する →</span>
+      <span className={`btn mt-auto ${irregular ? "btn-earth" : "btn-leaf"}`}>詳しく見る・希望する →</span>
     </Link>
   );
 }

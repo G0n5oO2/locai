@@ -85,13 +85,13 @@ async function ProducerOrders() {
     <div className="flex flex-col gap-6">
       {listings.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold">受付中の出品</h2>
+          <h2 className="section-title section-title-earth">受付中の出品</h2>
           {listings.map((l) => {
             const requested = l.orders.filter((o) => o.status !== "confirmed");
             const requestedG = requested.reduce((sum, o) => sum + o.quantityG, 0);
             const confirmedG = l.orders.filter((o) => o.status === "confirmed").reduce((sum, o) => sum + o.quantityG, 0);
             return (
-              <div key={l.id} className="rounded-2xl border border-line bg-surface p-4 text-sm">
+              <div key={l.id} className="card p-4 text-sm">
                 <p className="font-bold">{l.vegetable}</p>
                 <p>
                   販売可能 {gramsToKgText(l.totalG)}kg／購入希望 {gramsToKgText(requestedG)}kg・{requested.length}件／販売確定 {gramsToKgText(confirmedG)}kg
@@ -114,7 +114,7 @@ async function ProducerOrders() {
         return (
           <section key={day} className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-bold">{formatDate(new Date(day))} の納品</h2>
+              <h2 className="section-title section-title-earth">{formatDate(new Date(day))} の納品</h2>
               {counts.map(({ method, count, trial }) => {
                 const over = count - limitOf[method];
                 // 基準を超えた日は、提案の候補を並べる（設計メモ2章）

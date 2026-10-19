@@ -25,7 +25,7 @@ async function Trial({ searchParams }: PageProps<"/buyer/trial">) {
   const current = tab === "orders" ? "orders" : "items";
   return (
     <div className="flex flex-col gap-4">
-      <nav aria-label="お試しの希望とお試しの注文の切り替え" className="flex gap-2 rounded-2xl bg-surface p-1 md:w-fit">
+      <nav aria-label="お試しの希望とお試しの注文の切り替え" className="card flex gap-2 rounded-full p-1 md:w-fit">
         {[
           { key: "items", label: "お試しの希望", href: "/buyer/trial" },
           { key: "orders", label: "お試しの注文", href: "/buyer/trial?tab=orders" },
@@ -34,7 +34,7 @@ async function Trial({ searchParams }: PageProps<"/buyer/trial">) {
             key={t.key}
             href={t.href}
             aria-current={current === t.key ? "page" : undefined}
-            className={`flex-1 rounded-xl px-6 py-2 text-center font-bold md:flex-none ${current === t.key ? "bg-leaf text-white" : "text-muted"}`}
+            className={`flex-1 rounded-full px-6 py-2 text-center font-bold md:flex-none ${current === t.key ? "bg-leaf text-white" : "text-muted"}`}
           >
             {t.label}
           </Link>
@@ -58,7 +58,7 @@ async function TrialList({ userId }: { userId: string }) {
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {items.map(({ item, profile: p }) => (
           <li key={item.id}>
-            <Link href={`/buyer/trial/${item.id}`} className="flex h-full flex-col gap-1 rounded-2xl border border-line bg-surface p-4 text-sm">
+            <Link href={`/buyer/trial/${item.id}`} className="flex h-full flex-col gap-1 card p-4 text-sm">
               <div className="flex items-center justify-between gap-2">
                 {/* 食材名・農家さんの名前は利用者が入力したものなので、テキストとしてそのまま表示する */}
                 <p className="text-lg font-bold">{item.vegetable}</p>

@@ -31,14 +31,14 @@ async function Orders() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/buyer/search" className="rounded-xl bg-leaf px-4 py-3 md:w-fit md:px-8 text-center font-bold text-white">
+      <Link href="/buyer/search" className="btn btn-leaf md:w-fit md:px-8">
         仕入れ候補を探す
       </Link>
       {wanted.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="font-bold">公開中の「探しています」</h2>
+          <h2 className="section-title">公開中の「探しています」</h2>
           {wanted.map((w) => (
-            <div key={w.id} className="flex items-center justify-between gap-2 rounded-2xl border border-line bg-surface p-3 text-sm">
+            <div key={w.id} className="flex items-center justify-between gap-2 card p-3 text-sm">
               <p>
                 {w.vegetable}
                 {kindLabel[w.kind]}

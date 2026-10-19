@@ -53,7 +53,7 @@ async function Seasonal({ searchParams }: PageProps<"/buyer/home/seasonal">) {
               <Link
                 href={`/buyer/home/seasonal?veg=${encodeURIComponent(name)}`}
                 aria-current={active ? "true" : undefined}
-                className={`flex h-full flex-col items-center gap-2 rounded-2xl p-4 text-center shadow-sm ring-1 transition-transform hover:-translate-y-0.5 ${
+                className={`flex h-full flex-col items-center gap-2 rounded-3xl p-4 text-center shadow-sm ring-1 transition-transform hover:-translate-y-0.5 ${
                   active ? "bg-leaf text-white ring-leaf" : count > 0 ? "bg-surface ring-leaf" : "bg-surface ring-line"
                 }`}
               >
@@ -96,7 +96,7 @@ async function Seasonal({ searchParams }: PageProps<"/buyer/home/seasonal">) {
           ) : (
             <div className="flex flex-col gap-2">
               <p className="text-sm text-muted">今、近くで{selected}の出品はありません。条件を入れて探すこともできます。</p>
-              <Link href={`/buyer/search?vegetable=${encodeURIComponent(selected)}`} className="rounded-xl bg-leaf px-4 py-3 text-center font-bold text-white md:w-fit md:px-8">
+              <Link href={`/buyer/search?vegetable=${encodeURIComponent(selected)}`} className="btn btn-leaf md:w-fit md:px-8">
                 {selected}を出品している農家を探す →
               </Link>
             </div>

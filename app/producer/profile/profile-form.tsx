@@ -80,7 +80,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         />
         {state.errors?.commitment && <p className={errorClass}>{state.errors.commitment[0]}</p>}
         <p className="text-xs text-muted">箇条書きでかまいません。下のボタンで、AI が読みやすい文の案を出します。</p>
-        <button type="button" onClick={() => polish()} disabled={polishing} className="w-fit rounded-xl border border-earth px-4 py-2 text-sm font-bold text-earth disabled:opacity-60">
+        <button type="button" onClick={() => polish()} disabled={polishing} className="w-fit btn btn-sm btn-outline-earth text-sm">
           {polishing ? "AI が考えています…" : "AI で文に整える"}
         </button>
         {suggestion?.message && <p className="text-sm text-muted">{suggestion.message}</p>}
@@ -94,10 +94,10 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
             </p>
             {/* 「この文を使う」「別の案を出す」「使わない（閉じる）」の3つから選ぶ */}
             <div className="grid grid-cols-3 gap-2">
-              <button type="button" onClick={() => setSuggestion(null)} className="rounded-xl border border-line px-3 py-2 text-sm font-bold">
+              <button type="button" onClick={() => setSuggestion(null)} className="btn btn-sm btn-plain text-sm">
                 使わない
               </button>
-              <button type="button" onClick={() => polish(suggestion.text)} disabled={polishing} className="rounded-xl border border-earth px-3 py-2 text-sm font-bold text-earth disabled:opacity-60">
+              <button type="button" onClick={() => polish(suggestion.text)} disabled={polishing} className="btn btn-sm btn-outline-earth text-sm">
                 {polishing ? "考えています…" : "別の案を出す"}
               </button>
               <button
@@ -106,7 +106,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
                   setCommitment(suggestion.text ?? "");
                   setSuggestion(null);
                 }}
-                className="rounded-xl bg-earth px-3 py-2 text-sm font-bold text-white"
+                className="btn btn-sm btn-earth text-sm"
               >
                 この文を使う
               </button>
@@ -158,7 +158,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         {state.errors?.paymentMethods && <p className={errorClass}>{state.errors.paymentMethods[0]}</p>}
       </fieldset>
 
-      <button type="submit" disabled={pending} className="rounded-xl bg-earth px-4 py-3 font-bold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-earth">
         {pending ? "保存しています…" : "保存する"}
       </button>
 

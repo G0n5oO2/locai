@@ -51,14 +51,14 @@ async function Listings() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/producer/listings/new" className="rounded-xl bg-earth px-4 py-3 md:w-fit md:px-8 text-center font-bold text-white">
+      <Link href="/producer/listings/new" className="btn btn-earth md:w-fit md:px-8">
         新しく出品する
       </Link>
       {listings.length === 0 && <p className="text-muted">まだ出品はありません。</p>}
       {/* パソコンの幅では、カードを横に並べる */}
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {listings.map((l) => (
-          <li key={l.id} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
+          <li key={l.id} className="flex flex-col gap-1 card p-4">
             <div className="flex items-center justify-between gap-2">
               {/* 食材名は利用者が入力したものなので、テキストとしてそのまま表示する */}
               <p className="text-lg font-bold">{l.vegetable}</p>

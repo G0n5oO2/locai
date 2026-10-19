@@ -9,7 +9,7 @@ import { orderStatusLabel } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 
 type Side = "buyer" | "producer";
-const cardClass = "flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4";
+const cardClass = "flex flex-col gap-1 card p-4";
 
 // 相手ごとの一覧（メッセージの画面の最初）
 export async function PartnerList({ userId, side }: { userId: string; side: Side }) {
