@@ -128,9 +128,23 @@ function Tree({ x, y, r }: { x: number; y: number; r: number }) {
 // 立体的に見えるよう、光の当たる側を明るく・反対側を少し暗く塗り、物の下にふんわりした影を置く。かたい線は使わない
 // トラックが、左の農家さんの小屋から右のお店まで野菜を運び、お店で降ろして、向きを変えて空で戻る（くり返す）
 // 動きを減らす設定（OS の「視差効果を減らす」など）の人には、止まったトラックを出す
-export function FarmBanner() {
+export function FarmBanner({ message = "地元の野菜を、必要な量で。" }: { message?: string }) {
   // 1回の行き来の時間（秒）と、トラックの止まる位置（左：小屋の前、右：お店の前）
   const dur = "14s";
+  // 文字の見た目（やさしい緑の丸ゴシック。白いふちで、絵の上でも読みやすくする）
+  const textProps = {
+    x: 400,
+    y: 118,
+    textAnchor: "middle" as const,
+    fontSize: 30,
+    fontWeight: 700,
+    fill: "#3b7d4a",
+    stroke: "#ffffff",
+    strokeWidth: 6,
+    strokeLinejoin: "round" as const,
+    paintOrder: "stroke",
+    style: { fontFamily: "var(--font-zen-maru), sans-serif" },
+  };
   const left = 210;
   const right = 610;
   return (
@@ -266,6 +280,28 @@ export function FarmBanner() {
         <rect y="188" width="800" height="26" fill="url(#fb-road)" />
         <path d="M0 201 H800" stroke="#ffffff" strokeWidth="3" strokeDasharray="14 12" strokeLinecap="round" opacity="0.9" />
         <rect y="214" width="800" height="16" fill="#a9d68c" />
+
+        {/* 文字：トラックが通ったところから現れ、帰りはトラックが通ったところから消える
+            （文字を、トラックの位置までの幅で切り取って見せる。切り取る幅を、トラックと同じ動きで変える） */}
+        <clipPath id="fb-reveal">
+          {/* 文字が、小屋の前では全部かくれ、お店の前では全部見えるよう、少し広めに動かす */}
+          <rect x="0" y="0" height="230" width={left - 40}>
+            <animate
+              attributeName="width"
+              values={`${left - 40}; ${right + 40}; ${right + 40}; ${left - 40}; ${left - 40}`}
+              keyTimes="0; 0.42; 0.5; 0.92; 1"
+              dur={dur}
+              repeatCount="indefinite"
+            />
+          </rect>
+        </clipPath>
+        <g className="motion-reduce:hidden" clipPath="url(#fb-reveal)">
+          <text {...textProps}>{message}</text>
+        </g>
+        {/* 動きを減らす設定の人には、文字をはじめから全部見せる */}
+        <text {...textProps} className="hidden motion-reduce:inline">
+          {message}
+        </text>
 
         {/* 動くトラック：野菜を積んで右へ走る → お店の前で止まって降ろす → 向きを変えて、空で左へ戻る → 小屋の前で止まって積む */}
         <g className="motion-reduce:hidden">
