@@ -17,37 +17,72 @@ export type ProducerOrder = Prisma.OrderGetPayload<{
   };
 }>;
 
+// 見やすくするため、大事なもの（お店の名前・野菜と量・合計）は大きく・色を変え、こまかい情報は小さな見出しつきで並べる
 export function ProducerOrderCard({ order, unread, checks }: { order: ProducerOrder; unread: number; checks: string[] }) {
+  const statusColor =
+    order.status === "confirmed" ? "bg-earth text-white" : order.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200" : "bg-earth-soft text-earth";
   return (
-    <article className="flex flex-col gap-2 card p-4 text-sm">
-      <div className="flex items-center justify-between gap-2">
+    <article className="flex flex-col gap-3 card p-4 text-sm">
+      {/* いちばん上：お店の名前（大きく）と、状態のラベル */}
+      <div className="flex flex-wrap items-center gap-2">
         {/* お店の名前は、申し込んだ相手にだけ見える */}
-        <p className="font-bold">{order.buyer.name}</p>
-        <span className={`rounded-full px-3 py-0.5 text-xs font-medium ${order.status === "confirmed" ? "bg-earth text-white" : "bg-earth-soft text-earth"}`}>
-          {orderStatusLabel[order.status]}
-        </span>
+        <p className="mr-auto text-lg font-bold">{order.buyer.name}</p>
+        {order.isTrial && <span className="rounded-full bg-sky-100 px-3 py-0.5 text-xs font-bold text-sky-800 dark:bg-sky-950 dark:text-sky-200">お試し</span>}
+        <span className={`rounded-full px-3 py-0.5 text-xs font-bold ${statusColor}`}>{orderStatusLabel[order.status]}</span>
       </div>
-      <p>
-        {order.listing.vegetable} {quantityText(order.quantityG, order.isTrial)}・{methodLabel[order.method]}
-        {order.isTrial && "・お試し"}
-      </p>
-      <p>
-        商品代 {order.itemYen.toLocaleString()}円／送料・配達料 {order.shippingYen.toLocaleString()}円
-      </p>
-      <p>支払方法：{order.paymentMethod ? paymentLabel[order.paymentMethod] : "メッセージで相談"}</p>
-      <Link href={`/orders/${order.id}`} className="font-bold text-earth underline">
-        注文の詳細・メッセージ{unread > 0 && `（未読 ${unread}件）`}
-      </Link>
-      {/* 使用日は、お店が見せてよいとしたときだけ */}
-      {order.showUseDate && <p className="text-muted">お店の使用日：{formatDate(order.useDate)}</p>}
-      {order.buyer.buyerProfile && <p className="text-muted">お店の地域：{order.buyer.buyerProfile.prefecture} {order.buyer.buyerProfile.city}</p>}
-      {/* 届け先の住所は、販売確定した注文にだけ見せる（不変条件4） */}
-      {order.status === "confirmed" && order.method !== "pickup" && order.buyer.buyerProfile && (
-        <p>届け先：{order.buyer.buyerProfile.address}</p>
-      )}
+      {/* 野菜と量（大きく）・合計（大きく、色を変える） */}
+      <div className="flex items-end justify-between gap-3">
+        <p>
+          <span className="block text-xs text-muted">{order.listing.vegetable}</span>
+          <span className="text-2xl font-bold">{quantityText(order.quantityG, order.isTrial)}</span>
+        </p>
+        <p className="text-right">
+          <span className="block text-xs text-muted">
+            商品代 {order.itemYen.toLocaleString()}円＋送料 {order.shippingYen.toLocaleString()}円
+          </span>
+          <span className="text-2xl font-bold text-earth">{order.totalYen.toLocaleString()}円</span>
+        </p>
+      </div>
+      {/* こまかい情報（見出しは小さくうすく、中身ははっきり） */}
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl bg-background p-3">
+        <div>
+          <dt className="text-xs text-muted">受け渡し</dt>
+          <dd className="font-bold">{methodLabel[order.method]}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted">納品日</dt>
+          <dd className="font-bold">{formatDate(order.deliveryDate)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted">支払方法</dt>
+          <dd className="font-bold">{order.paymentMethod ? paymentLabel[order.paymentMethod] : "メッセージで相談"}</dd>
+        </div>
+        {/* 使用日は、お店が見せてよいとしたときだけ */}
+        {order.showUseDate && (
+          <div>
+            <dt className="text-xs text-muted">お店の使用日</dt>
+            <dd className="font-bold">{formatDate(order.useDate)}</dd>
+          </div>
+        )}
+        {order.buyer.buyerProfile && (
+          <div className="col-span-2">
+            <dt className="text-xs text-muted">お店の地域</dt>
+            <dd className="font-bold">
+              {order.buyer.buyerProfile.prefecture} {order.buyer.buyerProfile.city}
+            </dd>
+          </div>
+        )}
+        {/* 届け先の住所は、販売確定した注文にだけ見せる（不変条件4） */}
+        {order.status === "confirmed" && order.method !== "pickup" && order.buyer.buyerProfile && (
+          <div className="col-span-2">
+            <dt className="text-xs text-muted">届け先</dt>
+            <dd className="font-bold">{order.buyer.buyerProfile.address}</dd>
+          </div>
+        )}
+      </dl>
       {order.status === "pending" && (
         <>
-          <p className="text-muted">回答期限：{formatJstDateTime(order.answerUntil)}</p>
+          <p className="font-bold text-amber-800 dark:text-amber-200">回答期限：{formatJstDateTime(order.answerUntil)}</p>
           <OrderChecks orderId={order.id} checks={checks} />
           <OrderButtons orderId={order.id} />
           <Link href={`/producer/orders/${order.id}/propose`} className="text-center font-bold text-earth underline">
@@ -56,15 +91,20 @@ export function ProducerOrderCard({ order, unread, checks }: { order: ProducerOr
         </>
       )}
       {order.status === "change_pending" && order.proposedDeliveryDate && order.proposedQuantityG !== null && (
-        <div className="rounded-xl bg-earth-soft p-3">
+        <div className="flex flex-col gap-1 rounded-2xl bg-earth-soft p-3">
           <p className="font-bold">提案中（お店の返事待ち）</p>
           <p>
-            納品日 {formatDate(order.deliveryDate)} → {formatDate(order.proposedDeliveryDate)}／数量 {quantityText(order.quantityG, order.isTrial)} → {quantityText(order.proposedQuantityG, order.isTrial)}
+            納品日 {formatDate(order.deliveryDate)} → <strong>{formatDate(order.proposedDeliveryDate)}</strong>
           </p>
-          <p>断られたら：{order.confirmIfRefused ? "元の条件で販売確定" : "見送り"}</p>
-          <p className="text-muted">回答期限：{formatJstDateTime(order.answerUntil)}</p>
+          <p>
+            数量 {quantityText(order.quantityG, order.isTrial)} → <strong>{quantityText(order.proposedQuantityG, order.isTrial)}</strong>
+          </p>
+          <p className="text-xs text-muted">断られたら：{order.confirmIfRefused ? "元の条件で販売確定" : "見送り"}／回答期限：{formatJstDateTime(order.answerUntil)}</p>
         </div>
       )}
+      <Link href={`/orders/${order.id}`} className="btn btn-sm btn-outline-earth">
+        注文の詳細・メッセージ{unread > 0 && `（未読 ${unread}件）`}
+      </Link>
     </article>
   );
 }

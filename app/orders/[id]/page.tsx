@@ -46,27 +46,55 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1 card p-4 text-sm">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-lg font-bold">{order.listing.vegetable}</p>
-          <span className="rounded-full bg-leaf-soft px-3 py-0.5 text-xs font-medium text-leaf">{orderStatusLabel[order.status]}</span>
+      <div className="flex flex-col gap-3 card p-4 text-sm">
+        {/* いちばん上：野菜（大きく）と、お試し・状態のラベル */}
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="mr-auto text-xl font-bold">{order.listing.vegetable}</p>
+          {order.isTrial && <span className="rounded-full bg-sky-100 px-3 py-0.5 text-xs font-bold text-sky-800 dark:bg-sky-950 dark:text-sky-200">お試し</span>}
+          <span className="rounded-full bg-leaf-soft px-3 py-0.5 text-xs font-bold text-leaf">{orderStatusLabel[order.status]}</span>
         </div>
-        <p>相手：{isBuyer ? order.listing.producer.name : order.buyer.name}</p>
-        <p>
-          {methodLabel[order.method]}・納品 {formatDate(order.deliveryDate)}
-          {order.isTrial && "・お試し"}
+        <p className="text-base">
+          <span className="text-xs text-muted">相手　</span>
+          <strong>{isBuyer ? order.listing.producer.name : order.buyer.name}</strong>
         </p>
         {/* 数量と金額（合計は大きく、色を変える） */}
         <OrderAmount isTrial={order.isTrial} quantityG={order.quantityG} unitG={order.unitG} unitPriceYen={order.unitPriceYen} itemYen={order.itemYen} shippingYen={order.shippingYen} totalYen={order.totalYen} />
-        {/* 支払方法（第2版）。選ばれていないときは、メッセージで相談 */}
-        <p>支払方法：{order.paymentMethod ? paymentLabel[order.paymentMethod] : "メッセージで相談"}</p>
-        {/* 使用日は、お店本人か、お店が見せてよいとしたときだけ */}
-        {(isBuyer || order.showUseDate) && <p className="text-muted">使用日：{formatDate(order.useDate)}</p>}
-        {/* 届け先・引き取りの場所は、販売確定したときだけ相手に見せる（不変条件4） */}
-        {confirmed && !isBuyer && order.method !== "pickup" && order.buyer.buyerProfile && <p>届け先：{order.buyer.buyerProfile.address}</p>}
-        {confirmed && isBuyer && order.method === "pickup" && order.listing.producer.profile?.pickupPlace && (
-          <p>引き取りの場所：{order.listing.producer.profile.pickupPlace}</p>
-        )}
+        {/* こまかい情報（見出しは小さくうすく、中身ははっきり） */}
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl bg-background p-3">
+          <div>
+            <dt className="text-xs text-muted">受け渡し</dt>
+            <dd className="font-bold">{methodLabel[order.method]}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted">納品日</dt>
+            <dd className="font-bold">{formatDate(order.deliveryDate)}</dd>
+          </div>
+          <div>
+            {/* 支払方法（第2版）。選ばれていないときは、メッセージで相談 */}
+            <dt className="text-xs text-muted">支払方法</dt>
+            <dd className="font-bold">{order.paymentMethod ? paymentLabel[order.paymentMethod] : "メッセージで相談"}</dd>
+          </div>
+          {/* 使用日は、お店本人か、お店が見せてよいとしたときだけ */}
+          {(isBuyer || order.showUseDate) && (
+            <div>
+              <dt className="text-xs text-muted">使用日</dt>
+              <dd className="font-bold">{formatDate(order.useDate)}</dd>
+            </div>
+          )}
+          {/* 届け先・引き取りの場所は、販売確定したときだけ相手に見せる（不変条件4） */}
+          {confirmed && !isBuyer && order.method !== "pickup" && order.buyer.buyerProfile && (
+            <div className="col-span-2">
+              <dt className="text-xs text-muted">届け先</dt>
+              <dd className="font-bold">{order.buyer.buyerProfile.address}</dd>
+            </div>
+          )}
+          {confirmed && isBuyer && order.method === "pickup" && order.listing.producer.profile?.pickupPlace && (
+            <div className="col-span-2">
+              <dt className="text-xs text-muted">引き取りの場所</dt>
+              <dd className="font-bold">{order.listing.producer.profile.pickupPlace}</dd>
+            </div>
+          )}
+        </dl>
         {confirmed && <p className="mt-1 text-xs text-muted">支払いと配送の手配は、当事者どうしでアプリの外で行います。支払期限・発送予定（支払方法が決まっていなければ支払方法も）は、下のメッセージで確かめてください。</p>}
       </div>
 

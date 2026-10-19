@@ -65,13 +65,17 @@ export async function signIn(_state: AuthFormState, formData: FormData): Promise
   const parsed = signInSchema.safeParse(input);
   if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors, values };
 
+  let role: unknown;
   try {
-    await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    const result = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+    role = (result.user as { role?: unknown }).role;
   } catch {
     // どちらが違うかは教えない（他人のメールアドレスが登録済みか分からないようにするため）
     return { message: "メールアドレスかパスワードが違います", values };
   }
-  redirect("/mypage");
+  // ログインしたら、立場に合ったホームへ（第2版）。立場が分からないときはマイページへ
+  const checked = roleSchema.safeParse(role);
+  redirect(!checked.success ? "/mypage" : checked.data === "producer" ? "/producer/home" : "/buyer/home");
 }
 
 export async function signOut() {
