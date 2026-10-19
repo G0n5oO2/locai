@@ -1,8 +1,8 @@
 "use client";
 // 生産者プロフィールの入力フォーム（確かめと保存はサーバー側の saveProfile で行う）
 
-import { useActionState } from "react";
-import { saveProfile, type ProfileFormState } from "@/app/actions/profile";
+import { useActionState, useState, useTransition } from "react";
+import { polishCommitmentAction, saveProfile, type ProfileFormState } from "@/app/actions/profile";
 import { Field } from "@/app/ui/field";
 import { paymentLabel, paymentMethods, paymentNote } from "@/lib/payment";
 import { RegionSelect } from "@/app/ui/region-select";
@@ -40,6 +40,14 @@ const fieldNames: Record<string, string> = {
 export function ProfileForm({ citiesByPrefecture, initial }: Props) {
   const [state, action, pending] = useActionState<ProfileFormState, FormData>(saveProfile, {});
   const values = state.values ?? initial;
+  // 栽培のこだわり（AI の案を「この文を使う」で入れられるように、入力欄の文をここで持つ）
+  const [commitment, setCommitment] = useState(values.commitment ?? "");
+  const [suggestion, setSuggestion] = useState<{ text?: string; message?: string } | null>(null);
+  const [polishing, startPolish] = useTransition();
+  const polish = () =>
+    startPolish(async () => {
+      setSuggestion(await polishCommitmentAction(commitment));
+    });
   // 選んである支払方法（「cash,transfer」のように「,」でつないで持っている）
   const checkedPayments = (values.paymentMethods ?? "").split(",");
 
@@ -59,8 +67,47 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="commitment" className="text-sm font-bold">栽培のこだわり</label>
-        <textarea id="commitment" name="commitment" rows={4} maxLength={500} defaultValue={values.commitment} className={inputClass} />
+        <textarea
+          id="commitment"
+          name="commitment"
+          rows={4}
+          maxLength={500}
+          value={commitment}
+          onChange={(e) => setCommitment(e.target.value)}
+          placeholder={"例：\n・農薬はできるだけ減らしている\n・朝どりしてその日に出す"}
+          className={inputClass}
+        />
         {state.errors?.commitment && <p className={errorClass}>{state.errors.commitment[0]}</p>}
+        <p className="text-xs text-muted">箇条書きでかまいません。下のボタンで、AI が読みやすい文の案を出します。</p>
+        <button type="button" onClick={polish} disabled={polishing} className="w-fit rounded-xl border border-earth px-4 py-2 text-sm font-bold text-earth disabled:opacity-60">
+          {polishing ? "AI が考えています…" : "AI で文に整える"}
+        </button>
+        {suggestion?.message && <p className="text-sm text-muted">{suggestion.message}</p>}
+        {/* AI の案：使うかどうかは生産者が決める（不変条件5）。AI の文は、テキストとしてそのまま表示する */}
+        {suggestion?.text && (
+          <div className="flex flex-col gap-2 rounded-xl border border-earth bg-earth-soft p-3">
+            <p className="text-xs font-bold text-earth">AI の案</p>
+            <p className="text-sm whitespace-pre-wrap">{suggestion.text}</p>
+            <p className="text-xs font-bold text-red-700 dark:text-red-400">
+              AI は、あなたが書いていないことを足してしまうことがあります。内容が合っているか確かめてから使ってください。
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setSuggestion(null)} className="rounded-xl border border-line px-3 py-2 text-sm font-bold">
+                使わない
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCommitment(suggestion.text ?? "");
+                  setSuggestion(null);
+                }}
+                className="rounded-xl bg-earth px-3 py-2 text-sm font-bold text-white"
+              >
+                この文を使う
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <fieldset className="flex flex-col gap-3">
