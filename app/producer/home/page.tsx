@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
+import { FarmBackdrop, FarmBanner } from "@/app/ui/farm-map";
 import { quantityText } from "@/app/ui/order-amount";
 import { expireOverdue, usedAmounts } from "@/lib/availability";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,9 @@ import { requireProducer } from "@/lib/session";
 export default function ProducerHomePage() {
   return (
     <AuthShell title="ホーム" wide>
+      {/* 上に横長の農園の絵、その下はうすい農園の背景（第2版 4-1） */}
+      <FarmBackdrop />
+      <FarmBanner />
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <Amounts />
       </Suspense>

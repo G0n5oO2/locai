@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
+import { FarmBackdrop, FarmBanner } from "@/app/ui/farm-map";
 import { irregularListings } from "@/lib/irregular";
 import { prisma } from "@/lib/prisma";
 import { seasonalInfo } from "@/lib/seasonal";
@@ -14,6 +15,9 @@ import { IrregularArt, SeasonalArt } from "./feature-art";
 export default function BuyerHomePage() {
   return (
     <AuthShell title="ホーム" wide>
+      {/* 上に横長の農園の絵、その下はうすい農園の背景（第2版 4-1） */}
+      <FarmBackdrop />
+      <FarmBanner />
       <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
         <Features />
       </Suspense>
