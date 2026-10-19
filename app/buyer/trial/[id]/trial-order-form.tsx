@@ -6,6 +6,7 @@ import { Field } from "@/app/ui/field";
 import { methodLabel, type DeliveryMethod } from "@/lib/burden";
 import { paymentFits, paymentLabel, type PaymentMethodKey } from "@/lib/payment";
 import { quote } from "@/lib/pricing";
+import { RequiredMark } from "@/app/ui/required-mark";
 
 type Props = {
   listingId: string;
@@ -44,6 +45,7 @@ export function TrialOrderForm({ listingId, requestKey, price, fees, methods, re
       <Field
         label={`希望数量（g・${price.unitG}g 単位、残り ${restG.toLocaleString()}g まで）`}
         name="quantity"
+        required
         type="number"
         inputMode="numeric"
         min={price.unitG}
@@ -55,7 +57,7 @@ export function TrialOrderForm({ listingId, requestKey, price, fees, methods, re
       />
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="method" className="text-sm font-bold">受け取り方法</label>
+        <label htmlFor="method" className="text-sm font-bold">受け取り方法<RequiredMark /></label>
         <select id="method" name="method" value={method} onChange={(e) => setMethod(e.target.value)} className={inputClass}>
           {methods.map((m) => (
             <option key={m} value={m}>{methodLabel[m]}</option>
@@ -64,12 +66,12 @@ export function TrialOrderForm({ listingId, requestKey, price, fees, methods, re
       </div>
 
       <div className="flex flex-col gap-1">
-        <Field label="届けてほしい日（納品日）" name="deliveryDate" type="date" min={earliest} max={latest} defaultValue={v.deliveryDate} errors={state.errors?.deliveryDate} />
+        <Field label="届けてほしい日（納品日）" required name="deliveryDate" type="date" min={earliest} max={latest} defaultValue={v.deliveryDate} errors={state.errors?.deliveryDate} />
         <p className="text-xs text-muted">農家さんの返事のあとに届くように、{earliest}〜{latest} の中から選んでください。</p>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="paymentMethod" className="text-sm font-bold">支払方法</label>
+        <label htmlFor="paymentMethod" className="text-sm font-bold">支払方法{payments.length > 0 && <RequiredMark />}</label>
         {payments.length === 0 ? (
           <>
             <input type="hidden" name="paymentMethod" value="" />

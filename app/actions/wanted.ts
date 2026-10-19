@@ -53,6 +53,8 @@ export async function publishWanted(_state: WantedFormState, formData: FormData)
       city: profile.city,
     },
   });
+  // 探していますのタブの一覧を、新しくする
+  refresh();
   return { done: true };
 }
 

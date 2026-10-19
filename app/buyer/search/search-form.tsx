@@ -10,6 +10,7 @@ import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { gramsToKgText } from "@/lib/quantity";
 import type { Candidate, SortKey } from "@/lib/search";
 import { PublishWanted } from "./publish-wanted";
+import { RequiredMark } from "@/app/ui/required-mark";
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
@@ -29,12 +30,12 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
       <form action={action} className="flex flex-col gap-4 md:max-w-md">
         <Field label="食材（空なら種類を問わない）" name="vegetable" maxLength={50} placeholder="例：賀茂茄子" defaultValue={v.vegetable ?? initialVegetable} errors={state.errors?.vegetable} />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="希望数量（kg）" name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
-          <Field label="予算（円・送料込み）" name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
+          <Field label="希望数量（kg）" required name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
+          <Field label="予算（円・送料込み）" required name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
         </div>
-        <Field label="使用日" name="useDate" type="date" defaultValue={v.useDate} errors={state.errors?.useDate} />
+        <Field label="使用日" required name="useDate" type="date" defaultValue={v.useDate} errors={state.errors?.useDate} />
         <div className="flex flex-col gap-1">
-          <label htmlFor="method" className="text-sm font-bold">受け取り方法</label>
+          <label htmlFor="method" className="text-sm font-bold">受け取り方法<RequiredMark /></label>
           <select id="method" name="method" defaultValue={v.method ?? ""} className={inputClass}>
             <option value="">選ぶ</option>
             <option value="delivery">宅配発送</option>

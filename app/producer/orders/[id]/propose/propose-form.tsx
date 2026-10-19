@@ -4,6 +4,7 @@
 import { useActionState, useState } from "react";
 import { proposeAction, type FlowState } from "@/app/actions/order-flow";
 import { Field } from "@/app/ui/field";
+import { RequiredMark } from "@/app/ui/required-mark";
 
 export type DateOption = { value: string; label: string; detail: string; over: boolean };
 
@@ -55,7 +56,7 @@ export function ProposeForm({ orderId, currentDateLabel, dateOptions, unitText, 
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-bold">もし断られたら</legend>
+        <legend className="mb-1 text-sm font-bold">もし断られたら<RequiredMark /></legend>
         <label className={`flex items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm ${changingQuantity ? "opacity-50" : ""}`}>
           <input type="radio" name="confirmIfRefused" value="yes" disabled={changingQuantity} defaultChecked={!changingQuantity} key={`yes-${changingQuantity}`} />
           元の条件（{currentDateLabel}）で販売を確定する

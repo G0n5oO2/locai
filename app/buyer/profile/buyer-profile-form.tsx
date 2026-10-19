@@ -18,6 +18,7 @@ export function BuyerProfileForm({ citiesByPrefecture, initial }: Props) {
   return (
     <form action={action} className="flex flex-col gap-6">
       <RegionSelect
+        required
         legend="お店の地域"
         note="近くの農家さんの出品を探すのに使います。農家さんには、地域だけが伝わります。"
         citiesByPrefecture={citiesByPrefecture}
@@ -27,7 +28,7 @@ export function BuyerProfileForm({ citiesByPrefecture, initial }: Props) {
         cityErrors={state.errors?.city}
       />
       <div className="flex flex-col gap-1">
-        <Field label="届け先の住所" name="address" maxLength={200} autoComplete="street-address" defaultValue={values.address} errors={state.errors?.address} />
+        <Field label="届け先の住所" required name="address" maxLength={200} autoComplete="street-address" defaultValue={values.address} errors={state.errors?.address} />
         <p className="text-xs text-muted">販売確定した相手の農家さんにだけ表示します。</p>
       </div>
       <button type="submit" disabled={pending} className="btn btn-leaf">

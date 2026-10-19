@@ -8,6 +8,7 @@ import { methodLabel, type DeliveryMethod } from "@/lib/burden";
 import { paymentFits, paymentLabel, type PaymentMethodKey } from "@/lib/payment";
 import { quote } from "@/lib/pricing";
 import { gramsToKgText, kgTextToGrams } from "@/lib/quantity";
+import { RequiredMark } from "@/app/ui/required-mark";
 
 type Props = {
   listingId: string;
@@ -50,6 +51,7 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       <Field
         label={`数量（kg・${gramsToKgText(price.unitG)}kg 単位、${gramsToKgText(price.minOrderG)}kg から）`}
         name="quantity"
+        required
         inputMode="decimal"
         value={quantity}
         onChange={(e) => setQuantity(e.target.value)}
@@ -57,7 +59,7 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       />
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="method" className="text-sm font-bold">受け取り方法</label>
+        <label htmlFor="method" className="text-sm font-bold">受け取り方法<RequiredMark /></label>
         <select id="method" name="method" value={method} onChange={(e) => setMethod(e.target.value)} className={inputClass}>
           {methods.map((m) => (
             <option key={m} value={m}>{methodLabel[m]}</option>
@@ -66,7 +68,7 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="paymentMethod" className="text-sm font-bold">支払方法</label>
+        <label htmlFor="paymentMethod" className="text-sm font-bold">支払方法{payments.length > 0 && <RequiredMark />}</label>
         {payments.length === 0 ? (
           // 農家さんがまだ設定していないときは、選ばずに送れる
           <>
@@ -90,8 +92,8 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="納品日" name="deliveryDate" type="date" min={earliest} max={latest} defaultValue={v.deliveryDate} errors={state.errors?.deliveryDate} />
-        <Field label="使用日" name="useDate" type="date" defaultValue={v.useDate ?? initial.useDate} errors={state.errors?.useDate} />
+        <Field label="納品日" required name="deliveryDate" type="date" min={earliest} max={latest} defaultValue={v.deliveryDate} errors={state.errors?.deliveryDate} />
+        <Field label="使用日" required name="useDate" type="date" defaultValue={v.useDate ?? initial.useDate} errors={state.errors?.useDate} />
       </div>
       <p className="-mt-3 text-xs text-muted">納品日は、届けられる日（{earliest}〜{latest}）の中から、使用日までの日を選んでください。</p>
 

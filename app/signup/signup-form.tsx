@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signUp, type AuthFormState } from "@/app/actions/auth";
 import { Field } from "@/app/ui/field";
+import { RequiredMark } from "@/app/ui/required-mark";
 
 const roles = [
   { value: "producer", label: "生産者", note: "野菜を出品して販売する" },
@@ -18,7 +19,7 @@ export function SignUpForm({ initialRole }: { initialRole: string }) {
   return (
     <form action={action} className="flex flex-col gap-5">
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-bold">立場（あとから変えられません）</legend>
+        <legend className="mb-1 text-sm font-bold">立場（あとから変えられません）<RequiredMark /></legend>
         <div className="grid grid-cols-2 gap-3">
           {roles.map((r) => (
             <label
@@ -36,9 +37,9 @@ export function SignUpForm({ initialRole }: { initialRole: string }) {
         {state.errors?.role && <p className="text-sm text-red-700 dark:text-red-400">{state.errors.role[0]}</p>}
       </fieldset>
 
-      <Field label="名前（お店の名前・農園の名前など）" name="name" autoComplete="name" defaultValue={state.values?.name} errors={state.errors?.name} />
-      <Field label="メールアドレス" name="email" type="email" autoComplete="email" defaultValue={state.values?.email} errors={state.errors?.email} />
-      <Field label="パスワード（8文字以上）" name="password" type="password" autoComplete="new-password" errors={state.errors?.password} />
+      <Field label="名前（お店の名前・農園の名前など）" required name="name" autoComplete="name" defaultValue={state.values?.name} errors={state.errors?.name} />
+      <Field label="メールアドレス" required name="email" type="email" autoComplete="email" defaultValue={state.values?.email} errors={state.errors?.email} />
+      <Field label="パスワード（8文字以上）" required name="password" type="password" autoComplete="new-password" errors={state.errors?.password} />
 
       {state.message && <p className="text-sm text-red-700 dark:text-red-400">{state.message}</p>}
 

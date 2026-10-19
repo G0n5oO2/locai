@@ -11,8 +11,8 @@ export function LoginForm() {
 
   return (
     <form action={action} className="flex flex-col gap-5">
-      <Field label="メールアドレス" name="email" type="email" autoComplete="email" defaultValue={state.values?.email} errors={state.errors?.email} />
-      <Field label="パスワード" name="password" type="password" autoComplete="current-password" errors={state.errors?.password} />
+      <Field label="メールアドレス" required name="email" type="email" autoComplete="email" defaultValue={state.values?.email} errors={state.errors?.email} />
+      <Field label="パスワード" required name="password" type="password" autoComplete="current-password" errors={state.errors?.password} />
 
       {state.message && <p className="text-sm text-red-700 dark:text-red-400">{state.message}</p>}
 

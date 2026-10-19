@@ -6,6 +6,7 @@ import { polishCommitmentAction, saveProfile, type ProfileFormState } from "@/ap
 import { Field } from "@/app/ui/field";
 import { paymentLabel, paymentMethods, paymentNote } from "@/lib/payment";
 import { RegionSelect } from "@/app/ui/region-select";
+import { OptionalMark, RequiredMark } from "@/app/ui/required-mark";
 
 type Props = {
   // 府県ごとの市区町村の一覧
@@ -55,6 +56,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
   return (
     <form action={action} className="flex flex-col gap-6">
       <RegionSelect
+        required
         legend="畑の地域"
         note="畑の正確な場所は保存しません。市区町村だけを使います。"
         citiesByPrefecture={citiesByPrefecture}
@@ -64,10 +66,10 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         cityErrors={state.errors?.city}
       />
 
-      <Field label="栽培している品目（例：賀茂茄子、万願寺唐辛子）" name="items" defaultValue={values.items} errors={state.errors?.items} maxLength={200} />
+      <Field label="栽培している品目（例：賀茂茄子、万願寺唐辛子）" required name="items" defaultValue={values.items} errors={state.errors?.items} maxLength={200} />
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="commitment" className="text-sm font-bold">栽培のこだわり</label>
+        <label htmlFor="commitment" className="text-sm font-bold">栽培のこだわり<RequiredMark /></label>
         <textarea
           id="commitment"
           name="commitment"
@@ -116,17 +118,17 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
       </div>
 
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-bold">1回の出荷で、何件まで対応できますか</legend>
+        <legend className="mb-1 text-sm font-bold">1回の出荷で、何件まで対応できますか<RequiredMark /></legend>
         <p className="text-xs text-muted">出品や申し込みの画面で、出荷の負担が大きすぎないかの目安に使います。いつでも変えられます。</p>
         <div className="grid grid-cols-3 gap-3">
-          <Field label="宅配発送" name="shipLimitDelivery" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitDelivery} errors={state.errors?.shipLimitDelivery} />
-          <Field label="自分で配達" name="shipLimitSelf" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitSelf} errors={state.errors?.shipLimitSelf} />
-          <Field label="引き取り" name="shipLimitPickup" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitPickup} errors={state.errors?.shipLimitPickup} />
+          <Field label="宅配発送" required name="shipLimitDelivery" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitDelivery} errors={state.errors?.shipLimitDelivery} />
+          <Field label="自分で配達" required name="shipLimitSelf" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitSelf} errors={state.errors?.shipLimitSelf} />
+          <Field label="引き取り" required name="shipLimitPickup" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitPickup} errors={state.errors?.shipLimitPickup} />
         </div>
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-bold">宅配発送の送料（重さごと、3行まで）</legend>
+        <legend className="mb-1 text-sm font-bold">宅配発送の送料（重さごと、3行まで）<OptionalMark /></legend>
         <p className="text-xs text-muted">宅配をしない場合は空のままで大丈夫です。いちばん下の行より重い注文は、宅配では受け付けません。</p>
         {[1, 2, 3].map((n) => (
           <div key={n} className="grid grid-cols-2 gap-3">
@@ -144,7 +146,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-bold">受け付ける支払方法（1つ以上）</legend>
+        <legend className="mb-1 text-sm font-bold">受け付ける支払方法（1つ以上）<RequiredMark /></legend>
         <p className="text-xs text-muted">お店は、ここで選んだ方法の中から選びます。支払い自体は、アプリの外で行います。</p>
         {paymentMethods.map((m) => (
           <label key={m} className="flex items-start gap-2 rounded-xl border border-line bg-surface p-3">
