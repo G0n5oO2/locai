@@ -55,7 +55,7 @@ const emptyResult: SearchResult = { random: [], cheap: [], early: [], trial: [] 
 
 // 並べ替えたい順のまま、同じ農家さんが続かないように並べ直す
 // 前と違う農家さんのうち、一番前にあるものを順に取り出す。どうしても続いてしまうとき（残りが1人の農家さんだけ）は、そのまま後ろに並べる
-function noRepeatInRow<T extends { producerId: string }>(list: T[]): T[] {
+export function noRepeatInRow<T extends { producerId: string }>(list: T[]): T[] {
   const rest = [...list];
   const result: T[] = [];
   while (rest.length > 0) {
@@ -67,7 +67,7 @@ function noRepeatInRow<T extends { producerId: string }>(list: T[]): T[] {
 }
 
 // ばらばらに並べる（同じ値どうしの順番も、毎回くじ引きで決める）
-function shuffle<T>(list: T[]): T[] {
+export function shuffle<T>(list: T[]): T[] {
   const copy = [...list];
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

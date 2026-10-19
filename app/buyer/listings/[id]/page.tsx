@@ -57,6 +57,8 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
           {gramsToKgText(listing.unitG)}kg あたり {listing.unitPriceYen.toLocaleString()}円・{listing.quality === "normal" ? "通常品" : "規格外"}
           {listing.surplus && "・余剰品"}
         </p>
+        {/* 品の状態の説明（規格外のときは特に大事）。利用者が入力した文字は、テキストとしてそのまま表示する */}
+        {listing.note && <p className="text-sm whitespace-pre-wrap">状態：{listing.note}</p>}
         <p className="text-sm text-muted">
           受付 {formatJstDateTime(listing.acceptUntil)} まで／農家さんの回答 {formatJstDateTime(listing.answerUntil)} まで
         </p>
