@@ -14,7 +14,7 @@ import { PublishWanted } from "./publish-wanted";
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 
-export function SearchForm({ area }: { area: string }) {
+export function SearchForm({ area, initialVegetable }: { area: string; initialVegetable?: string }) {
   const [state, action, pending] = useActionState<SearchFormState, FormData>(search, {});
   const v = state.values ?? {};
   const r = state.result;
@@ -27,7 +27,7 @@ export function SearchForm({ area }: { area: string }) {
     <div className="flex flex-col gap-6">
       {/* 入力の部分は、パソコンでも読みやすい幅のまま */}
       <form action={action} className="flex flex-col gap-4 md:max-w-md">
-        <Field label="食材（空なら種類を問わない）" name="vegetable" maxLength={50} placeholder="例：賀茂茄子" defaultValue={v.vegetable} errors={state.errors?.vegetable} />
+        <Field label="食材（空なら種類を問わない）" name="vegetable" maxLength={50} placeholder="例：賀茂茄子" defaultValue={v.vegetable ?? initialVegetable} errors={state.errors?.vegetable} />
         <div className="grid grid-cols-2 gap-3">
           <Field label="希望数量（kg）" name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
           <Field label="予算（円・送料込み）" name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
