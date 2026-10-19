@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { unreadCountAction } from "@/app/actions/message";
 import type { Role } from "@/lib/auth";
+import { Wallpaper, wallpaperFor } from "./wallpaper";
 
 type NavItem = {
   label: string; // 読み上げ・マウスを重ねたときに出る名前
@@ -52,8 +53,12 @@ export function NavBar({ role, initialUnread }: { role: Role; initialUnread: num
   // 今開いている画面かどうか（「/producer/listings/new」も「出品」に含める）
   const isActive = (item: NavItem) => item.match.some((m) => pathname === m || pathname.startsWith(`${m}/`));
 
+  // ホーム以外の画面の背景（そのタブに合う絵を、壁紙のように散らす）
+  const theme = wallpaperFor(pathname, role);
+
   return (
     <>
+      {theme && <Wallpaper theme={theme} />}
       {/* スマホ：下に固定。パソコン：一番上（order-first）に置き、スクロールしても上に残す（sticky） */}
       <nav
         aria-label="メインメニュー"

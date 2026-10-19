@@ -51,8 +51,8 @@ function Truck({ cargoDur }: { cargoDur?: string }) {
 }
 
 // 横から見た野菜（x=0 が真ん中、y=0 が根もと・かごの底）。形の特徴で、何の野菜か分かるようにする
-type Veg = "cabbage" | "tomato" | "eggplant" | "carrot";
-function Vegetable({ kind }: { kind: Veg }) {
+export type Veg = "cabbage" | "tomato" | "eggplant" | "carrot";
+export function Vegetable({ kind }: { kind: Veg }) {
   if (kind === "cabbage") {
     // キャベツ：外側の濃い葉に包まれた、うすい緑の丸い玉（葉のすじつき）
     return (
