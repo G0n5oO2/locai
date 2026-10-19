@@ -39,6 +39,18 @@
   --color-earth: var(--earth);
   --color-earth-soft: var(--earth-soft);
   --font-sans: var(--font-zen-maru), system-ui, sans-serif;
+  /* ふわふわ浮かぶ動き（入口の画面の野菜。animate-float で使う） */
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translateY(-14px) rotate(calc(var(--tilt, 0deg) * -1));
+  }
 }
 
 body {

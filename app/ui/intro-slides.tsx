@@ -189,46 +189,87 @@ function Troubles() {
 
 // ===== 人物のイラスト（線と色で描いた簡単な絵） =====
 
-// お店の人：コック帽とエプロン（体 → 顔 → 帽子の順に重ねる）
+// ===== 人物（やわらかく、あたたかみのある絵。かたい線は使わない） =====
+// 体 → 顔 → 髪 → 帽子の順に重ねる。ほっぺに赤み、下にふんわりした影
+
+// 顔（肌・ほっぺ・眉・目・口）。happy なら、にっこり閉じた目と笑った口
+function Face({ cy, skin, happy }: { cy: number; skin: string; happy: boolean }) {
+  return (
+    <g>
+      <circle cx="32" cy={cy} r="11.5" fill={skin} />
+      <ellipse cx="25.5" cy={cy + 3.5} rx="2.6" ry="1.6" fill="#f4a3a3" opacity="0.7" />
+      <ellipse cx="38.5" cy={cy + 3.5} rx="2.6" ry="1.6" fill="#f4a3a3" opacity="0.7" />
+      <Brows y={cy - 3} happy={happy} />
+      {happy ? (
+        <path d={`M26.5 ${cy} q2 -2 4 0 M33.5 ${cy} q2 -2 4 0`} fill="none" stroke="#7a5a48" strokeWidth="1.6" strokeLinecap="round" />
+      ) : (
+        <>
+          <circle cx="28.5" cy={cy} r="1.4" fill="#7a5a48" />
+          <circle cx="35.5" cy={cy} r="1.4" fill="#7a5a48" />
+        </>
+      )}
+      <Mouth y={cy + 6} happy={happy} />
+    </g>
+  );
+}
+
+// お店の人：ふっくらしたコック帽と、やさしい緑のエプロン
 function ShopOwner({ happy = false }: { happy?: boolean }) {
   return (
-    <svg aria-hidden viewBox="0 0 64 72" className="size-20">
-      {/* 体とエプロン */}
-      <path d="M14 72c0-17 8-28 18-28s18 11 18 28z" fill="#e6f0e3" stroke="#5b6658" strokeWidth="1.5" />
-      <path d="M24 50h16v22H24z" fill="#2f6b3a" />
-      {/* 顔 */}
-      <circle cx="32" cy="32" r="11" fill="#f4d9bf" stroke="#5b6658" strokeWidth="1.5" />
-      {/* 眉・目・口（happy なら笑顔） */}
-      <Brows y={29.5} happy={happy} />
-      <circle cx="28.5" cy="32" r="1.3" fill="#5b6658" />
-      <circle cx="35.5" cy="32" r="1.3" fill="#5b6658" />
-      <Mouth y={38} happy={happy} />
-      {/* コック帽 */}
-      <rect x="21" y="17" width="22" height="5" fill="#ffffff" stroke="#5b6658" strokeWidth="1.5" />
-      <path d="M21 17C15 17 14 9 19 8C20 3 27 2 30 5C33 2 40 3 41 7C46 8 47 16 43 17Z" fill="#ffffff" stroke="#5b6658" strokeWidth="1.5" />
+    <svg aria-hidden viewBox="0 0 64 74" className="size-20">
+      <defs>
+        <linearGradient id="sv-shirt" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#eee6d8" />
+        </linearGradient>
+        <linearGradient id="sv-apron" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#8cc49a" />
+          <stop offset="100%" stopColor="#6aa97a" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="32" cy="71" rx="20" ry="3" fill="#6b5a3a" opacity="0.12" />
+      {/* 体（丸い肩の白い服）とエプロン */}
+      <path d="M12 71 Q12 46 32 45 Q52 46 52 71 Z" fill="url(#sv-shirt)" />
+      <path d="M22 53 Q32 50 42 53 V71 H22 Z" fill="url(#sv-apron)" />
+      <circle cx="32" cy="60" r="1.3" fill="#ffffff" opacity="0.8" />
+      {/* 顔と髪 */}
+      <Face cy={33} skin="#fbe3cc" happy={happy} />
+      <path d="M21 31 Q21 22 32 21 Q43 22 43 31 Q38 26 32 26 Q26 26 21 31 Z" fill="#8a6650" />
+      {/* コック帽（ふっくら丸い） */}
+      <rect x="21" y="17" width="22" height="6" rx="3" fill="#ffffff" />
+      <path d="M21 18 C14 18 13 9 19 8 C20 2 28 1 31 5 C34 1 42 2 43 7 C49 8 50 17 43 18 Z" fill="#ffffff" />
+      <path d="M24 11 Q27 8 30 10" fill="none" stroke="#efe8dc" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-// 農家さん：麦わら帽子と首のタオル（体 → 顔 → 帽子の順に重ねる）
+// 農家さん：麦わら帽子・首のタオル・やさしい茶色の作業着
 function Farmer({ happy = false }: { happy?: boolean }) {
   return (
-    <svg aria-hidden viewBox="0 0 64 72" className="size-20">
-      {/* 体と首のタオル */}
-      <path d="M14 72c0-17 8-28 18-28s18 11 18 28z" fill="#f5ebdf" stroke="#5b6658" strokeWidth="1.5" />
-      <path d="M26 56h12v16H26z" fill="#8a5a2b" opacity="0.8" />
-      <path d="M22 44Q32 52 42 44L40 51Q32 56 24 51Z" fill="#ffffff" stroke="#5b6658" strokeWidth="1.2" />
-      {/* 顔 */}
-      <circle cx="32" cy="33" r="11" fill="#e9c39f" stroke="#5b6658" strokeWidth="1.5" />
-      {/* 眉・目・口（happy なら笑顔） */}
-      <Brows y={30.5} happy={happy} />
-      <circle cx="28.5" cy="33" r="1.3" fill="#5b6658" />
-      <circle cx="35.5" cy="33" r="1.3" fill="#5b6658" />
-      <Mouth y={39} happy={happy} />
-      {/* 麦わら帽子 */}
-      <path d="M22 23C22 15 26 11 32 11S42 15 42 23Z" fill="#e8c46a" stroke="#8a5a2b" strokeWidth="1.5" />
-      <ellipse cx="32" cy="23" rx="21" ry="4" fill="#e8c46a" stroke="#8a5a2b" strokeWidth="1.5" />
-      <path d="M22.5 20.5h19" stroke="#c0392b" strokeWidth="2" />
+    <svg aria-hidden viewBox="0 0 64 74" className="size-20">
+      <defs>
+        <linearGradient id="sv-work" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#f6e6cf" />
+          <stop offset="100%" stopColor="#e6cfac" />
+        </linearGradient>
+        <linearGradient id="sv-hat" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f8e0a2" />
+          <stop offset="100%" stopColor="#ecc77a" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="32" cy="71" rx="20" ry="3" fill="#6b5a3a" opacity="0.12" />
+      {/* 体（丸い肩の作業着）・胸あて・首のタオル */}
+      <path d="M12 71 Q12 46 32 45 Q52 46 52 71 Z" fill="url(#sv-work)" />
+      <path d="M25 56 Q32 54 39 56 V71 H25 Z" fill="#b98a5e" opacity="0.75" />
+      <path d="M21 46 Q32 54 43 46 Q42 52 32 55 Q22 52 21 46 Z" fill="#ffffff" />
+      {/* 顔と髪 */}
+      <Face cy={34} skin="#f6d7b8" happy={happy} />
+      <path d="M21 32 Q22 25 32 24 Q42 25 43 32 Q38 28 32 28 Q26 28 21 32 Z" fill="#6e5240" />
+      {/* 麦わら帽子（丸いつばと、やさしい赤のリボン） */}
+      <path d="M22 24 C22 15 26 11 32 11 S42 15 42 24 Z" fill="url(#sv-hat)" />
+      <ellipse cx="32" cy="24" rx="21" ry="4.5" fill="url(#sv-hat)" />
+      <path d="M22.5 21 H41.5" stroke="#ec8f7c" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M26 14 Q29 12 32 13" fill="none" stroke="#fff3d4" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -295,13 +336,13 @@ function Arrow({ label, direction }: { label: string; direction: "left" | "right
 // 眉：困った顔は内側が上がる。笑顔はなだらかな山形
 function Brows({ y, happy }: { y: number; happy: boolean }) {
   const d = happy ? `M25.5 ${y - 0.5}Q27.5 ${y - 2} 29.5 ${y - 0.5}M34.5 ${y - 0.5}Q36.5 ${y - 2} 38.5 ${y - 0.5}` : `M25.5 ${y}l4 -1.5M38.5 ${y}l-4 -1.5`;
-  return <path d={d} fill="none" stroke="#5b6658" strokeWidth="1.5" strokeLinecap="round" />;
+  return <path d={d} fill="none" stroke="#8a6650" strokeWidth="1.4" strokeLinecap="round" />;
 }
 
 // 口：困った顔は「へ」の字、笑顔は大きくにっこり
 function Mouth({ y, happy }: { y: number; happy: boolean }) {
-  const d = happy ? `M28 ${y - 1.5}Q32 ${y + 2.5} 36 ${y - 1.5}` : `M29 ${y}Q32 ${y - 2} 35 ${y}`;
-  return <path d={d} fill="none" stroke="#5b6658" strokeWidth="1.5" strokeLinecap="round" />;
+  const d = happy ? `M28.5 ${y - 1.5}Q32 ${y + 2.5} 35.5 ${y - 1.5}` : `M29.5 ${y}Q32 ${y - 1.6} 34.5 ${y}`;
+  return <path d={d} fill="none" stroke="#b0705e" strokeWidth="1.6" strokeLinecap="round" />;
 }
 
 // LocAI のスマホ
