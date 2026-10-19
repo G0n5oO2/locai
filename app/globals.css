@@ -2,28 +2,29 @@
 
 /* アプリ全体で使う色。画面ごとに色を直接書かず、ここの名前（bg-leaf など）を使う */
 :root {
-  --background: #f7f5ee;
-  --foreground: #1f2a1f;
-  --surface: #ffffff;
-  --muted: #5b6658;
-  --line: #dfe3d6;
-  --leaf: #2f6b3a;
-  --leaf-soft: #e6f0e3;
-  --earth: #8a5a2b;
-  --earth-soft: #f5ebdf;
+  /* 第2版：やわらかいパステル（野菜っぽいやさしい色）。文字やボタンに使う緑・茶色は、読みやすいように少し深くしている */
+  --background: #fdf8ee;
+  --foreground: #2b3a2c;
+  --surface: #fffdf8;
+  --muted: #5f695b;
+  --line: #ece4d2;
+  --leaf: #3b7d4a;
+  --leaf-soft: #e3f2dd;
+  --earth: #9e5b27;
+  --earth-soft: #fcecd9;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #141813;
-    --foreground: #e9ede5;
-    --surface: #1d231c;
-    --muted: #a3ad9f;
-    --line: #313a2f;
-    --leaf: #7fc28b;
-    --leaf-soft: #22331f;
-    --earth: #d9a571;
-    --earth-soft: #33281c;
+    --background: #161b15;
+    --foreground: #edf1e8;
+    --surface: #1f251d;
+    --muted: #a9b3a5;
+    --line: #333c30;
+    --leaf: #8fcf98;
+    --leaf-soft: #243722;
+    --earth: #e3ad7a;
+    --earth-soft: #3a2c1e;
   }
 }
 
@@ -37,7 +38,7 @@
   --color-leaf-soft: var(--leaf-soft);
   --color-earth: var(--earth);
   --color-earth-soft: var(--earth-soft);
-  --font-sans: var(--font-noto-sans-jp), system-ui, sans-serif;
+  --font-sans: var(--font-zen-maru), system-ui, sans-serif;
 }
 
 body {

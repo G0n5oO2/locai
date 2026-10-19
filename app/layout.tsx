@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_JP } from "next/font/google";
+import { Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "./ui/app-nav";
 
-// 日本語のフォント。日本語は文字の種類が多く subsets が使えないため、先読み（preload）はしない
-const notoSansJP = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
+// 日本語のフォント（第2版：やさしく読みやすい丸ゴシック）。日本語は文字の種類が多く subsets が使えないため、先読み（preload）はしない
+const zenMaru = Zen_Maru_Gothic({
+  variable: "--font-zen-maru",
+  weight: ["400", "500", "700"],
   preload: false,
 });
 
@@ -16,12 +17,12 @@ export const metadata: Metadata = {
 
 // スマートフォンで見たときの表示の設定
 export const viewport: Viewport = {
-  themeColor: "#2f6b3a",
+  themeColor: "#3b7d4a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ja" className={`${notoSansJP.variable} h-full antialiased`}>
+    <html lang="ja" className={`${zenMaru.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
         {/* ナビゲーションバー（ログインしている人だけ。スマホは下、パソコンは上に出る） */}
