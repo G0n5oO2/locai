@@ -148,7 +148,8 @@ export function FarmBanner({ message = "地元の野菜を、必要な量で。"
   const left = 210;
   const right = 610;
   return (
-    <div className="card overflow-hidden">
+    // 横長の絵なので、画面いっぱいに広げると高くなりすぎる。幅をおさえて真ん中に置く
+    <div className="card mx-auto w-full max-w-5xl overflow-hidden">
       <svg aria-hidden viewBox="0 0 800 230" className="h-auto w-full">
         <defs>
           <linearGradient id="fb-sky" x1="0" y1="0" x2="0" y2="1">

@@ -3,6 +3,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { addressError } from "@/lib/address";
 import { prisma } from "@/lib/prisma";
 import { polishCommitment } from "@/lib/ai-commitment";
 import { paymentMethodSchema } from "@/lib/payment";
@@ -68,7 +69,14 @@ const feeSchema = z.object({
   band3Kg: optionalKg,
   band3Yen: optionalYen,
   selfDeliveryYen: optionalYen,
-  pickupPlace: z.string().trim().max(200, "200文字以内にしてください"),
+  // 引き取りの場所：入れる場合は、住所として正しいか確かめる（lib/address.ts の決まり）
+  pickupPlace: z
+    .string()
+    .trim()
+    .superRefine((text, ctx) => {
+      const error = text === "" ? null : addressError(text);
+      if (error) ctx.addIssue({ code: "custom", message: error });
+    }),
 });
 
 const fields = [

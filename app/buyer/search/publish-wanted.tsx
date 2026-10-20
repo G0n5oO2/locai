@@ -37,7 +37,7 @@ export function PublishWanted({ values = {}, editable = false }: { values?: Reco
       {state.done && editable && <p className="rounded-2xl bg-leaf-soft p-3 font-bold">公開しました。続けて、ほかの野菜も出せます。</p>}
       {editable ? (
         // タブから出すとき：条件を、ここで入力する
-        <div className="flex flex-col gap-3">
+        <div className="grid gap-3 md:grid-cols-2 md:items-end lg:grid-cols-4">
           <div className="flex flex-col gap-1">
             <label htmlFor="wanted-vegetable" className="font-bold">
               食材
@@ -48,10 +48,8 @@ export function PublishWanted({ values = {}, editable = false }: { values?: Reco
                 if (e.target.value.trim() === "") setKind("any");
               }} placeholder="例：万願寺唐辛子（空なら種類を問わない）" className={inputClass} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="希望数量（kg）" name="quantity" inputMode="decimal" required />
-            <Field label="使用日" name="useDate" type="date" required />
-          </div>
+          <Field label="希望数量（kg）" name="quantity" inputMode="decimal" required />
+          <Field label="使用日" name="useDate" type="date" required />
           <div className="flex flex-col gap-1">
             <label htmlFor="wanted-method" className="font-bold">
               受け取り方法

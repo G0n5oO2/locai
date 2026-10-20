@@ -57,9 +57,9 @@ export function CalcForm() {
       </p>
 
       {/* 共通：商品代（ここに入れると、下の全部に同じ商品代が入る） */}
-      <section className="flex flex-col gap-3 md:max-w-md">
+      <section className="card flex w-full flex-col gap-3 p-5">
         <h2 className="section-title section-title-earth">野菜の単価と数量</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:items-end lg:max-w-3xl">
           <label className="flex flex-col gap-1 text-sm font-bold">
             単価（1kg あたりの円）
             <input inputMode="numeric" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="例：600" className={inputClass} />

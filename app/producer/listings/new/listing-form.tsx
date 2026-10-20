@@ -69,7 +69,7 @@ export function ListingForm({ limits, available, wanted, initialVegetable, initi
       )}
       <Field label="食材名（例：賀茂茄子）" required name="vegetable" maxLength={50} value={vegetable} onChange={(e) => setVegetable(e.target.value)} errors={state.errors?.vegetable} />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
         <Field label="販売可能総量（kg）" required name="total" inputMode="decimal" value={total} onChange={(e) => setTotal(e.target.value)} errors={errorsFor("total")} />
         <Field label="注文単位（kg）" required name="unit" inputMode="decimal" value={unit} onChange={(e) => setUnit(e.target.value)} errors={errorsFor("unit")} />
       </div>
@@ -124,14 +124,14 @@ export function ListingForm({ limits, available, wanted, initialVegetable, initi
         {state.errors?.note && <p className={errorClass}>{state.errors.note[0]}</p>}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
         <Field label="受付期限" required name="acceptUntil" type="datetime-local" defaultValue={v.acceptUntil} errors={state.errors?.acceptUntil} />
         <Field label="回答期限" required name="answerUntil" type="datetime-local" defaultValue={v.answerUntil} errors={state.errors?.answerUntil} />
       </div>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-bold">納品できる日<RequiredMark /></legend>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
           <Field label="いつから" required name="deliverFrom" type="date" defaultValue={v.deliverFrom} errors={state.errors?.deliverFrom} />
           <Field label="いつまで" required name="deliverTo" type="date" defaultValue={v.deliverTo} errors={state.errors?.deliverTo} />
         </div>

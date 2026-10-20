@@ -44,7 +44,7 @@ async function Wanted() {
       <section className="flex flex-col gap-3">
         <h2 className="section-title">公開中の「探しています」（{wanted.length}件）</h2>
         {wanted.length === 0 && <p className="text-sm text-muted">今、公開中の「探しています」はありません。</p>}
-        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {wanted.map((w) => (
             <li key={w.id} className="flex flex-col gap-3 card p-4 text-sm">
               <div className="flex flex-wrap items-center gap-2">
@@ -80,7 +80,7 @@ async function Wanted() {
         </ul>
       </section>
 
-      <section className="flex flex-col gap-3 md:max-w-xl">
+      <section className="flex w-full flex-col gap-3">
         <h2 className="section-title">新しく出す</h2>
         <PublishWanted editable />
       </section>

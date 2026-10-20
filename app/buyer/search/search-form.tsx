@@ -26,13 +26,11 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 入力の部分は、パソコンでも読みやすい幅のまま */}
-      <form action={action} className="flex flex-col gap-4 md:max-w-md">
+      {/* 入力の部分：スマホは縦に1つずつ。パソコンは横幅いっぱいに使い、入力欄を2〜3列に並べる */}
+      <form action={action} className="card grid w-full gap-4 p-5 md:grid-cols-2 md:items-end lg:grid-cols-3">
         <Field label="食材（空なら種類を問わない）" name="vegetable" maxLength={50} placeholder="例：賀茂茄子" defaultValue={v.vegetable ?? initialVegetable} errors={state.errors?.vegetable} />
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="希望数量（kg）" required name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
-          <Field label="予算（円・送料込み）" required name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
-        </div>
+        <Field label="希望数量（kg）" required name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
+        <Field label="予算（円・送料込み）" required name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
         <Field label="使用日" required name="useDate" type="date" defaultValue={v.useDate} errors={state.errors?.useDate} />
         <div className="flex flex-col gap-1">
           <label htmlFor="method" className="text-sm font-bold">受け取り方法<RequiredMark /></label>
@@ -44,9 +42,9 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
           </select>
           {state.errors?.method && <p className={errorClass}>{state.errors.method[0]}</p>}
         </div>
-        <p className="text-xs text-muted">お店の地域（{area}）から 70km 以内の農家さんの出品を探します。</p>
-        {state.message && <p className={errorClass}>{state.message}</p>}
-        <button type="submit" disabled={pending} className="btn btn-leaf">
+        <p className="text-xs text-muted md:col-span-2 lg:col-span-3">お店の地域（{area}）から 70km 以内の農家さんの出品を探します。</p>
+        {state.message && <p className={`${errorClass} md:col-span-2 lg:col-span-3`}>{state.message}</p>}
+        <button type="submit" disabled={pending} className="btn btn-leaf md:col-span-2 md:w-fit md:px-12 lg:col-span-3">
           {pending ? "探しています…" : "仕入れ候補を探す"}
         </button>
       </form>
@@ -105,7 +103,7 @@ function Group({ list, useDate }: { list: Candidate[]; useDate?: string }) {
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted">同じ農家さんの出品は、続けて並ばないようにしています。</p>
       {/* パソコンの幅では、候補を横に並べる */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {list.map((c) => (
           <CandidateCard key={c.listingId} c={c} useDate={useDate ?? ""} />
         ))}

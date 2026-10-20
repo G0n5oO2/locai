@@ -3,6 +3,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { addressError } from "@/lib/address";
 import { prisma } from "@/lib/prisma";
 import { findMunicipality } from "@/lib/region";
 import { requireBuyer } from "@/lib/session";
@@ -15,7 +16,15 @@ export type BuyerProfileFormState = {
 const buyerProfileSchema = z.object({
   prefecture: z.string().min(1, "府県を選んでください"),
   city: z.string().min(1, "市区町村を選んでください"),
-  address: z.string().trim().min(1, "届け先の住所を入力してください").max(200, "200文字以内にしてください"),
+  // 届け先の住所：でたらめな入力（「ああああ」など）では保存できない（lib/address.ts の決まり）
+  address: z
+    .string()
+    .trim()
+    .min(1, "届け先の住所を入力してください")
+    .superRefine((text, ctx) => {
+      const error = addressError(text);
+      if (error) ctx.addIssue({ code: "custom", message: error });
+    }),
 });
 
 export async function saveBuyerProfile(_state: BuyerProfileFormState, formData: FormData): Promise<BuyerProfileFormState> {

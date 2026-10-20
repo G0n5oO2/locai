@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { EntranceBackdrop } from "./ui/entrance-backdrop";
+import { RedirectIfSignedIn } from "./ui/redirect-if-signed-in";
 import { IntroSlides, ShowIntroButton } from "./ui/intro-slides";
 
 // 立場ごとの入口。ボタンを押すと、立場を選んだ状態で登録画面が開く
@@ -42,6 +43,8 @@ export default function Home() {
     <div className="flex flex-1 flex-col">
       {/* 入口の画面の背景（空と、ふわふわ浮かぶ野菜） */}
       <EntranceBackdrop />
+      {/* ログインしている人は、自分のホームへ */}
+      <RedirectIfSignedIn />
       {/* はじめて開いたときだけ、説明のスライドを重ねて出す */}
       <IntroSlides />
       <header className="mx-auto w-full max-w-3xl px-4 pt-5">

@@ -32,7 +32,7 @@ async function WantedList() {
       <p className="text-sm text-muted">畑（{profile.prefecture} {profile.city}）から70km以内のお店です。お店の名前や住所は表示されません。</p>
       {wanted.length === 0 && <p className="text-muted">今は、近くに「探しています」はありません。</p>}
       {/* パソコンの幅では、カードを横に並べる */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {wanted.map((w) => (
           <div key={w.id} className="flex flex-col gap-1 card p-4 text-sm">
             <p className="font-bold">

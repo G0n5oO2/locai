@@ -91,7 +91,7 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
         <p className="text-xs text-muted">支払い自体は、アプリの外で行います。{payments.includes("cod") && "代金引換は、宅配のときだけ選べます。"}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
         <Field label="納品日" required name="deliveryDate" type="date" min={earliest} max={latest} defaultValue={v.deliveryDate} errors={state.errors?.deliveryDate} />
         <Field label="使用日" required name="useDate" type="date" defaultValue={v.useDate ?? initial.useDate} errors={state.errors?.useDate} />
       </div>

@@ -21,10 +21,10 @@ export async function sendMessageAction(state: MessageState, formData: FormData)
   return { sent: (state.sent ?? 0) + 1 };
 }
 
-// 自分あての未読メッセージの数（ナビゲーションバーが画面を移動するたびに聞きに来る）
-// 外から直接呼ばれても、ログイン中の本人の数しか返さない
-export async function unreadCountAction(): Promise<number> {
+// ナビゲーションバーが画面を移動するたびに聞きに来る：ログインしているか（立場）と、未読の数
+// ログインしていなければ role は null（バーを出さない）
+export async function navStateAction(): Promise<{ role: "producer" | "buyer" | null; unread: number }> {
   const user = await getCurrentUser();
-  if (!user) return 0;
-  return totalUnread(user.id);
+  if (!user) return { role: null, unread: 0 };
+  return { role: user.role, unread: await totalUnread(user.id) };
 }

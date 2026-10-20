@@ -90,7 +90,7 @@ async function Listings({ searchParams }: PageProps<"/producer/listings">) {
         <p className="text-muted">{current === "open" ? "受付中の出品はありません。" : current === "expired" ? "受付期限が過ぎた出品はありません。" : "受付を終えた出品はありません。"}</p>
       )}
       {/* パソコンの幅では、カードを横に並べる */}
-      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {shown.map((l) => {
           const u = used.get(l.id)!;
           const restG = Math.max(l.totalG - u.confirmedG - u.reservedG, 0);

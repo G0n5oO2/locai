@@ -84,7 +84,7 @@ async function Seasonal({ searchParams }: PageProps<"/buyer/home/seasonal">) {
               <h3 className="font-bold">
                 近くで出品されている{selected}（{offers.length}件）
               </h3>
-              <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {offers.map((item) => (
                   <li key={item.listing.id}>
                     <ListingCard item={item} />

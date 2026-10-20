@@ -54,9 +54,26 @@
 }
 
 body {
+  /* スマホで押したときに出る、青っぽい四角を消す */
+  -webkit-tap-highlight-color: transparent;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* 選ぶ欄（select）の「▼」：ブラウザのものは端に寄ってしまうので、自分で描いて、内側に余白をとって置く */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%235f695b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.8rem auto;
+  padding-right: 2.75rem !important;
+}
+
+/* キーボードで選んだときの枠は、青ではなく、やさしい緑にする */
+:focus-visible {
+  outline-color: var(--leaf);
 }
 
 /* ===== 形の決まり（第2版 4-1：ふっくら・立体的） =====

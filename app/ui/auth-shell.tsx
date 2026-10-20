@@ -4,7 +4,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export function AuthShell({ title, wide = false, children }: { title: string; wide?: boolean; children: ReactNode }) {
-  const width = wide ? "max-w-md md:max-w-5xl" : "max-w-md";
+  // パソコンでは横幅をもっと使う：一覧の画面は画面いっぱい（左右に少し余白）、入力の画面も少し広くする
+  const width = wide ? "max-w-md md:max-w-none md:px-8 lg:px-12" : "max-w-md md:max-w-3xl md:px-8";
   return (
     <div className="flex flex-1 flex-col">
       <header className={`mx-auto w-full ${width} px-4 pt-5`}>

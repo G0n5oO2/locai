@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { unreadCountAction } from "@/app/actions/message";
+import { navStateAction } from "@/app/actions/message";
 import type { Role } from "@/lib/auth";
 import { Wallpaper, wallpaperFor } from "./wallpaper";
 
@@ -36,19 +36,27 @@ const buyerItems: NavItem[] = [
   { label: "プロフィール", href: "/mypage", match: ["/mypage", "/buyer/profile"], icon: <PersonIcon /> },
 ];
 
-export function NavBar({ role, initialUnread }: { role: Role; initialUnread: number }) {
+export function NavBar({ initialRole, initialUnread }: { initialRole: Role | null; initialUnread: number }) {
   const pathname = usePathname();
-  // 未読メッセージの数。画面を移動するたびに、サーバーに聞き直す（読んだら消えるように）
+  // ログインしているか（立場）と、未読メッセージの数
+  // アプリの一番外側の枠は、画面を移動しても作り直されないので、移動するたびにサーバーに聞き直す
+  // （ログアウトしたらバーを消し、ログインしたらバーを出す。メッセージを読んだら未読の数を消す）
+  const [role, setRole] = useState(initialRole);
   const [unread, setUnread] = useState(initialUnread);
   useEffect(() => {
     let alive = true;
-    unreadCountAction()
-      .then((n) => alive && setUnread(n))
-      .catch(() => {}); // 聞けなかったときは、前の数のまま
+    navStateAction()
+      .then((s) => {
+        if (!alive) return;
+        setRole(s.role);
+        setUnread(s.unread);
+      })
+      .catch(() => {}); // 聞けなかったときは、前の状態のまま
     return () => {
       alive = false;
     };
   }, [pathname]);
+  if (!role) return null;
   const items = role === "producer" ? producerItems : buyerItems;
   // 今開いている画面かどうか（「/producer/listings/new」も「出品」に含める）
   const isActive = (item: NavItem) => item.match.some((m) => pathname === m || pathname.startsWith(`${m}/`));
@@ -59,10 +67,11 @@ export function NavBar({ role, initialUnread }: { role: Role; initialUnread: num
   return (
     <>
       {theme && <Wallpaper theme={theme} />}
-      {/* スマホ：下に固定。パソコン：一番上（order-first）に置き、スクロールしても上に残す（sticky） */}
+      {/* スマホ：下に固定。パソコン：一番上（order-first）に置き、スクロールしても上に残す（sticky）
+          上にも余白をとり、スマホの下のふち（ホームバーなど）に重ならないよう、その分の余白も足す */}
       <nav
         aria-label="メインメニュー"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:sticky md:top-0 md:bottom-auto md:order-first md:border-t-0 md:border-b md:pb-0"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface pt-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] md:sticky md:top-0 md:bottom-auto md:order-first md:border-t-0 md:border-b md:py-2"
       >
         <div className="mx-auto max-w-3xl md:px-4">
           <ul className="flex justify-around md:justify-center md:gap-2">
@@ -78,7 +87,8 @@ export function NavBar({ role, initialUnread }: { role: Role; initialUnread: num
                     aria-label={name}
                     title={name}
                     aria-current={active ? "page" : undefined}
-                    className={`relative flex size-14 items-center justify-center rounded-xl ${
+                    // 押したときの青い枠は出さない。キーボードで選んだときだけ、やさしい緑の枠を出す
+                    className={`relative flex size-14 items-center justify-center rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-leaf ${
                       active ? "bg-leaf-soft text-leaf" : "text-muted hover:text-foreground"
                     }`}
                   >
@@ -96,8 +106,8 @@ export function NavBar({ role, initialUnread }: { role: Role; initialUnread: num
           </ul>
         </div>
       </nav>
-      {/* スマホで、下のバーが画面の最後の内容に重ならないようにする空き */}
-      <div aria-hidden className="h-16 shrink-0 md:hidden" />
+      {/* スマホで、下のバーが画面の最後の内容に重ならないようにする空き（バーの高さ＋下のふちの分） */}
+      <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))] shrink-0 md:hidden" />
     </>
   );
 }

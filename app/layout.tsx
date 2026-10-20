@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 // スマートフォンで見たときの表示の設定
 export const viewport: Viewport = {
   themeColor: "#3b7d4a",
+  // スマホの下のふち（ホームバーなど）の大きさを、画面で使えるようにする
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

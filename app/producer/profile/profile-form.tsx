@@ -120,7 +120,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-sm font-bold">1回の出荷で、何件まで対応できますか<RequiredMark /></legend>
         <p className="text-xs text-muted">出品や申し込みの画面で、出荷の負担が大きすぎないかの目安に使います。いつでも変えられます。</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 items-end gap-3">
           <Field label="宅配発送" required name="shipLimitDelivery" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitDelivery} errors={state.errors?.shipLimitDelivery} />
           <Field label="自分で配達" required name="shipLimitSelf" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitSelf} errors={state.errors?.shipLimitSelf} />
           <Field label="引き取り" required name="shipLimitPickup" type="number" inputMode="numeric" min={1} max={100} defaultValue={values.shipLimitPickup} errors={state.errors?.shipLimitPickup} />
@@ -131,7 +131,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         <legend className="mb-1 text-sm font-bold">宅配発送の送料（重さごと、3行まで）<OptionalMark /></legend>
         <p className="text-xs text-muted">宅配をしない場合は空のままで大丈夫です。いちばん下の行より重い注文は、宅配では受け付けません。</p>
         {[1, 2, 3].map((n) => (
-          <div key={n} className="grid grid-cols-2 gap-3">
+          <div key={n} className="grid gap-3 sm:grid-cols-2 sm:items-end">
             <Field label={`${n}行目：◯kg まで`} name={`band${n}Kg`} inputMode="decimal" defaultValue={values[`band${n}Kg`]} errors={state.errors?.[`band${n}Kg`]} />
             <Field label="送料（円）" name={`band${n}Yen`} inputMode="numeric" defaultValue={values[`band${n}Yen`]} errors={state.errors?.[`band${n}Yen`]} />
           </div>
@@ -141,7 +141,7 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
       <Field label="自分で配達するときの料金（円・1件あたり。配達しない場合は空）" name="selfDeliveryYen" inputMode="numeric" defaultValue={values.selfDeliveryYen} errors={state.errors?.selfDeliveryYen} />
 
       <div className="flex flex-col gap-1">
-        <Field label="引き取りの場所（引き取りをしない場合は空）" name="pickupPlace" maxLength={200} defaultValue={values.pickupPlace} errors={state.errors?.pickupPlace} />
+        <Field label="引き取りの場所（引き取りをしない場合は空）" name="pickupPlace" maxLength={200} placeholder="例：南丹市園部町小桜町47（入れる場合は番地まで）" defaultValue={values.pickupPlace} errors={state.errors?.pickupPlace} />
         <p className="text-xs text-muted">販売確定したお店にだけ表示します。</p>
       </div>
 

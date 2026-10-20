@@ -27,7 +27,7 @@ export async function BuyerOrderList({ userId, trial }: { userId: string; trial:
     <>
       {orders.length === 0 && <p className="text-muted">{trial ? "まだお試しの注文はありません。" : "まだ注文はありません。"}</p>}
       {/* パソコンの幅では、カードを横に並べる */}
-      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {orders.map((o) => (
           <li key={o.id} className="flex flex-col gap-1 card p-4">
             <div className="flex items-center justify-between gap-2">

@@ -153,7 +153,7 @@ async function ProducerOrders() {
               })}
             </div>
             {/* パソコンの幅では、カードを横に並べる */}
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {list.filter((o) => !o.isTrial).map((o) => (
                 <ProducerOrderCard key={o.id} order={o} unread={unread.get(o.id) ?? 0} checks={checks.get(o.id) ?? []} />
               ))}

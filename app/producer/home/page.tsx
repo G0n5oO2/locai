@@ -67,7 +67,7 @@ async function Amounts() {
       </Link>
       {groups.size === 0 && <p className="text-muted">今、受付中の出品や返事待ちの申し込みはありません。</p>}
       {/* パソコンの幅では、カードを横に並べる */}
-      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {[...groups.values()].map((g) => (
           <li key={g.vegetable} className="flex flex-col gap-4 card p-4">
             {/* 食材名は利用者が入力したものなので、テキストとしてそのまま表示する */}

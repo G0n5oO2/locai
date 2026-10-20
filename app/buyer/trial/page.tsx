@@ -55,7 +55,7 @@ async function TrialList({ userId }: { userId: string }) {
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted">まだ買ったことがない野菜を、少しだけ試せます。同じ農家さんでも、野菜がちがえば試せます。</p>
       {items.length === 0 && <p className="text-muted">今、お試しできる野菜はありません。</p>}
-      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {items.map(({ item, profile: p }) => (
           <li key={item.id}>
             <Link href={`/buyer/trial/${item.id}`} className="flex h-full flex-col gap-1 card p-4 text-sm">

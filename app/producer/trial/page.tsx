@@ -76,7 +76,7 @@ async function TrialRequests({ producerId }: { producerId: string }) {
       ) : (
         <p className="text-sm text-muted">返事待ち {waiting}件。注文管理の「1日の出荷件数」には、お試しの申し込みも数えています。</p>
       )}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {orders.map((o) => (
           <ProducerOrderCard key={o.id} order={o} unread={unread.get(o.id) ?? 0} checks={checks.get(o.id) ?? []} />
         ))}
@@ -98,7 +98,7 @@ async function TrialItems({ producerId }: { producerId: string }) {
         お試し食材を登録する
       </Link>
       {items.length === 0 && <p className="text-muted">まだお試し食材はありません。まだ買ったことがないお店に、少しだけ試してもらえます。</p>}
-      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {items.map((i) => {
           const u = used.get(i.id)!;
           const accepting = i.status === "open" && i.acceptUntil > now;

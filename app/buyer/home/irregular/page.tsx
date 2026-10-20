@@ -36,7 +36,7 @@ async function IrregularList() {
         <p className="text-xs text-muted">並び順は毎回ばらばらで、同じ農家さんが続かないようにしています。</p>
       </div>
       {items.length === 0 && <p className="text-muted">今、近くで受付中の規格外の野菜はありません。</p>}
-      <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {items.map((item) => (
           <li key={item.listing.id}>
             <ListingCard item={item} />
