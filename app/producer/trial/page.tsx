@@ -10,11 +10,12 @@ import { unreadCounts } from "@/lib/messages";
 import { checksFor } from "@/lib/order-check-facts";
 import { prisma } from "@/lib/prisma";
 import { requireProducer } from "@/lib/session";
+import { Loading } from "@/app/ui/loading";
 
 export default function ProducerTrialPage(props: PageProps<"/producer/trial">) {
   return (
     <AuthShell title="お試し" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Trial {...props} />
       </Suspense>
     </AuthShell>

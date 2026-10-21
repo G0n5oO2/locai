@@ -8,11 +8,12 @@ import { prisma } from "@/lib/prisma";
 import { requireBuyer } from "@/lib/session";
 import { IrregularArt } from "../feature-art";
 import { ListingCard } from "../listing-card";
+import { Loading } from "@/app/ui/loading";
 
 export default function IrregularPage() {
   return (
     <AuthShell title="規格外の野菜の特集" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <IrregularList />
       </Suspense>
     </AuthShell>

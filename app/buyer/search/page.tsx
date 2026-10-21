@@ -5,11 +5,12 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import { prisma } from "@/lib/prisma";
 import { requireBuyer } from "@/lib/session";
 import { SearchForm } from "./search-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function SearchPage(props: PageProps<"/buyer/search">) {
   return (
     <AuthShell title="仕入れ候補を探す" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Search {...props} />
       </Suspense>
     </AuthShell>

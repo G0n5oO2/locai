@@ -9,11 +9,12 @@ import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
 import { nearWanted } from "@/lib/wanted";
+import { Loading } from "@/app/ui/loading";
 
 export default function WantedPage() {
   return (
     <AuthShell title="近くの「探しています」" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <WantedList />
       </Suspense>
     </AuthShell>

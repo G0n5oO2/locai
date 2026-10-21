@@ -5,11 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { citiesOf, prefectures } from "@/lib/region";
 import { requireBuyer } from "@/lib/session";
 import { BuyerProfileForm } from "./buyer-profile-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function BuyerProfilePage() {
   return (
     <AuthShell title="お店のプロフィール">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <BuyerProfileEditor />
       </Suspense>
     </AuthShell>

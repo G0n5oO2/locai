@@ -41,6 +41,35 @@
   --font-sans: var(--font-zen-maru), system-ui, sans-serif;
   /* ふわふわ浮かぶ動き（入口の画面の野菜。animate-float で使う） */
   --animate-float: float 6s ease-in-out infinite;
+  /* ぴょんと跳ねる動き（読み込み中の野菜。animate-hop で使う） */
+  --animate-hop: hop 1s ease-in-out infinite;
+  /* 上から、ふわっと出てくる動き（ホームの通知。animate-drop で使う） */
+  --animate-drop: drop 0.5s ease-out both;
+}
+
+@keyframes drop {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes hop {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  20% {
+    transform: translateY(-14px) scale(0.95, 1.05);
+  }
+  40% {
+    transform: translateY(0) scale(1.08, 0.92);
+  }
 }
 
 @keyframes float {

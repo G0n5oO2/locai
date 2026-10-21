@@ -9,13 +9,14 @@ import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
 import { ProposeForm, type DateOption } from "./propose-form";
+import { Loading } from "@/app/ui/loading";
 
 const day = 24 * 60 * 60 * 1000;
 
 export default function ProposePage(props: PageProps<"/producer/orders/[id]/propose">) {
   return (
     <AuthShell title="条件の変更を提案する">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Propose {...props} />
       </Suspense>
     </AuthShell>

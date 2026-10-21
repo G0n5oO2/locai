@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { EntranceBackdrop } from "./ui/entrance-backdrop";
+import { FontSizeButton } from "./ui/font-size";
 import { RedirectIfSignedIn } from "./ui/redirect-if-signed-in";
 import { IntroSlides, ShowIntroButton } from "./ui/intro-slides";
 
@@ -50,9 +51,12 @@ export default function Home() {
       <header className="mx-auto w-full max-w-3xl px-4 pt-5">
         <div className="flex items-center justify-between">
           <p className="text-lg font-bold tracking-wide text-leaf">LocAI</p>
-          <Link href="/login" className="text-sm font-bold text-leaf underline">
-            ログイン
-          </Link>
+          <div className="flex items-center gap-3">
+            <FontSizeButton />
+            <Link href="/login" className="text-sm font-bold text-leaf underline">
+              ログイン
+            </Link>
+          </div>
         </div>
       </header>
 

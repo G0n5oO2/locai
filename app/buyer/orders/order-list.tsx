@@ -7,16 +7,18 @@ import { formatDate, formatJstDateTime } from "@/lib/datetime";
 import { unreadCounts } from "@/lib/messages";
 import { orderStatusLabel } from "@/lib/order-status";
 import { paymentLabel } from "@/lib/payment";
+import type { OrderStatus } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { OrderAmount, quantityText } from "@/app/ui/order-amount";
 import { BuyerOrderButtons } from "./buyer-order-buttons";
 
-export async function BuyerOrderList({ userId, trial }: { userId: string; trial: boolean }) {
+// statuses を渡すと、その状態の注文だけを出す（自分の注文の、状態の切り替えに使う）
+export async function BuyerOrderList({ userId, trial, statuses, emptyText }: { userId: string; trial: boolean; statuses?: OrderStatus[]; emptyText?: string }) {
   // 回答期限を過ぎた返事待ちは、期限切れにしてから表示する
   await expireOverdue(prisma);
   // 自分の注文だけを読む（他人の注文は見えない）
   const orders = await prisma.order.findMany({
-    where: { buyerId: userId, isTrial: trial },
+    where: { buyerId: userId, isTrial: trial, ...(statuses ? { status: { in: statuses } } : {}) },
     orderBy: { createdAt: "desc" },
     include: { listing: { select: { vegetable: true, producer: { select: { name: true, profile: { select: { pickupPlace: true } } } } } } },
   });
@@ -25,7 +27,7 @@ export async function BuyerOrderList({ userId, trial }: { userId: string; trial:
 
   return (
     <>
-      {orders.length === 0 && <p className="text-muted">{trial ? "まだお試しの注文はありません。" : "まだ注文はありません。"}</p>}
+      {orders.length === 0 && <p className="text-muted">{emptyText ?? (trial ? "まだお試しの注文はありません。" : "まだ注文はありません。")}</p>}
       {/* パソコンの幅では、カードを横に並べる */}
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {orders.map((o) => (

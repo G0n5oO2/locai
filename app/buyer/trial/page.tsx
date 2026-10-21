@@ -8,11 +8,12 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import { prisma } from "@/lib/prisma";
 import { requireBuyer } from "@/lib/session";
 import { trialItemsFor } from "@/lib/trial-items";
+import { Loading } from "@/app/ui/loading";
 
 export default function BuyerTrialPage(props: PageProps<"/buyer/trial">) {
   return (
     <AuthShell title="お試し" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Trial {...props} />
       </Suspense>
     </AuthShell>

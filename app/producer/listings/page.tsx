@@ -10,12 +10,13 @@ import { expireOverdue, usedAmounts } from "@/lib/availability";
 import { requireProducer } from "@/lib/session";
 import { matchingBuyerIds, nearWanted } from "@/lib/wanted";
 import { LeftoverPanel } from "./leftover-panel";
+import { Loading } from "@/app/ui/loading";
 
 export default function ListingsPage(props: PageProps<"/producer/listings">) {
   return (
     <AuthShell title="出品一覧" wide>
       <ListingTabs current="listings" />
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Listings {...props} />
       </Suspense>
     </AuthShell>

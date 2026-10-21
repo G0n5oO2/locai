@@ -11,11 +11,12 @@ import { requireBuyer } from "@/lib/session";
 import { SeasonalArt, VegIcon } from "../feature-art";
 import { ListingCard } from "../listing-card";
 import { RecipePanel } from "./recipe-panel";
+import { Loading } from "@/app/ui/loading";
 
 export default function SeasonalPage(props: PageProps<"/buyer/home/seasonal">) {
   return (
     <AuthShell title="季節の野菜（旬の野菜）" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Seasonal {...props} />
       </Suspense>
     </AuthShell>

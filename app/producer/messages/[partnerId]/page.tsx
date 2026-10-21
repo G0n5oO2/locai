@@ -3,11 +3,12 @@ import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { ThreadList } from "@/app/ui/message-list";
 import { requireProducer } from "@/lib/session";
+import { Loading } from "@/app/ui/loading";
 
 export default function PartnerMessagesPage(props: PageProps<"/producer/messages/[partnerId]">) {
   return (
     <AuthShell title="メッセージ">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Threads {...props} />
       </Suspense>
     </AuthShell>

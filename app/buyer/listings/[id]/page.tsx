@@ -9,11 +9,12 @@ import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireBuyer } from "@/lib/session";
 import { OrderForm } from "./order-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function OrderPage(props: PageProps<"/buyer/listings/[id]">) {
   return (
     <AuthShell title="購入希望を送る">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Order {...props} />
       </Suspense>
     </AuthShell>

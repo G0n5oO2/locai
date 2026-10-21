@@ -6,11 +6,12 @@ import { gramsToKgText } from "@/lib/quantity";
 import { citiesOf, prefectures } from "@/lib/region";
 import { requireProducer } from "@/lib/session";
 import { ProfileForm } from "./profile-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function ProducerProfilePage() {
   return (
     <AuthShell title="生産者プロフィール">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <ProfileEditor />
       </Suspense>
     </AuthShell>

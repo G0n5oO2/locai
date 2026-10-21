@@ -9,11 +9,12 @@ import { prisma } from "@/lib/prisma";
 import { requireBuyer } from "@/lib/session";
 import { trialItemsFor } from "@/lib/trial-items";
 import { TrialOrderForm } from "./trial-order-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function TrialDetailPage(props: PageProps<"/buyer/trial/[id]">) {
   return (
     <AuthShell title="お試しを申し込む">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <TrialDetail {...props} />
       </Suspense>
     </AuthShell>

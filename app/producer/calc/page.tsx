@@ -3,11 +3,12 @@ import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { requireProducer } from "@/lib/session";
 import { CalcForm } from "./calc-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function CalcPage() {
   return (
     <AuthShell title="計算（概算受取額の試算）" wide>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Calc />
       </Suspense>
     </AuthShell>

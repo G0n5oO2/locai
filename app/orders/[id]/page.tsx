@@ -11,11 +11,12 @@ import { paymentLabel } from "@/lib/payment";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { MessageForm } from "./message-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function OrderDetailPage(props: PageProps<"/orders/[id]">) {
   return (
     <AuthShell title="注文の詳細">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <OrderDetail {...props} />
       </Suspense>
     </AuthShell>

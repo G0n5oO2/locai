@@ -9,6 +9,7 @@ import { deliveryBands } from "@/lib/fees";
 import { paymentLabel } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { BuyerNotices } from "@/app/buyer/wanted/notices";
+import { Loading } from "@/app/ui/loading";
 
 const roleLabel = { producer: "生産者", buyer: "飲食店" } as const;
 
@@ -16,7 +17,7 @@ export default function MyPage() {
   return (
     <AuthShell title="マイページ">
       {/* ログイン中の人の情報はアクセスのたびに読むので、読み込み中の表示を用意しておく */}
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <Profile />
       </Suspense>
     </AuthShell>

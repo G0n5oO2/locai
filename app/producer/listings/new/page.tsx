@@ -9,11 +9,12 @@ import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
 import { nearWanted } from "@/lib/wanted";
 import { ListingForm } from "./listing-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function NewListingPage(props: PageProps<"/producer/listings/new">) {
   return (
     <AuthShell title="新しく出品する">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <NewListing {...props} />
       </Suspense>
     </AuthShell>

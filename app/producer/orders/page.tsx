@@ -16,16 +16,17 @@ import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
 import { requireProducer } from "@/lib/session";
 import { checksFor } from "@/lib/order-check-facts";
+import { Loading } from "@/app/ui/loading";
 
 export default function ProducerOrdersPage() {
   return (
     <AuthShell title="注文管理" wide>
       <ListingTabs current="orders" />
       {/* 上に売上のまとめ、その下に申し込みの一覧 */}
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <SalesSummary />
       </Suspense>
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <ProducerOrders />
       </Suspense>
     </AuthShell>

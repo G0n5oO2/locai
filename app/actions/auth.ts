@@ -75,7 +75,8 @@ export async function signIn(_state: AuthFormState, formData: FormData): Promise
   }
   // ログインしたら、立場に合ったホームへ（第2版）。立場が分からないときはマイページへ
   const checked = roleSchema.safeParse(role);
-  redirect(!checked.success ? "/mypage" : checked.data === "producer" ? "/producer/home" : "/buyer/home");
+  // 「ログインしたばかり」の印（welcome=1）を付けて、ホームで通知を出す
+  redirect(!checked.success ? "/mypage" : checked.data === "producer" ? "/producer/home?welcome=1" : "/buyer/home?welcome=1");
 }
 
 export async function signOut() {

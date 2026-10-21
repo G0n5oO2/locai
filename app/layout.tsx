@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "./ui/app-nav";
+import { FontSizeApply } from "./ui/font-size";
 
 // 日本語のフォント（第2版：やさしく読みやすい丸ゴシック）。日本語は文字の種類が多く subsets が使えないため、先読み（preload）はしない
 const zenMaru = Zen_Maru_Gothic({
@@ -26,6 +27,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className={`${zenMaru.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        {/* 覚えておいた文字の大きさにする */}
+        <FontSizeApply />
         {children}
         {/* ナビゲーションバー（ログインしている人だけ。スマホは下、パソコンは上に出る） */}
         <AppNav />

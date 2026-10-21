@@ -5,25 +5,29 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { FarmBackdrop, FarmBanner } from "@/app/ui/farm-map";
+import { DeliveryCalendarFor, HomeNoticesFor } from "@/app/ui/home-updates";
 import { quantityText } from "@/app/ui/order-amount";
 import { expireOverdue, usedAmounts } from "@/lib/availability";
 import { prisma } from "@/lib/prisma";
 import { requireProducer } from "@/lib/session";
+import { Loading } from "@/app/ui/loading";
 
-export default function ProducerHomePage() {
+export default function ProducerHomePage(props: PageProps<"/producer/home">) {
   return (
     <AuthShell title="ホーム" wide>
       {/* 上に横長の農園の絵、その下はうすい農園の背景（第2版 4-1） */}
       <FarmBackdrop />
       <FarmBanner />
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
-        <Amounts />
+      <Suspense fallback={<Loading />}>
+        <Amounts {...props} />
       </Suspense>
     </AuthShell>
   );
 }
 
-async function Amounts() {
+async function Amounts({ searchParams }: PageProps<"/producer/home">) {
+  // ログインしたばかり（welcome=1）なら、上から通知を出す
+  const { welcome } = await searchParams;
   const user = await requireProducer();
   // 回答期限を過ぎた返事待ちは、期限切れにして仮押さえを外してから数える
   const mine = await prisma.listing.findMany({ where: { producerId: user.id }, select: { id: true } });
@@ -62,6 +66,8 @@ async function Amounts() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ホームを開いたときに、上から出てくる通知（新しいメッセージ・返事待ち・今日の納品） */}
+      <HomeNoticesFor userId={user.id} side="producer" fromLogin={welcome === "1"} />
       <Link href="/producer/listings/new" className="btn btn-earth md:w-fit md:px-8">
         新しく出品する
       </Link>
@@ -77,6 +83,8 @@ async function Amounts() {
           </li>
         ))}
       </ul>
+      {/* 納品の予定のカレンダー */}
+      <DeliveryCalendarFor userId={user.id} side="producer" />
     </div>
   );
 }

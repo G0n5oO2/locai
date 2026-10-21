@@ -6,11 +6,12 @@ import { deliveryBands } from "@/lib/fees";
 import { prisma } from "@/lib/prisma";
 import { requireProducer } from "@/lib/session";
 import { TrialForm } from "./trial-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function NewTrialPage() {
   return (
     <AuthShell title="お試し食材を登録する">
-      <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+      <Suspense fallback={<Loading />}>
         <NewTrial />
       </Suspense>
     </AuthShell>

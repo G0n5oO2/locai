@@ -4,6 +4,7 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import { EntranceBackdrop } from "@/app/ui/entrance-backdrop";
 import { RedirectIfSignedIn } from "@/app/ui/redirect-if-signed-in";
 import { SignUpForm } from "./signup-form";
+import { Loading } from "@/app/ui/loading";
 
 export default function SignUpPage({ searchParams }: PageProps<"/signup">) {
   return (
@@ -14,7 +15,7 @@ export default function SignUpPage({ searchParams }: PageProps<"/signup">) {
       <RedirectIfSignedIn />
       {/* URL の ?role=... はアクセスのたびに変わるので、読み込み中の表示を用意しておく */}
       <div className="card p-5">
-        <Suspense fallback={<p className="text-muted">読み込んでいます…</p>}>
+        <Suspense fallback={<Loading />}>
           <SignUpFormWithRole searchParams={searchParams} />
         </Suspense>
       </div>
