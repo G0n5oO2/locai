@@ -11,6 +11,7 @@ import { gramsToKgText } from "@/lib/quantity";
 import type { Candidate, SortKey } from "@/lib/search";
 import { PublishWanted } from "./publish-wanted";
 import { RequiredMark } from "@/app/ui/required-mark";
+import { QualityTags } from "@/app/ui/price-box";
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
@@ -112,50 +113,70 @@ function Group({ list, useDate }: { list: Candidate[]; useDate?: string }) {
   );
 }
 
+// 条件に合った出品のカード
+// 一番知りたい「送料込みの合計」を大きく出し、内訳・量・日付は小さな枠に分けて、ひと目で読めるようにする
 function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
   // 1kg あたりの値段は、市場と比べるための参考（計算には使わない）
   const perKg = Math.round((c.unitPriceYen * 1000) / c.unitG);
   return (
     <article className="flex flex-col gap-3 card p-4">
       <div className="flex flex-col gap-1">
-        {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
-        <p className="text-lg font-bold">{c.vegetable}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
+          <p className="text-xl font-bold">{c.vegetable}</p>
+          <QualityTags quality={c.quality} surplus={c.surplus} />
+        </div>
         <p className="text-sm text-muted">
           {c.producerName}・{c.producerArea}
         </p>
-        <p className="text-sm">
-          {c.quality === "normal" ? "通常品" : "規格外"}
-          {c.surplus && "・余剰品"}
-        </p>
-        {c.note && <p className="text-sm whitespace-pre-wrap">{c.note}</p>}
+      </div>
+      {/* 状態は、買うかどうか決める大事な手がかりなので、色の付いた枠で目立たせる */}
+      {c.note && (
+        <div className="rounded-xl bg-amber-50 p-3 text-sm dark:bg-amber-950">
+          <p className="text-xs font-bold text-amber-800 dark:text-amber-200">状態</p>
+          <p className="whitespace-pre-wrap">{c.note}</p>
+        </div>
+      )}
+
+      {/* 金額：合計を大きく、内訳は小さく添える（金額はアプリが計算したもの：不変条件2） */}
+      <div className="flex flex-col gap-2 rounded-2xl bg-earth-soft px-4 py-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-sm font-bold text-earth">{gramsToKgText(c.quantityG)}kg の合計（送料込み）</span>
+          <span className="text-3xl font-bold text-earth">{c.totalYen.toLocaleString()}円</span>
+        </div>
+        <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 border-t border-earth/20 pt-2 text-sm">
+          <dt className="text-muted">
+            商品代（{gramsToKgText(c.unitG)}kg {c.unitPriceYen.toLocaleString()}円 × {c.quantityG / c.unitG}）
+          </dt>
+          <dd className="text-right">{c.itemYen.toLocaleString()}円</dd>
+          <dt className="text-muted">送料・配達料（{methodLabel[c.method]}）</dt>
+          <dd className="text-right">{c.shippingYen.toLocaleString()}円</dd>
+        </dl>
+        <p className="text-xs text-muted">1kg あたり 約{perKg.toLocaleString()}円（送料を除く）</p>
       </div>
 
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        <dt className="text-muted">単価</dt>
-        <dd>
-          {gramsToKgText(c.unitG)}kg あたり {c.unitPriceYen.toLocaleString()}円（1kg あたり 約{perKg.toLocaleString()}円）
-        </dd>
-        <dt className="text-muted">希望数量</dt>
-        <dd>{gramsToKgText(c.quantityG)}kg</dd>
-        <dt className="text-muted">商品代</dt>
-        <dd>{c.itemYen.toLocaleString()}円</dd>
-        <dt className="text-muted">送料・配達料</dt>
-        <dd>{c.shippingYen.toLocaleString()}円（{methodLabel[c.method]}）</dd>
-        <dt className="font-bold">合計</dt>
-        <dd className="font-bold">{c.totalYen.toLocaleString()}円</dd>
-        <dt className="text-muted">届けられる日</dt>
-        <dd>
-          {formatDate(new Date(c.earliestDelivery))}〜{formatDate(new Date(c.latestDelivery))}
-        </dd>
-        <dt className="text-muted">受付期限</dt>
-        <dd>{formatJstDateTime(new Date(c.acceptUntil))}</dd>
-        <dt className="text-muted">回答期限</dt>
-        <dd>{formatJstDateTime(new Date(c.answerUntil))}</dd>
-        <dt className="text-muted">出品の状況</dt>
-        <dd>
-          出品 {gramsToKgText(c.totalListedG)}kg／販売確定 {gramsToKgText(c.confirmedG)}kg／返事待ち {gramsToKgText(c.reservedG)}kg（{c.requestCount}件）
-        </dd>
+      {/* 日付と期限 */}
+      <dl className="grid grid-cols-2 gap-2 text-sm">
+        <div className="col-span-2 rounded-xl bg-leaf-soft px-3 py-2">
+          <dt className="text-xs font-bold text-leaf">届けられる日</dt>
+          <dd className="text-base font-bold">
+            {formatDate(new Date(c.earliestDelivery))}〜{formatDate(new Date(c.latestDelivery))}
+          </dd>
+        </div>
+        <div className="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-950">
+          <dt className="text-xs font-bold text-amber-800 dark:text-amber-300">受付期限</dt>
+          <dd className="font-bold">{formatJstDateTime(new Date(c.acceptUntil))}</dd>
+        </div>
+        <div className="rounded-xl bg-sky-50 px-3 py-2 dark:bg-sky-950">
+          <dt className="text-xs font-bold text-sky-800 dark:text-sky-300">農家さんの回答期限</dt>
+          <dd className="font-bold">{formatJstDateTime(new Date(c.answerUntil))}</dd>
+        </div>
       </dl>
+
+      {/* 出品の残りの様子（どれくらい申し込まれているか） */}
+      <p className="text-xs text-muted">
+        出品 {gramsToKgText(c.totalListedG)}kg のうち、販売確定 {gramsToKgText(c.confirmedG)}kg・返事待ち {gramsToKgText(c.reservedG)}kg（{c.requestCount}件）
+      </p>
 
       <details className="text-sm">
         <summary className="cursor-pointer font-bold">農家さんのこと</summary>
@@ -166,7 +187,7 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
       {/* 探したときの条件を持って、購入希望の画面へ */}
       <Link
         href={`/buyer/listings/${c.listingId}?${new URLSearchParams({ quantity: gramsToKgText(c.quantityG), method: c.method, useDate })}`}
-        className="btn btn-leaf"
+        className="btn btn-leaf mt-auto"
       >
         この内容で購入希望へ進む
       </Link>

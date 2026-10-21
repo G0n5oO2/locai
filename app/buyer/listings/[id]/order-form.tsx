@@ -108,14 +108,19 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
       {/* 金額の目安（不変条件2：本当の金額は、送ったときにサーバーが計算する） */}
       <div className="rounded-3xl bg-leaf-soft p-4 text-sm">
         {q && !("error" in q) ? (
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-            <dt>商品代</dt>
-            <dd>{q.itemYen.toLocaleString()}円</dd>
-            <dt>送料・配達料</dt>
-            <dd>{q.shippingYen.toLocaleString()}円</dd>
-            <dt className="font-bold">合計</dt>
-            <dd className="font-bold">{q.totalYen.toLocaleString()}円</dd>
-          </dl>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-bold text-leaf">金額の目安（送るときに、アプリがもう一度計算します）</p>
+            <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5">
+              <dt className="text-muted">商品代</dt>
+              <dd className="text-right">{q.itemYen.toLocaleString()}円</dd>
+              <dt className="text-muted">送料・配達料</dt>
+              <dd className="text-right">{q.shippingYen.toLocaleString()}円</dd>
+            </dl>
+            <div className="flex items-baseline justify-between gap-2 border-t border-line pt-2">
+              <span className="font-bold">合計（送料込み）</span>
+              <span className="text-3xl font-bold text-leaf">{q.totalYen.toLocaleString()}円</span>
+            </div>
+          </div>
         ) : (
           <p>{q && "error" in q ? q.error : "数量を入れると、合計金額が出ます"}</p>
         )}

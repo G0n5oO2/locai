@@ -6,8 +6,8 @@ import { AuthShell } from "@/app/ui/auth-shell";
 import type { DeliveryMethod } from "@/lib/burden";
 import { formatJstDateTime, jstDateText, parseDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
-import { gramsToKgText } from "@/lib/quantity";
 import { requireBuyer } from "@/lib/session";
+import { PriceBox, QualityTags } from "@/app/ui/price-box";
 import { OrderForm } from "./order-form";
 import { Loading } from "@/app/ui/loading";
 
@@ -48,16 +48,19 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1 card p-4">
-        {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
-        <p className="text-lg font-bold">{listing.vegetable}</p>
-        <p className="text-sm text-muted">
-          {listing.producer.name}・{profile.prefecture} {profile.city}
-        </p>
-        <p className="text-sm">
-          {gramsToKgText(listing.unitG)}kg あたり {listing.unitPriceYen.toLocaleString()}円・{listing.quality === "normal" ? "通常品" : "規格外"}
-          {listing.surplus && "・余剰品"}
-        </p>
+      <div className="flex flex-col gap-3 card p-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 利用者が入力した文字は、テキストとしてそのまま表示する */}
+            <p className="text-xl font-bold">{listing.vegetable}</p>
+            <QualityTags quality={listing.quality} surplus={listing.surplus} />
+          </div>
+          <p className="text-sm text-muted">
+            {listing.producer.name}・{profile.prefecture} {profile.city}
+          </p>
+        </div>
+        {/* 値段は大きく、茶色の囲みで目立たせる */}
+        <PriceBox unitG={listing.unitG} unitPriceYen={listing.unitPriceYen} />
         {/* 品の状態の説明（規格外のときは特に大事）。利用者が入力した文字は、テキストとしてそのまま表示する */}
         {listing.note && <p className="text-sm whitespace-pre-wrap">状態：{listing.note}</p>}
         <p className="text-sm text-muted">
