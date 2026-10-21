@@ -68,7 +68,22 @@ export async function DeliveryCalendarFor({ userId, side }: { userId: string; si
     method: methodLabel[o.method],
     methodKey: o.method,
   }));
-  if (side === "buyer") return <DeliveryCalendar deliveries={deliveries} today={todayText} side={side} />;
+  if (side === "buyer") {
+    // お店だけ：返事待ちの注文の期限（農家さんの回答期限と、条件の変更の提案にお店が返事をする期限）。自分の注文だけを読む
+    const waiting = await prisma.order.findMany({
+      where: { buyerId: userId, status: { in: ["pending", "change_pending"] }, answerUntil: { gt: new Date() } },
+      include: { listing: { select: { vegetable: true, producer: { select: { name: true } } } } },
+    });
+    const orderMarks = waiting.map((o) => ({
+      orderId: o.id,
+      date: jstDateText(o.answerUntil),
+      kind: o.status === "change_pending" ? ("mine" as const) : ("farmer" as const),
+      vegetable: o.listing.vegetable,
+      partner: o.listing.producer.name,
+      time: formatJstDateTime(o.answerUntil),
+    }));
+    return <DeliveryCalendar deliveries={deliveries} today={todayText} side={side} orderMarks={orderMarks} />;
+  }
 
   // 農家さんだけ：1回の出荷の基準（負担の目安）と、受付中の出品の期限の印
   const profile = await prisma.producerProfile.findUnique({ where: { userId } });

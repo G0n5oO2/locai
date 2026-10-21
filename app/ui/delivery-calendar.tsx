@@ -18,6 +18,14 @@ export type CalendarDelivery = {
 
 // 出品の期限（農家さんのカレンダーだけ）：受付期限・回答期限の日に印を付ける
 export type CalendarDeadline = { date: string; kind: "accept" | "answer"; vegetable: string; time: string; listingId: string };
+// 返事待ちの注文の期限（お店のカレンダーだけ）
+// farmer：農家さんが返事をする期限（この日までに、買えるかが決まる）
+// mine：農家さんから条件の変更の提案が来ていて、お店が返事をする期限（過ぎると期限切れになる）
+export type CalendarOrderMark = { orderId: string; date: string; kind: "farmer" | "mine"; vegetable: string; partner: string; time: string };
+const orderMarkStyle = {
+  farmer: { label: "農家さんの回答期限", short: "回", chip: "bg-sky-100 ring-sky-400", text: "text-sky-900", tag: "bg-sky-200 text-sky-900" },
+  mine: { label: "あなたの返事の期限", short: "返", chip: "bg-rose-100 ring-rose-400", text: "text-rose-900", tag: "bg-rose-200 text-rose-900" },
+} as const;
 // 1回の出荷で何件まで（農家さんの基準。受け渡し方法ごと）
 export type ShipLimits = Record<"delivery" | "self" | "pickup", number>;
 
@@ -46,12 +54,14 @@ export function DeliveryCalendar({
   side,
   limits,
   deadlines = [],
+  orderMarks = [],
 }: {
   deliveries: CalendarDelivery[];
   today: string;
   side: "producer" | "buyer";
   limits?: ShipLimits;
   deadlines?: CalendarDeadline[];
+  orderMarks?: CalendarOrderMark[];
 }) {
   const [y0, m0] = today.split("-").map(Number);
   // 見ている月（今月から、前は1か月・先は2か月まで）
@@ -65,6 +75,8 @@ export function DeliveryCalendar({
   const accent = side === "producer" ? "earth" : "leaf";
   const picked = selected ? (byDate.get(selected) ?? []) : [];
   const deadlinesOn = (date: string) => deadlines.filter((d) => d.date === date);
+  // お店：その日が期限の、返事待ちの注文（自分が返事をするものを先に出す）
+  const orderMarksOn = (date: string) => orderMarks.filter((d) => d.date === date).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "mine" ? -1 : 1));
   // 出品ごとに番号を付ける（受付期限が早い順）。受付期限と回答期限の印に、同じ番号を入れてセットだと分かるようにする
   const listingIds = [...new Set([...deadlines].sort((a, b) => (a.kind === b.kind ? a.date.localeCompare(b.date) : a.kind === "accept" ? -1 : 1)).map((d) => d.listingId))];
   const numberOf = (listingId: string) => listingIds.indexOf(listingId) + 1;
@@ -109,6 +121,13 @@ export function DeliveryCalendar({
           <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 font-bold text-red-700 ring-1 ring-red-300 dark:bg-red-950 dark:text-red-300">出荷の基準を超えた日</span>
         </div>
       )}
+      {/* お店：色の見本 */}
+      {side === "buyer" && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-sky-100 px-2 py-0.5 font-bold text-sky-900 ring-1 ring-sky-400">{orderMarkStyle.farmer.label}</span>
+          <span className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-900 ring-1 ring-rose-400">{orderMarkStyle.mine.label}</span>
+        </div>
+      )}
       {/* カレンダー：曜日の見出しと、日にちのマス。納品がある日には、届く野菜のアイコンをのせる */}
       <div className="grid grid-cols-7 gap-1 text-center text-xs">
         {WEEK.map((w, i) => (
@@ -123,13 +142,14 @@ export function DeliveryCalendar({
           const isSelected = date === selected;
           const over = side === "producer" && overOn(date);
           const marks = deadlinesOn(date);
+          const oMarks = orderMarksOn(date);
           const paired = pairedDates.has(date);
           return (
             <button
               key={date}
               type="button"
               onClick={() => setSelected(isSelected ? null : date)}
-              aria-label={`${Number(date.slice(8))}日${items.length > 0 ? `（${side === "producer" ? "お届け" : "納品"} ${items.length}件）` : ""}${over ? "（基準を超えています）" : ""}${marks.length > 0 ? "（出品の期限あり）" : ""}`}
+              aria-label={`${Number(date.slice(8))}日${items.length > 0 ? `（${side === "producer" ? "お届け" : "納品"} ${items.length}件）` : ""}${over ? "（基準を超えています）" : ""}${marks.length > 0 ? "（出品の期限あり）" : ""}${oMarks.some((o) => o.kind === "mine") ? "（あなたの返事の期限あり）" : ""}${oMarks.some((o) => o.kind === "farmer") ? "（農家さんの回答期限あり）" : ""}`}
               aria-pressed={isSelected}
               className={`flex h-14 flex-col items-center gap-0.5 rounded-xl p-0.5 md:h-24 outline-none focus-visible:ring-2 focus-visible:ring-leaf ${
                 isSelected
@@ -168,6 +188,23 @@ export function DeliveryCalendar({
                   {marks.length > 2 && <span className="text-[9px] font-bold text-muted">+{marks.length - 2}</span>}
                 </span>
               )}
+              {/* お店：返事待ちの注文の期限の印（水色＝農家さんの回答期限、ピンク＝あなたの返事の期限）
+                  スマホはアイコンだけ、パソコンは「回 賀茂茄子」のように名前も出す */}
+              {oMarks.length > 0 && (
+                <span className="flex max-w-full flex-wrap justify-center gap-0.5">
+                  {oMarks.slice(0, 2).map((m) => (
+                    <span key={`${m.orderId}-${m.kind}`} className={`flex max-w-full items-center gap-0.5 rounded-full px-0.5 ring-1 md:px-1 ${orderMarkStyle[m.kind].chip}`}>
+                      <span className="[&>svg]:size-3.5 md:[&>svg]:size-4">
+                        <VegIcon name={m.vegetable} />
+                      </span>
+                      <span className={`hidden truncate text-[10px] leading-4 font-bold md:inline ${orderMarkStyle[m.kind].text}`}>
+                        {orderMarkStyle[m.kind].short} {m.vegetable}
+                      </span>
+                    </span>
+                  ))}
+                  {oMarks.length > 2 && <span className="text-[9px] font-bold text-muted">+{oMarks.length - 2}</span>}
+                </span>
+              )}
               {/* 届く野菜のアイコン（3つまで。もっとあれば「+数」） */}
               <span className="flex flex-1 items-center justify-center">
                 {items.slice(0, 3).map((d) => (
@@ -189,7 +226,7 @@ export function DeliveryCalendar({
             {Number(selected.slice(5, 7))}月{Number(selected.slice(8))}日の{side === "producer" ? "お届け" : "納品"}
             {selected === today && "（今日）"}
           </p>
-          {picked.length === 0 && <p className="text-muted">この日の{side === "producer" ? "お届け" : "納品"}はありません。</p>}
+          {picked.length === 0 && orderMarksOn(selected).length === 0 && <p className="text-muted">この日の{side === "producer" ? "お届け" : "納品"}はありません。</p>}
           {/* 農家さん：野菜ごとの合計の量（何をどれだけ収穫するか）と、受け渡し方法ごとの件数（出荷の負担） */}
           {side === "producer" && picked.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-2">
@@ -220,6 +257,26 @@ export function DeliveryCalendar({
                 {circled(numberOf(d.listingId))} {d.vegetable}
               </span>
               <span className="ml-auto text-xs text-muted">{d.time} まで</span>
+            </Link>
+          ))}
+          {/* お店：この日が期限の、返事待ちの注文 */}
+          {orderMarksOn(selected).map((d) => (
+            <Link key={`${d.orderId}-${d.kind}`} href={`/orders/${d.orderId}`} className="flex flex-col gap-1 rounded-2xl bg-surface p-2 ring-1 ring-line">
+              <span className="flex items-center gap-2">
+                <span className={`rounded px-1.5 text-xs font-bold ${orderMarkStyle[d.kind].tag}`}>{orderMarkStyle[d.kind].label}</span>
+                <span className="ml-auto text-xs text-muted">{d.time} まで</span>
+              </span>
+              <span className="flex items-center gap-2">
+                <VegIcon name={d.vegetable} />
+                <span className="flex min-w-0 flex-col">
+                  {/* 名前・野菜は利用者が入力したものなので、テキストとしてそのまま表示する */}
+                  <span className="truncate font-bold">{d.vegetable}</span>
+                  <span className="truncate text-xs text-muted">
+                    {d.partner}・{d.kind === "mine" ? "変更の提案に、承認か断るかを返事してください" : "この日までに、買えるかが決まります"}
+                  </span>
+                </span>
+                <span className="ml-auto shrink-0 text-xs font-bold text-leaf">詳しく →</span>
+              </span>
             </Link>
           ))}
           {picked.map((d) => (
@@ -265,6 +322,7 @@ export function DeliveryCalendar({
       )}
       <p className="text-xs text-muted">
         販売確定した注文の納品日に、{side === "producer" ? "届ける" : "届く"}野菜をのせています。日にちを押すと、詳しい内容が見られます。
+        {side === "buyer" && "水色の枠の野菜は、返事待ちの注文に農家さんが答える期限の日、ピンクの枠の野菜は、条件の変更の提案にあなたが返事をする期限の日です。"}
         {side === "producer" && "黄色の枠の野菜は出品の受付期限、水色の枠の野菜は回答期限の日です。同じ番号がセットで、期限の日を押すと、もう一方の日が黄色の枠で光ります。1回の出荷の基準を超えた日は、赤っぽい色になります。"}
       </p>
     </section>
