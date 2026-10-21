@@ -108,6 +108,10 @@ select {
 /* ===== 形の決まり（第2版 4-1：ふっくら・立体的） =====
    画面ごとに形を書かず、ここの名前（card・btn など）を使う。1か所直せば、全部の画面が変わる */
 @layer components {
+  /* 地図で探す：出品の数を出す丸（第2版） */
+  .map-count {
+    @apply flex size-[34px] items-center justify-center rounded-full border-[3px] border-white bg-leaf text-sm font-bold text-white shadow-[0_2px_6px_rgba(0,0,0,0.3)];
+  }
   /* カード：大きく丸く、やわらかい影で浮いて見える */
   .card {
     @apply rounded-3xl bg-surface shadow-[0_4px_16px_rgba(80,70,40,0.10)];
@@ -146,4 +150,11 @@ select {
   .section-title-earth {
     @apply before:bg-earth;
   }
+}
+
+/* 地図の出典（国土地理院）の文字。消さずに、読める大きさで小さめにする
+   leaflet の決まりより強くするため、@layer の外に書き、地図の箱（.map-box）から指定する */
+.map-box.leaflet-container .leaflet-control-attribution {
+  font-size: 10px;
+  line-height: 1.4;
 }

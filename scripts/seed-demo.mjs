@@ -33,6 +33,55 @@ const producers = [
     profile: { prefecture: "京都府", city: "南丹市", items: "賀茂茄子", commitment: "今年から始めました（デモ）", band1: [5000, 1000], band2: null, band3: null, self: null, pickup: "南丹市の集荷場（デモ）" },
     listings: [{ vegetable: "賀茂茄子", totalG: 10000, unitG: 500, minOrderG: 500, unitPriceYen: 280, quality: "irregular", surplus: false, note: "少し小ぶりです（デモ）" }],
   },
+  // ここから下は、地図で探すを試すための農家さん（関西の各地）
+  {
+    email: "producer4@example.com",
+    profile: { prefecture: "滋賀県", city: "東近江市", items: "赤かぶ、日野菜", commitment: "琵琶湖の近くで、土づくりから育てています（デモ）", band1: [3000, 900], band2: [10000, 1500], band3: null, self: null, pickup: "東近江市の直売所（デモ）" },
+    listings: [{ vegetable: "日野菜", totalG: 15000, unitG: 500, minOrderG: 1000, unitPriceYen: 250, quality: "normal", surplus: false, note: "" }],
+  },
+  {
+    email: "producer5@example.com",
+    profile: { prefecture: "滋賀県", city: "高島市", items: "賀茂茄子、ほうれん草", commitment: "山の水で育てています（デモ）", band1: [5000, 1200], band2: null, band3: null, self: null, pickup: null },
+    listings: [{ vegetable: "ほうれん草", totalG: 8000, unitG: 500, minOrderG: 500, unitPriceYen: 220, quality: "normal", surplus: true, note: "寒くなって甘くなりました（デモ）" }],
+  },
+  {
+    email: "producer6@example.com",
+    profile: { prefecture: "京都府", city: "京丹後市", items: "九条ねぎ、聖護院かぶ", commitment: "海風の当たる畑です（デモ）", band1: [3000, 1000], band2: [10000, 1800], band3: null, self: null, pickup: null },
+    listings: [{ vegetable: "九条ねぎ", totalG: 12000, unitG: 500, minOrderG: 1000, unitPriceYen: 350, quality: "irregular", surplus: false, note: "太さがばらばらです（デモ）" }],
+  },
+  {
+    email: "producer7@example.com",
+    profile: { prefecture: "大阪府", city: "豊能郡能勢町", items: "賀茂茄子、里芋", commitment: "里山で、少量ずつ育てています（デモ）", band1: [3000, 800], band2: null, band3: null, self: 600, pickup: "能勢町の畑の前（デモ）" },
+    listings: [
+      { vegetable: "里芋", totalG: 20000, unitG: 1000, minOrderG: 2000, unitPriceYen: 500, quality: "normal", surplus: false, note: "" },
+      { vegetable: "賀茂茄子", totalG: 6000, unitG: 500, minOrderG: 500, unitPriceYen: 320, quality: "normal", surplus: false, note: "" },
+    ],
+  },
+  {
+    email: "producer8@example.com",
+    profile: { prefecture: "大阪府", city: "泉佐野市", items: "水なす、玉ねぎ", commitment: "泉州の水なす一筋です（デモ）", band1: [2000, 700], band2: [5000, 1100], band3: null, self: 500, pickup: null },
+    listings: [{ vegetable: "水なす", totalG: 15000, unitG: 500, minOrderG: 1000, unitPriceYen: 450, quality: "normal", surplus: true, note: "たくさん採れています（デモ）" }],
+  },
+  {
+    email: "producer9@example.com",
+    profile: { prefecture: "兵庫県", city: "丹波篠山市", items: "黒枝豆、山の芋", commitment: "昼と夜の寒暖差を生かしています（デモ）", band1: [3000, 900], band2: [10000, 1400], band3: null, self: null, pickup: "丹波篠山市の集荷場（デモ）" },
+    listings: [{ vegetable: "黒枝豆", totalG: 10000, unitG: 500, minOrderG: 500, unitPriceYen: 600, quality: "normal", surplus: false, note: "" }],
+  },
+  {
+    email: "producer10@example.com",
+    profile: { prefecture: "兵庫県", city: "南あわじ市", items: "玉ねぎ、レタス", commitment: "淡路島の玉ねぎです（デモ）", band1: [5000, 1000], band2: [20000, 2000], band3: null, self: null, pickup: null },
+    listings: [{ vegetable: "玉ねぎ", totalG: 50000, unitG: 1000, minOrderG: 5000, unitPriceYen: 200, quality: "irregular", surplus: true, note: "大きさが不ぞろいです（デモ）" }],
+  },
+  {
+    email: "producer11@example.com",
+    profile: { prefecture: "奈良県", city: "宇陀市", items: "大和まな、ほうれん草", commitment: "高原の涼しさで育てています（デモ）", band1: [3000, 900], band2: null, band3: null, self: 800, pickup: null },
+    listings: [{ vegetable: "大和まな", totalG: 6000, unitG: 500, minOrderG: 500, unitPriceYen: 280, quality: "normal", surplus: false, note: "" }],
+  },
+  {
+    email: "producer12@example.com",
+    profile: { prefecture: "和歌山県", city: "紀の川市", items: "玉ねぎ、ほうれん草", commitment: "紀の川の近くの畑です（デモ）", band1: [3000, 1000], band2: [10000, 1600], band3: null, self: null, pickup: "紀の川市の直売所（デモ）" },
+    listings: [{ vegetable: "ほうれん草", totalG: 10000, unitG: 500, minOrderG: 1000, unitPriceYen: 200, quality: "normal", surplus: false, note: "" }],
+  },
 ];
 
 const buyers = [
