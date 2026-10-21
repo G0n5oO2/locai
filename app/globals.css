@@ -112,6 +112,9 @@ select {
   .map-count {
     @apply flex size-[34px] items-center justify-center rounded-full border-[3px] border-white bg-leaf text-sm font-bold text-white shadow-[0_2px_6px_rgba(0,0,0,0.3)];
   }
+  .map-count-earth {
+    @apply bg-earth;
+  }
   /* カード：大きく丸く、やわらかい影で浮いて見える */
   .card {
     @apply rounded-3xl bg-surface shadow-[0_4px_16px_rgba(80,70,40,0.10)];

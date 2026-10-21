@@ -24,6 +24,11 @@ const slides = [
     body: [],
   },
   {
+    title: "AI がお手伝いします",
+    lead: "",
+    body: [],
+  },
+  {
     title: "はじめてみましょう",
     lead: "",
     body: ["登録は、お店か農家さんかを選ぶだけで始められます。"],
@@ -49,6 +54,12 @@ const features = [
   "農家さんは、自分で値段を決めて、売りたい野菜をまとめて出品できます",
   "お店は、仕入れ日の前に、必要な量だけ申し込めます",
   "送料込みの合計金額はアプリが計算し、農家さんが承認すると「販売確定」になります",
+];
+
+// 4枚目：AI がお手伝いすること（アプリで実際に AI を使っているところ）
+const aiHelps = [
+  { who: "農家さん", figure: <Farmer happy />, lines: ["こだわりの箇条書きを、読みやすい文の案に", "届いた注文の、確かめるところを短くまとめる"] },
+  { who: "お店", figure: <ShopOwner happy />, lines: ["ほしい野菜がないときに、代わりの野菜の案を出す", "旬の野菜を使った料理の案を出す"] },
 ];
 
 // このブラウザで、もう見たかどうか（保存できないブラウザでも、エラーで止まらないようにする）
@@ -114,7 +125,8 @@ export function IntroSlides() {
           )}
           {index === 1 && <Troubles />}
           {index === 2 && <Connect />}
-          {index === 3 && <Together />}
+          {index === 3 && <AiHelp />}
+          {index === 4 && <Together />}
           {slide.body.length > 0 && (
             <ul className="flex flex-col gap-3">
               {slide.body.map((line) => (
@@ -306,7 +318,44 @@ function Connect() {
   );
 }
 
-// 4枚目の中身：笑顔の2人が、野菜のかごをはさんで並ぶ
+// 4枚目の中身：AI がお手伝いすること。決めるのは、人とアプリの決まり（ルール2・5）
+function AiHelp() {
+  return (
+    <div className="flex flex-col gap-4">
+      {aiHelps.map((a) => (
+        <div key={a.who} className="flex items-start gap-3">
+          <figure className="flex w-20 shrink-0 flex-col items-center gap-1">
+            {a.figure}
+            <figcaption className="text-sm font-bold">{a.who}</figcaption>
+          </figure>
+          <ul className="flex flex-1 flex-col gap-2" aria-label={`${a.who}への AI のお手伝い`}>
+            {a.lines.map((line) => (
+              <li key={line} className="flex items-start gap-2 card px-3 py-2 text-sm leading-6">
+                <SparkleIcon />
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <div className="rounded-2xl bg-leaf-soft p-3 text-sm leading-6">
+        <p className="font-bold text-leaf">決めるのは、あなたです</p>
+        <p>AI の案を使うかどうかは、自分で選べます。値段・在庫・並び順・販売の確定は、AI ではなくアプリの決まりで決めます。</p>
+      </div>
+    </div>
+  );
+}
+
+// AI のお手伝いのしるし（きらきら）
+function SparkleIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 20 20" className="mt-1 size-4 shrink-0 text-leaf">
+      <path d="M10 1.5 L11.8 8.2 L18.5 10 L11.8 11.8 L10 18.5 L8.2 11.8 L1.5 10 L8.2 8.2 Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+// 5枚目の中身：笑顔の2人が、野菜のかごをはさんで並ぶ
 function Together() {
   return (
     <div className="flex items-end justify-center gap-2" aria-label="農家さんとお店が、野菜を通してつながっている絵">
