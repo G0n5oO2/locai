@@ -153,7 +153,8 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-line px-4 py-5 text-center text-xs text-muted">
-        デモ版です。表示している内容は、作り物のデータです。
+        {/* 名前に「デモ」は付けないが、本物と思われないように、架空のデータであることは書いておく */}
+        試作版です。表示している農家さん・お店・出品は、架空のものです。
       </footer>
     </div>
   );

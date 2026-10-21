@@ -9,7 +9,12 @@ import { DeliveryCalendarFor, HomeNoticesFor } from "@/app/ui/home-updates";
 import { quantityText } from "@/app/ui/order-amount";
 import { expireOverdue, usedAmounts } from "@/lib/availability";
 import { prisma } from "@/lib/prisma";
+import { farmShopKm } from "@/lib/region";
+import { shuffle } from "@/lib/search";
 import { requireProducer } from "@/lib/session";
+import { nearWanted } from "@/lib/wanted";
+import { splitWanted } from "@/lib/wanted-tabs";
+import { LeftoverWanted, type LeftoverWantedGroup } from "./leftover-wanted";
 import { Loading } from "@/app/ui/loading";
 
 export default function ProducerHomePage(props: PageProps<"/producer/home">) {
@@ -64,6 +69,28 @@ async function Amounts({ searchParams }: PageProps<"/producer/home">) {
     groups.set(l.vegetable, g);
   }
 
+  // 残りの量がある出品に、その野菜の「探しています」が来ていたら、ホームに出す（第2版 4-3「ホーム」）
+  // 出すのは、受付中のふつうの出品で、残りが最低注文量以上あるもの。お試し食材は出さない
+  const profile = await prisma.producerProfile.findUnique({ where: { userId: user.id } });
+  const allWanted = profile ? await nearWanted(profile) : [];
+  const leftoverGroups: LeftoverWantedGroup[] = [];
+  for (const l of listings) {
+    const u = used.get(l.id)!;
+    const remainingG = l.totalG - u.confirmedG - u.reservedG;
+    if (!profile || l.isTrial || l.status !== "open" || remainingG < l.minOrderG) continue;
+    // その野菜を探しているお店と、代わりの野菜としてその野菜を選んでいるお店（種類を問わないお店は、出品の画面で見る）
+    const tabs = splitWanted(allWanted, l.vegetable);
+    const matched = [...tabs.specified.map((w) => ({ w, substitute: false })), ...tabs.substitute.map((w) => ({ w, substitute: true }))];
+    if (matched.length === 0) continue;
+    const items = matched.map(({ w, substitute }) => {
+      const [prefecture, city] = w.area.split(" ");
+      return { id: w.id, vegetable: w.vegetable, substitute, quantityG: w.quantityG, useDate: w.useDate, method: w.method, area: w.area, km: farmShopKm(profile, { prefecture, city }) };
+    });
+    // 近い順。先にばらばらにしておくと、距離が同じお店どうしはランダムな順になる（同じお店ばかりが上に来ない）
+    const sorted = shuffle(items).sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity));
+    leftoverGroups.push({ listingId: l.id, vegetable: l.vegetable, remainingG, expired: l.acceptUntil <= now, wanted: sorted });
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* ホームを開いたときに、上から出てくる通知（新しいメッセージ・返事待ち・今日の納品） */}
@@ -71,6 +98,8 @@ async function Amounts({ searchParams }: PageProps<"/producer/home">) {
       <Link href="/producer/listings/new" className="btn btn-earth md:w-fit md:px-8">
         新しく出品する
       </Link>
+      {/* 残りの野菜を探しているお店（来ているときだけ） */}
+      {leftoverGroups.length > 0 && <LeftoverWanted groups={leftoverGroups} />}
       {groups.size === 0 && <p className="text-muted">今、受付中の出品や返事待ちの申し込みはありません。</p>}
       {/* パソコンの幅では、カードを横に並べる */}
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

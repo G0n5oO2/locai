@@ -14,7 +14,7 @@ const [profile] = await sql`select "deliveryBand1MaxG", "selfDeliveryYen", "pick
 await sql`
   insert into listing (id, "producerId", vegetable, "totalG", "unitG", "minOrderG", "unitPriceYen", quality, surplus, note,
     "acceptUntil", "answerUntil", "deliverFrom", "deliverTo", "offersDelivery", "offersSelf", "offersPickup", "updatedAt")
-  values (${randomUUID()}, ${user.id}, '賀茂茄子', 18000, 500, 1000, 300, 'normal', true, '売れ残りのテスト用（デモ）',
+  values (${randomUUID()}, ${user.id}, '賀茂茄子', 18000, 500, 1000, 300, 'normal', true, '売れ残りのテスト用',
     ${new Date(Date.now() - 60 * 60 * 1000).toISOString()}, ${new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString()}, ${dateOnly(2)}, ${dateOnly(10)},
     ${profile.deliveryBand1MaxG !== null}, ${profile.selfDeliveryYen !== null}, ${profile.pickupPlace !== null}, now())`;
 console.log("producer1 に、受付期限が過ぎた「賀茂茄子 18kg」の出品を作りました");
