@@ -43,7 +43,7 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
           </select>
           {state.errors?.method && <p className={errorClass}>{state.errors.method[0]}</p>}
         </div>
-        <p className="text-xs text-muted md:col-span-2 lg:col-span-3">お店の地域（{area}）から 70km 以内の農家さんの出品を探します。</p>
+        <p className="text-xs text-muted md:col-span-2 lg:col-span-3">関西の農家さんの出品から、条件に合うものを探します。お店の地域（{area}）からの距離は、宅配の送料と、農家さんが配達できるかに使います。</p>
         {state.message && <p className={`${errorClass} md:col-span-2 lg:col-span-3`}>{state.message}</p>}
         <button type="submit" disabled={pending} className="btn btn-leaf md:col-span-2 md:w-fit md:px-12 lg:col-span-3">
           {pending ? "探しています…" : "仕入れ候補を探す"}
@@ -127,7 +127,7 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
           <QualityTags quality={c.quality} surplus={c.surplus} />
         </div>
         <p className="text-sm text-muted">
-          {c.producerName}・{c.producerArea}
+          {c.producerName}・{c.producerArea}（お店から 約{c.distanceKm}km）
         </p>
       </div>
       {/* 状態は、買うかどうか決める大事な手がかりなので、色の付いた枠で目立たせる */}
@@ -141,7 +141,9 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
       {/* 金額：合計を大きく、内訳は小さく添える（金額はアプリが計算したもの：不変条件2） */}
       <div className="flex flex-col gap-2 rounded-2xl bg-earth-soft px-4 py-3">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-sm font-bold text-earth">{gramsToKgText(c.quantityG)}kg の合計（送料込み）</span>
+          <span className="text-sm font-bold text-earth">
+            {gramsToKgText(c.quantityG)}kg の合計{c.shippingToBeDecided ? "（送料を除く）" : "（送料込み）"}
+          </span>
           <span className="text-3xl font-bold text-earth">{c.totalYen.toLocaleString()}円</span>
         </div>
         <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 border-t border-earth/20 pt-2 text-sm">
@@ -150,8 +152,9 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
           </dt>
           <dd className="text-right">{c.itemYen.toLocaleString()}円</dd>
           <dt className="text-muted">送料・配達料（{methodLabel[c.method]}）</dt>
-          <dd className="text-right">{c.shippingYen.toLocaleString()}円</dd>
+          <dd className="text-right">{c.shippingToBeDecided ? "要相談" : `${c.shippingYen.toLocaleString()}円`}</dd>
         </dl>
+        {c.shippingToBeDecided && <p className="text-xs text-muted">お店が農家さんの送料の表より遠いため、送料は農家さんが決めてから知らせます。</p>}
         <p className="text-xs text-muted">1kg あたり 約{perKg.toLocaleString()}円（送料を除く）</p>
       </div>
 

@@ -27,7 +27,7 @@ async function NewListing({ searchParams }: PageProps<"/producer/listings/new">)
   // プロフィールがないと、地域や送料が分からないので出品できない
   if (!profile) redirect("/producer/profile");
 
-  // 畑から 70km 以内の「探しています」
+  // お店の「探しています」（第2版：70km 以内に絞る決まりは外した）
   const wanted = await nearWanted(profile);
   const { vegetable, from } = await searchParams;
 

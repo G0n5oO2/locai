@@ -1,5 +1,5 @@
 // 地図で探す（第2版）
-// 地図で囲んだ地域の、受付中の出品を出す。条件で探すと違い、お店からの距離（70km）では絞らない（遠くの農家さんも見つけてもらえるように）
+// 地図で囲んだ地域の、受付中の出品を出す。お店からの距離では絞らない（遠くの農家さんも見つけてもらえるように）
 // 場所は市区町村の代表地点（役所の場所）だけを使う。畑の場所は出さない（不変条件4）
 // 並び順はランダムで、同じ農家さんが続かないようにする（不変条件5・6）
 import "server-only";
@@ -7,7 +7,8 @@ import type { DeliveryMethod } from "./burden";
 import { expireOverdue, usedAmounts } from "./availability";
 import { jstDateText, parseDate } from "./datetime";
 import { prisma } from "./prisma";
-import { findMunicipality } from "./region";
+import { selfDeliveryAllowed } from "./pricing";
+import { farmShopKm, findMunicipality } from "./region";
 import { noRepeatInRow, shuffle } from "./search";
 
 export type MapListing = {
@@ -15,6 +16,7 @@ export type MapListing = {
   vegetable: string;
   producerName: string;
   area: string; // 「府県 市区町村」
+  distanceKm: number | null; // お店からの、だいたいの距離（市区町村の代表地点どうし）
   lat: number; // 市区町村の代表地点
   lng: number;
   quality: "normal" | "irregular";
@@ -44,8 +46,9 @@ export async function mapListings(buyerId: string, vegetable: string): Promise<M
       vegetable: { contains: vegetable, mode: "insensitive" },
       producerId: { not: buyerId },
     },
-    include: { producer: { select: { id: true, name: true, profile: { select: { prefecture: true, city: true } } } } },
+    include: { producer: { select: { id: true, name: true, profile: { select: { prefecture: true, city: true, selfDeliveryMaxKm: true } } } } },
   });
+  const shop = await prisma.buyerProfile.findUnique({ where: { userId: buyerId }, select: { prefecture: true, city: true } });
   const used = await usedAmounts(prisma, listings.map((l) => l.id));
 
   const rows: (MapListing & { producerId: string })[] = [];
@@ -58,12 +61,16 @@ export async function mapListings(buyerId: string, vegetable: string): Promise<M
     const availableG = l.totalG - u.confirmedG - u.reservedG;
     if (availableG < l.minOrderG) continue;
     const from = l.deliverFrom > today ? l.deliverFrom : today;
+    const km = shop ? farmShopKm(place, shop) : null;
+    // 自分で配達は、農家さんが決めた距離より遠いお店には出さない（選べないため）
+    const selfOk = l.offersSelf && (km === null || selfDeliveryAllowed(profile, km));
     rows.push({
       producerId: l.producerId,
       listingId: l.id,
       vegetable: l.vegetable,
       producerName: l.producer.name,
       area: `${place.prefecture} ${place.city}`,
+      distanceKm: km,
       lat: place.lat,
       lng: place.lng,
       quality: l.quality,
@@ -72,7 +79,7 @@ export async function mapListings(buyerId: string, vegetable: string): Promise<M
       unitPriceYen: l.unitPriceYen,
       minOrderG: l.minOrderG,
       availableG,
-      methods: (["delivery", "self", "pickup"] as const).filter((m) => ({ delivery: l.offersDelivery, self: l.offersSelf, pickup: l.offersPickup })[m]),
+      methods: (["delivery", "self", "pickup"] as const).filter((m) => ({ delivery: l.offersDelivery, self: selfOk, pickup: l.offersPickup })[m]),
       deliverFrom: from.toISOString().slice(0, 10),
       deliverTo: l.deliverTo.toISOString().slice(0, 10),
       acceptUntil: l.acceptUntil,

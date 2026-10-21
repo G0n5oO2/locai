@@ -53,8 +53,12 @@ export async function proposeAction(_state: FlowState, formData: FormData): Prom
   if (quantityText !== "" && newQuantityG === null) return { message: "数量は 0.1kg 単位の数字で入力してください" };
   const fallback = formData.get("confirmIfRefused");
   if (fallback !== "yes" && fallback !== "no") return { message: "断られたときの扱いを選んでください" };
+  // 送料が要相談の注文だけ：農家さんが決めた送料（円の整数）。範囲の確かめは lib/order-flow.ts で行う
+  const shippingText = String(formData.get("shippingYen") ?? "").trim();
+  if (shippingText !== "" && !/^\d{1,6}$/.test(shippingText)) return { message: "送料は円の整数で入れてください" };
+  const shippingYen = shippingText === "" ? null : Number(shippingText);
 
-  const result = await proposeChange(user.id, orderId.data, { newDeliveryDate, newQuantityG, confirmIfRefused: fallback === "yes" });
+  const result = await proposeChange(user.id, orderId.data, { newDeliveryDate, newQuantityG, confirmIfRefused: fallback === "yes", shippingYen });
   if (!result.ok) return { message: result.message };
   // お試しの申し込みは、お試しのタブに戻る（第2版：お試しの申し込みは、お試しのタブで見る）
   const order = await prisma.order.findUnique({ where: { id: orderId.data }, select: { isTrial: true } });

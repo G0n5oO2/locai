@@ -18,7 +18,7 @@ type Props = {
   limits: { shipLimitDelivery: number; shipLimitSelf: number; shipLimitPickup: number };
   // プロフィールで送料などを入れていて、選べる受け渡し方法
   available: Record<DeliveryMethod, boolean>;
-  // 畑から 70km 以内の「探しています」（店名・住所は入っていない）
+  // お店の「探しています」（店名・住所は入っていない）
   wanted: PublicWanted[];
   // 「探しています」に応えて出品するときの食材名
   initialVegetable?: string;

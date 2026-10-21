@@ -5,7 +5,7 @@ import { signOut } from "@/app/actions/auth";
 import { AuthShell } from "@/app/ui/auth-shell";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
-import { deliveryBands } from "@/lib/fees";
+import { deliveryBands, distanceBands } from "@/lib/fees";
 import { paymentLabel } from "@/lib/payment";
 import { requireUser } from "@/lib/session";
 import { BuyerNotices } from "@/app/buyer/wanted/notices";
@@ -70,7 +70,7 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
       出品一覧・新しく出品する
     </Link>
     <Link href="/producer/wanted" className="btn btn-outline-earth">
-      近くの「探しています」
+      お店の「探しています」
     </Link>
     <div className="flex flex-col gap-3 card p-5">
       <p className="font-bold">生産者プロフィール</p>
@@ -89,8 +89,17 @@ async function ProducerProfileSummary({ userId }: { userId: string }) {
             ? "宅配しない"
             : deliveryBands(profile).map((b) => `${gramsToKgText(b.maxG)}kg まで ${b.yen.toLocaleString()}円`).join("、")}
         </dd>
+        <dt className="text-muted">宅配の距離の料金</dt>
+        <dd>
+          {distanceBands(profile).length === 0
+            ? "なし"
+            : `${distanceBands(profile).map((b) => `${b.maxKm}km まで ${b.yen.toLocaleString()}円`).join("、")}（それより遠いお店は要相談）`}
+        </dd>
         <dt className="text-muted">配達料</dt>
-        <dd>{profile.selfDeliveryYen === null ? "配達しない" : `${profile.selfDeliveryYen.toLocaleString()}円（1件あたり）`}</dd>
+        <dd>
+          {profile.selfDeliveryYen === null ? "配達しない" : `${profile.selfDeliveryYen.toLocaleString()}円（1件あたり）`}
+          {profile.selfDeliveryYen !== null && profile.selfDeliveryMaxKm !== null && `・${profile.selfDeliveryMaxKm}km までのお店`}
+        </dd>
         <dt className="text-muted">引き取り</dt>
         <dd>{profile.pickupPlace === null ? "引き取りなし" : profile.pickupPlace}</dd>
         <dt className="text-muted">支払方法</dt>

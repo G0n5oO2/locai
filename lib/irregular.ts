@@ -1,12 +1,12 @@
-// 近くで受付中のふつうの出品を、特集のために集める（第2版 4-4「ホーム」）
+// 受付中のふつうの出品を、特集のために集める（第2版 4-4「ホーム」）
 // - 規格外の野菜の特集：品の状態が「規格外」のもの
 // - 季節の野菜：名前に旬の野菜の名前を含むもの
-// 出すのは、畑とお店が近く、最低注文量より残りがあるものだけ
+// 出すのは、最低注文量より残りがあるものだけ（第2版：70km 以内に絞る決まりは外した。遠くの農家さんにも見つけてもらうため）
 // 並びはランダムで、同じ農家さんが続かないようにする（不変条件6：人気順にしない）
 import "server-only";
 import { expireOverdue, usedAmounts } from "./availability";
 import { prisma } from "./prisma";
-import { findMunicipality, isNear } from "./region";
+import { findMunicipality } from "./region";
 import { noRepeatInRow, shuffle } from "./search";
 
 type Filter = { quality?: "normal" | "irregular"; vegetableIncludes?: string };
@@ -30,7 +30,7 @@ export async function featuredListings(buyerPrefecture: string, buyerCity: strin
     const profile = l.producer.profile;
     if (!profile) return [];
     const farm = findMunicipality(profile.prefecture, profile.city);
-    if (!farm || !isNear(farm, shop)) return [];
+    if (!farm) return [];
     const u = used.get(l.id)!;
     const restG = l.totalG - u.confirmedG - u.reservedG;
     if (restG < l.minOrderG) return [];

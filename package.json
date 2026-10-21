@@ -19,6 +19,7 @@
     "test:payment": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/payment.mts",
     "test:search": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/search.mts",
     "test:map": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/map-search.mts",
+    "test:distance": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/distance-fee.mts",
     "test:sales": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/sales.mts",
     "test:estimate": "node --import tsx tests/estimate.mts",
     "test:trial": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx tests/trial.mts"

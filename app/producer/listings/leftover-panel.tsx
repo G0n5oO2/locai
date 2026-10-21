@@ -1,6 +1,6 @@
 "use client";
 // 売れ残りのパネル（docs/04_producer_design.md 3章）
-// 3つのボタンを押す前に、近くの「探しています」の件数と合計量を見せる
+// 3つのボタンを押す前に、「探しています」の件数と合計量を見せる
 
 import Link from "next/link";
 import { useActionState } from "react";
@@ -49,9 +49,9 @@ export function LeftoverPanel({ listingId, vegetable, remainingG, expired, wante
         {expired ? `${vegetable} ${gramsToKgText(remainingG)}kg 売れ残りました（受付期限を過ぎました）` : `残り ${gramsToKgText(remainingG)}kg`}
       </p>
 
-      {/* 近くの「探しています」：件数と合計量 */}
+      {/* 「探しています」：件数と合計量 */}
       <div className="flex flex-col gap-1 rounded-xl bg-earth-soft p-3">
-        <p className="font-bold">近くの「探しています」</p>
+        <p className="font-bold">お店の「探しています」</p>
         <p>{vegetable}を探しているお店　{tabs.specified.length}件・合計 {sum(tabs.specified)}kg</p>
         <p>代替野菜OKのお店　{tabs.substitute.length}件・合計 {sum(tabs.substitute)}kg</p>
         <p>種類を問わないお店　{tabs.any.length}件・合計 {sum(tabs.any)}kg</p>

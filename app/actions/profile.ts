@@ -7,6 +7,7 @@ import { addressError } from "@/lib/address";
 import { prisma } from "@/lib/prisma";
 import { polishCommitment } from "@/lib/ai-commitment";
 import { paymentMethodSchema } from "@/lib/payment";
+import { MAX_DISTANCE_ROWS } from "@/lib/fees";
 import { kgTextToGrams } from "@/lib/quantity";
 import { findMunicipality } from "@/lib/region";
 import { requireProducer } from "@/lib/session";
@@ -61,7 +62,25 @@ const optionalKg = z
     return grams;
   });
 
+// 距離の「◯km まで」と、自分で配達できる距離：空なら「なし」。入れるなら 1〜1,000km の整数
+const optionalKm = z
+  .string()
+  .trim()
+  .transform((text, ctx) => {
+    if (text === "") return null;
+    if (!/^\d{1,4}$/.test(text) || Number(text) < 1 || Number(text) > 1000) {
+      ctx.addIssue({ code: "custom", message: "1〜1,000 の整数（km）で入力してください" });
+      return z.NEVER;
+    }
+    return Number(text);
+  });
+
+// 距離の料金は、5行まで（第2版）
+const distanceKeys = Array.from({ length: MAX_DISTANCE_ROWS }, (_, i) => i + 1);
+
 const feeSchema = z.object({
+  ...Object.fromEntries(distanceKeys.flatMap((n) => [[`dist${n}Km`, optionalKm], [`dist${n}Yen`, optionalYen]])) as Record<`dist${number}Km` | `dist${number}Yen`, typeof optionalKm>,
+  selfDeliveryMaxKm: optionalKm,
   band1Kg: optionalKg,
   band1Yen: optionalYen,
   band2Kg: optionalKg,
@@ -81,8 +100,24 @@ const feeSchema = z.object({
 
 const fields = [
   "prefecture", "city", "items", "commitment", "shipLimitDelivery", "shipLimitSelf", "shipLimitPickup",
-  "band1Kg", "band1Yen", "band2Kg", "band2Yen", "band3Kg", "band3Yen", "selfDeliveryYen", "pickupPlace",
+  "band1Kg", "band1Yen", "band2Kg", "band2Yen", "band3Kg", "band3Yen", "selfDeliveryYen", "selfDeliveryMaxKm", "pickupPlace",
+  ...distanceKeys.flatMap((n) => [`dist${n}Km`, `dist${n}Yen`]),
 ] as const;
+
+// 距離の料金を確かめて、近い順の一覧にする：「◯km まで」と「◯円」はそろって入れる、下の行ほど遠い（空の行はとばす）
+function checkDistance(fee: Record<string, number | null>) {
+  const errors: Record<string, string[]> = {};
+  const rows: { maxKm: number; yen: number }[] = [];
+  for (const n of distanceKeys) {
+    const km = fee[`dist${n}Km`];
+    const yen = fee[`dist${n}Yen`];
+    if (km === null && yen === null) continue;
+    if (km === null || yen === null) errors[`dist${n}Km`] = ["「◯km まで」と「◯円」を両方入れてください"];
+    else if (rows.length > 0 && km <= rows[rows.length - 1].maxKm) errors[`dist${n}Km`] = ["上の行より遠い距離にしてください"];
+    else rows.push({ maxKm: km, yen });
+  }
+  return { errors, rows };
+}
 
 // 送料の帯を確かめる：「◯kg まで」と「◯円」はそろって入れる、1行目から順に、下の行ほど重い
 function checkBands(fee: z.infer<typeof feeSchema>) {
@@ -129,6 +164,8 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
   if (!feeParsed.success) return { errors: z.flattenError(feeParsed.error).fieldErrors, values };
   const bandErrors = checkBands(feeParsed.data);
   if (Object.keys(bandErrors).length > 0) return { errors: bandErrors, values };
+  const distance = checkDistance(feeParsed.data as unknown as Record<string, number | null>);
+  if (Object.keys(distance.errors).length > 0) return { errors: distance.errors, values };
 
   const payments = paymentsSchema.safeParse(paymentInput);
   if (!payments.success) return { errors: { paymentMethods: [payments.error.issues[0].message] }, values };
@@ -152,7 +189,11 @@ export async function saveProfile(_state: ProfileFormState, formData: FormData):
     deliveryBand2Yen: fee.band2Yen,
     deliveryBand3MaxG: fee.band3Kg,
     deliveryBand3Yen: fee.band3Yen,
+    // 距離の料金（第2版）：近い順に、km と円を同じ順番で入れる
+    distanceFeeMaxKm: distance.rows.map((r) => r.maxKm),
+    distanceFeeYen: distance.rows.map((r) => r.yen),
     selfDeliveryYen: fee.selfDeliveryYen,
+    selfDeliveryMaxKm: fee.selfDeliveryMaxKm,
     pickupPlace: fee.pickupPlace === "" ? null : fee.pickupPlace,
     paymentMethods: payments.data,
   };

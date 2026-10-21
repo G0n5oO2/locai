@@ -10,6 +10,7 @@ type Props = {
   itemYen: number;
   shippingYen: number;
   totalYen: number;
+  shippingToBeDecided?: boolean; // 送料が要相談（農家さんが決めるまで、合計は商品代だけ）
 };
 
 // 量の書き方：お試しは g、ふつうは kg
@@ -17,7 +18,7 @@ export function quantityText(grams: number, isTrial: boolean) {
   return isTrial ? `${grams.toLocaleString()}g` : `${gramsToKgText(grams)}kg`;
 }
 
-export function OrderAmount({ isTrial, quantityG, unitG, unitPriceYen, itemYen, shippingYen, totalYen }: Props) {
+export function OrderAmount({ isTrial, quantityG, unitG, unitPriceYen, itemYen, shippingYen, totalYen, shippingToBeDecided = false }: Props) {
   const unitText = isTrial ? `${unitG}g` : `${gramsToKgText(unitG)}kg`;
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-leaf-soft p-3">
@@ -31,10 +32,11 @@ export function OrderAmount({ isTrial, quantityG, unitG, unitPriceYen, itemYen, 
         </dt>
         <dd className="text-right">{itemYen.toLocaleString()}円</dd>
         <dt className="text-muted">送料・配達料</dt>
-        <dd className="text-right">{shippingYen.toLocaleString()}円</dd>
+        <dd className="text-right">{shippingToBeDecided ? "要相談" : `${shippingYen.toLocaleString()}円`}</dd>
       </dl>
+      {shippingToBeDecided && <p className="text-xs text-muted">送料は、農家さんが決めてから知らせます。合計を見て、承認するか決められます。</p>}
       <div className="flex items-baseline justify-between gap-2 border-t border-line pt-2">
-        <span className="font-bold">合計</span>
+        <span className="font-bold">{shippingToBeDecided ? "合計（送料を除く）" : "合計"}</span>
         <span className="text-2xl font-bold text-leaf">{totalYen.toLocaleString()}円</span>
       </div>
     </div>

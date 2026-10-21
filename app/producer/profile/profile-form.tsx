@@ -4,6 +4,7 @@
 import { useActionState, useState, useTransition } from "react";
 import { polishCommitmentAction, saveProfile, type ProfileFormState } from "@/app/actions/profile";
 import { Field } from "@/app/ui/field";
+import { MAX_DISTANCE_ROWS } from "@/lib/fees";
 import { paymentLabel, paymentMethods, paymentNote } from "@/lib/payment";
 import { RegionSelect } from "@/app/ui/region-select";
 import { OptionalMark, RequiredMark } from "@/app/ui/required-mark";
@@ -34,6 +35,8 @@ const fieldNames: Record<string, string> = {
   band3Kg: "宅配発送の送料（3行目）",
   band3Yen: "宅配発送の送料（3行目）",
   selfDeliveryYen: "自分で配達するときの料金",
+  selfDeliveryMaxKm: "自分で配達できるお店の距離",
+  ...Object.fromEntries(Array.from({ length: MAX_DISTANCE_ROWS }, (_, i) => [`dist${i + 1}Km`, `宅配発送の距離の料金（${i + 1}行目）`])),
   pickupPlace: "引き取りの場所",
   paymentMethods: "受け付ける支払方法",
 };
@@ -138,7 +141,17 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         ))}
       </fieldset>
 
-      <Field label="自分で配達するときの料金（円・1件あたり。配達しない場合は空）" name="selfDeliveryYen" inputMode="numeric" defaultValue={values.selfDeliveryYen} errors={state.errors?.selfDeliveryYen} />
+      {/* 宅配の距離の料金（第2版）：使いたい人だけ、ボタンで行を足す */}
+      <DistanceFees values={values} errors={state.errors} />
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-sm font-bold">自分で配達<OptionalMark /></legend>
+        <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
+          <Field label="料金（円・1件あたり。配達しない場合は空）" name="selfDeliveryYen" inputMode="numeric" defaultValue={values.selfDeliveryYen} errors={state.errors?.selfDeliveryYen} />
+          <Field label="配達できるお店の距離（◯km まで。空なら制限しない）" name="selfDeliveryMaxKm" inputMode="numeric" placeholder="例：30" defaultValue={values.selfDeliveryMaxKm} errors={state.errors?.selfDeliveryMaxKm} />
+        </div>
+        <p className="text-xs text-muted">ここより遠いお店は、「自分で配達」を選べなくなります（宅配発送と引き取りは選べます）。距離は、畑とお店の市区町村の役所どうしの、だいたいの距離です。</p>
+      </fieldset>
 
       <div className="flex flex-col gap-1">
         <Field label="引き取りの場所（引き取りをしない場合は空）" name="pickupPlace" maxLength={200} placeholder="例：南丹市園部町小桜町47（入れる場合は番地まで）" defaultValue={values.pickupPlace} errors={state.errors?.pickupPlace} />
@@ -178,5 +191,39 @@ export function ProfileForm({ citiesByPrefecture, initial }: Props) {
         </div>
       )}
     </form>
+  );
+}
+
+// 宅配発送の、距離の料金（第2版）
+// はじめは行がなく、「＋距離の料金を追加」を押した人だけが入れる（入れなければ、距離の料金はかからない）
+function DistanceFees({ values, errors }: { values: Partial<Record<string, string>>; errors?: Record<string, string[] | undefined> }) {
+  // 保存してある行（または、送ったけれど直すところがあった行）から始める
+  const [rows, setRows] = useState(() => {
+    const saved = Array.from({ length: MAX_DISTANCE_ROWS }, (_, i) => ({ km: values[`dist${i + 1}Km`] ?? "", yen: values[`dist${i + 1}Yen`] ?? "" }));
+    return saved.filter((r) => r.km !== "" || r.yen !== "");
+  });
+  const update = (i: number, key: "km" | "yen", text: string) => setRows(rows.map((r, j) => (j === i ? { ...r, [key]: text } : r)));
+
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="mb-1 text-sm font-bold">宅配発送の距離の料金（5行まで）<OptionalMark /></legend>
+      <p className="text-xs text-muted">
+        遠いお店への宅配に、重さの料金とは別に足す料金です。使わない場合は、追加しなくて大丈夫です（距離の料金は 0円）。いちばん下の行より遠いお店の宅配は、送料が「要相談」になり、申し込みが来てからあなたが送料を決めます。
+      </p>
+      {rows.map((r, i) => (
+        <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-end gap-3">
+          <Field label={`${i + 1}行目：◯km まで`} name={`dist${i + 1}Km`} inputMode="numeric" placeholder="例：50" value={r.km} onChange={(e) => update(i, "km", e.target.value)} errors={errors?.[`dist${i + 1}Km`]} />
+          <Field label="距離の料金（円）" name={`dist${i + 1}Yen`} inputMode="numeric" placeholder="例：300" value={r.yen} onChange={(e) => update(i, "yen", e.target.value)} errors={errors?.[`dist${i + 1}Yen`]} />
+          <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="btn btn-sm btn-plain mb-1 text-sm" aria-label={`${i + 1}行目を消す`}>
+            消す
+          </button>
+        </div>
+      ))}
+      {rows.length < MAX_DISTANCE_ROWS && (
+        <button type="button" onClick={() => setRows([...rows, { km: "", yen: "" }])} className="w-fit btn btn-sm btn-outline-earth text-sm">
+          ＋ 距離の料金を追加
+        </button>
+      )}
+    </fieldset>
   );
 }

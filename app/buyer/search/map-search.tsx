@@ -302,6 +302,7 @@ function MapCard({ l }: { l: MapListing }) {
         </div>
         <p className="text-sm text-muted">
           {l.producerName}・{l.area}
+          {l.distanceKm !== null && `（お店から 約${l.distanceKm}km）`}
         </p>
       </div>
 

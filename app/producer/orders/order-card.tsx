@@ -38,7 +38,7 @@ export function ProducerOrderCard({ order, unread, checks }: { order: ProducerOr
         </p>
         <p className="text-right">
           <span className="block text-xs text-muted">
-            商品代 {order.itemYen.toLocaleString()}円＋送料 {order.shippingYen.toLocaleString()}円
+            商品代 {order.itemYen.toLocaleString()}円＋送料 {order.shippingToBeDecided ? "要相談" : `${order.shippingYen.toLocaleString()}円`}
           </span>
           <span className="text-2xl font-bold text-earth">{order.totalYen.toLocaleString()}円</span>
         </p>
@@ -84,10 +84,23 @@ export function ProducerOrderCard({ order, unread, checks }: { order: ProducerOr
         <>
           <p className="font-bold text-amber-800 dark:text-amber-200">回答期限：{formatJstDateTime(order.answerUntil)}</p>
           <OrderChecks orderId={order.id} checks={checks} />
-          <OrderButtons orderId={order.id} />
-          <Link href={`/producer/orders/${order.id}/propose`} className="text-center font-bold text-earth underline">
-            条件の変更を提案する
-          </Link>
+          {order.shippingToBeDecided ? (
+            // 送料が要相談：承認の前に、送料を決めて提案する（送料が決まらないまま販売確定にしない）
+            <>
+              <p className="rounded-xl bg-amber-50 p-2 font-bold text-amber-900 dark:bg-amber-950 dark:text-amber-200">お店が送料の表より遠いので、送料が要相談です。送料を決めて、お店に提案してください。</p>
+              <Link href={`/producer/orders/${order.id}/propose`} className="btn btn-sm btn-earth">
+                送料を決めて提案する
+              </Link>
+              <OrderButtons orderId={order.id} declineOnly />
+            </>
+          ) : (
+            <>
+              <OrderButtons orderId={order.id} />
+              <Link href={`/producer/orders/${order.id}/propose`} className="text-center font-bold text-earth underline">
+                条件の変更を提案する
+              </Link>
+            </>
+          )}
         </>
       )}
       {order.status === "change_pending" && order.proposedDeliveryDate && order.proposedQuantityG !== null && (
@@ -99,6 +112,11 @@ export function ProducerOrderCard({ order, unread, checks }: { order: ProducerOr
           <p>
             数量 {quantityText(order.quantityG, order.isTrial)} → <strong>{quantityText(order.proposedQuantityG, order.isTrial)}</strong>
           </p>
+          {order.shippingToBeDecided && order.proposedShippingYen !== null && (
+            <p>
+              送料 要相談 → <strong>{order.proposedShippingYen.toLocaleString()}円</strong>（合計 {order.proposedTotalYen?.toLocaleString()}円）
+            </p>
+          )}
           <p className="text-xs text-muted">断られたら：{order.confirmIfRefused ? "元の条件で販売確定" : "見送り"}／回答期限：{formatJstDateTime(order.answerUntil)}</p>
         </div>
       )}

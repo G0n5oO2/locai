@@ -1,9 +1,9 @@
 // 飲食店に見せるお試し食材（第2版 4-4「お試し」）
-// 出すのは：受付中のお試し食材で、畑とお店が近く、残りがあり、このお店がまだ買ったことがない野菜だけ
+// 出すのは：受付中のお試し食材で、残りがあり、このお店がまだ買ったことがない野菜だけ
 import "server-only";
 import { expireOverdue, usedAmounts } from "./availability";
 import { prisma } from "./prisma";
-import { findMunicipality, isNear } from "./region";
+import { findMunicipality } from "./region";
 
 export async function trialItemsFor(buyerId: string, buyerPrefecture: string, buyerCity: string, onlyId?: string) {
   const shop = findMunicipality(buyerPrefecture, buyerCity);
@@ -32,7 +32,7 @@ export async function trialItemsFor(buyerId: string, buyerPrefecture: string, bu
     const profile = i.producer.profile;
     if (!profile) return [];
     const farm = findMunicipality(profile.prefecture, profile.city);
-    if (!farm || !isNear(farm, shop)) return [];
+    if (!farm) return [];
     const u = used.get(i.id)!;
     const restG = i.totalG - u.confirmedG - u.reservedG;
     if (restG < i.minOrderG) return [];

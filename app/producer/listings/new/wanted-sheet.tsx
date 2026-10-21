@@ -35,12 +35,12 @@ export function WantedSheet({ wanted, vegetable }: { wanted: PublicWanted[]; veg
       </button>
       <dialog
         ref={dialogRef}
-        aria-label="近くの「探しています」"
+        aria-label="お店の「探しています」"
         className="fixed inset-x-0 bottom-0 m-0 mt-auto max-h-[75vh] w-full max-w-none rounded-t-2xl bg-surface p-0 text-foreground backdrop:bg-black/40"
       >
         <div className="mx-auto flex max-w-md flex-col gap-3 p-4">
           <div className="flex items-center justify-between">
-            <p className="font-bold">近くの「探しています」（畑から70km以内）</p>
+            <p className="font-bold">お店の「探しています」</p>
             <button type="button" onClick={() => dialogRef.current?.close()} className="rounded-lg border border-line px-3 py-1 text-sm">
               閉じる
             </button>

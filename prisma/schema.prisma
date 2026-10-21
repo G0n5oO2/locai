@@ -120,8 +120,14 @@ model ProducerProfile {
   deliveryBand2Yen  Int?
   deliveryBand3MaxG Int?
   deliveryBand3Yen  Int?
+  // 宅配発送の、距離の料金（第2版）。「◯km まで ◯円」を、近い順に最大5行。使わない人は空のまま（距離の料金は 0円）
+  // 距離は、畑とお店の市区町村の代表地点どうしの距離。表のどの行より遠いお店の宅配は、送料が要相談になる
+  distanceFeeMaxKm  Int[]    @default([])
+  distanceFeeYen    Int[]    @default([])
   // 自分で配達するときの料金（1件あたり）。配達をしない人は空のまま
   selfDeliveryYen   Int?
+  // 自分で配達できるお店の距離（km まで。第2版）。空なら距離では制限しない。これより遠いお店は「自分で配達」を選べない
+  selfDeliveryMaxKm Int?
   // 引き取りの場所。販売確定した相手にだけ見せる（不変条件4）
   pickupPlace       String?
   // 受け付ける支払方法（第2版）。支払い自体はアプリの外で行う。空なら「メッセージで相談」
@@ -250,6 +256,9 @@ model Order {
   unitPriceYen Int
   itemYen      Int // 商品代
   shippingYen  Int // 送料・配達料
+  // 送料が要相談か（第2版）。お店が距離の料金の表より遠いときの宅配。true の間の shippingYen は 0 で、合計は商品代だけ
+  // 農家さんが送料を入れて提案し（条件変更の確認待ち）、お店が同意すると false になる
+  shippingToBeDecided Boolean @default(false)
   totalYen     Int // 合計
   isTrial      Boolean        @default(false) // お試しの申し込みか
   // お店が選んだ支払方法（第2版）。農家さんが設定していないときは空（メッセージで相談）

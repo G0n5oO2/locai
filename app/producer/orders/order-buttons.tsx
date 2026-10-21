@@ -4,7 +4,8 @@
 import { useActionState } from "react";
 import { approveAction, declineAction, type FlowState } from "@/app/actions/order-flow";
 
-export function OrderButtons({ orderId }: { orderId: string }) {
+// declineOnly：見送るボタンだけを出す（送料が要相談の注文は、承認の前に送料を提案するため）
+export function OrderButtons({ orderId, declineOnly = false }: { orderId: string; declineOnly?: boolean }) {
   const [approveState, approve, approving] = useActionState<FlowState, FormData>(approveAction, {});
   const [declineState, decline, declining] = useActionState<FlowState, FormData>(declineAction, {});
   const busy = approving || declining;
@@ -12,13 +13,15 @@ export function OrderButtons({ orderId }: { orderId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-2 gap-2">
-        <form action={approve}>
-          <input type="hidden" name="orderId" value={orderId} />
-          <button type="submit" disabled={busy} className="w-full btn btn-sm btn-earth">
-            {approving ? "承認しています…" : "承認する"}
-          </button>
-        </form>
+      <div className={`grid gap-2 ${declineOnly ? "grid-cols-1" : "grid-cols-2"}`}>
+        {!declineOnly && (
+          <form action={approve}>
+            <input type="hidden" name="orderId" value={orderId} />
+            <button type="submit" disabled={busy} className="w-full btn btn-sm btn-earth">
+              {approving ? "承認しています…" : "承認する"}
+            </button>
+          </form>
+        )}
         <form action={decline}>
           <input type="hidden" name="orderId" value={orderId} />
           <button type="submit" disabled={busy} className="w-full btn btn-sm btn-plain">

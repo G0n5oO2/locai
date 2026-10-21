@@ -3,9 +3,12 @@ import { randomUUID } from "node:crypto";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AuthShell } from "@/app/ui/auth-shell";
+import { ShippingInfo } from "@/app/ui/shipping-info";
 import type { DeliveryMethod } from "@/lib/burden";
 import { formatJstDateTime, jstDateText, parseDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
+import { feesForForm, selfDeliveryAllowed } from "@/lib/pricing";
+import { farmShopKm } from "@/lib/region";
 import { requireBuyer } from "@/lib/session";
 import { PriceBox, QualityTags } from "@/app/ui/price-box";
 import { OrderForm } from "./order-form";
@@ -41,8 +44,12 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
 
   const today = parseDate(jstDateText(new Date()))!;
   const earliest = listing.deliverFrom > today ? listing.deliverFrom : today;
+  // 畑からお店までの、だいたいの距離（市区町村の代表地点どうし）。宅配の距離の料金と、自分で配達できるかに使う
+  const km = farmShopKm(profile, buyerProfile) ?? 0;
+  // 自分で配達は、農家さんが決めた距離より遠いお店では、自動で選べなくする（第2版）
+  const selfBlocked = listing.offersSelf && !selfDeliveryAllowed(profile, km);
   const methods = (["delivery", "self", "pickup"] as DeliveryMethod[]).filter(
-    (m) => ({ delivery: listing.offersDelivery, self: listing.offersSelf, pickup: listing.offersPickup })[m],
+    (m) => ({ delivery: listing.offersDelivery, self: listing.offersSelf && !selfBlocked, pickup: listing.offersPickup })[m],
   );
 
 
@@ -67,28 +74,27 @@ async function Order({ params, searchParams }: PageProps<"/buyer/listings/[id]">
           受付 {formatJstDateTime(listing.acceptUntil)} まで／農家さんの回答 {formatJstDateTime(listing.answerUntil)} まで
         </p>
       </div>
-      <OrderForm
-        listingId={listing.id}
-        // 画面を開くたびに新しい目印を作る（同じ画面から何回送っても1件にまとまる）
-        requestKey={randomUUID()}
-        price={{ unitG: listing.unitG, unitPriceYen: listing.unitPriceYen, minOrderG: listing.minOrderG }}
-        fees={{
-          deliveryBand1MaxG: profile.deliveryBand1MaxG,
-          deliveryBand1Yen: profile.deliveryBand1Yen,
-          deliveryBand2MaxG: profile.deliveryBand2MaxG,
-          deliveryBand2Yen: profile.deliveryBand2Yen,
-          deliveryBand3MaxG: profile.deliveryBand3MaxG,
-          deliveryBand3Yen: profile.deliveryBand3Yen,
-          selfDeliveryYen: profile.selfDeliveryYen,
+      {/* 送料のきまり（距離と重さ）と、お店までの距離 */}
+      <ShippingInfo profile={profile} km={km} selfBlocked={selfBlocked} offersDelivery={listing.offersDelivery} />
+      {/* 選べる受け取り方法がない（農家さんの配達の範囲の外で、ほかの方法がない）ときは、申し込めない */}
+      {methods.length === 0 ? (
+        <p className="card p-4 text-sm">このお店の場所には、この農家さんが届けられる方法がありません。</p>
+      ) : (
+        <OrderForm
+          listingId={listing.id}
+          // 画面を開くたびに新しい目印を作る（同じ画面から何回送っても1件にまとまる）
+          requestKey={randomUUID()}
+          price={{ unitG: listing.unitG, unitPriceYen: listing.unitPriceYen, minOrderG: listing.minOrderG }}
           // 引き取りの場所は、販売確定するまで見せない（不変条件4）。引き取りできるかだけを伝える
-          pickupPlace: profile.pickupPlace === null ? null : "",
-        }}
-        methods={methods}
-        earliest={earliest.toISOString().slice(0, 10)}
-        latest={listing.deliverTo.toISOString().slice(0, 10)}
-        initial={{ quantity: text("quantity"), method: text("method"), useDate: text("useDate") }}
-        payments={profile.paymentMethods}
-      />
+          fees={feesForForm(profile)}
+          km={km}
+          methods={methods}
+          earliest={earliest.toISOString().slice(0, 10)}
+          latest={listing.deliverTo.toISOString().slice(0, 10)}
+          initial={{ quantity: text("quantity"), method: text("method"), useDate: text("useDate") }}
+          payments={profile.paymentMethods}
+        />
+      )}
     </div>
   );
 }

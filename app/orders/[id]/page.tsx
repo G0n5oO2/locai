@@ -59,7 +59,7 @@ async function OrderDetail({ params }: PageProps<"/orders/[id]">) {
           <strong>{isBuyer ? order.listing.producer.name : order.buyer.name}</strong>
         </p>
         {/* 数量と金額（合計は大きく、色を変える） */}
-        <OrderAmount isTrial={order.isTrial} quantityG={order.quantityG} unitG={order.unitG} unitPriceYen={order.unitPriceYen} itemYen={order.itemYen} shippingYen={order.shippingYen} totalYen={order.totalYen} />
+        <OrderAmount isTrial={order.isTrial} quantityG={order.quantityG} unitG={order.unitG} unitPriceYen={order.unitPriceYen} itemYen={order.itemYen} shippingYen={order.shippingYen} totalYen={order.totalYen} shippingToBeDecided={order.shippingToBeDecided} />
         {/* こまかい情報（見出しは小さくうすく、中身ははっきり） */}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl bg-background p-3">
           <div>

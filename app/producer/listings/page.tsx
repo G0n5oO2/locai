@@ -42,7 +42,7 @@ async function Listings({ searchParams }: PageProps<"/producer/listings">) {
     include: { notices: { select: { buyerId: true } } },
   });
 
-  // 売れ残りのパネルのための材料（残りの量・近くの「探しています」・まだ知らせていないお店の数）
+  // 売れ残りのパネルのための材料（残りの量・「探しています」・まだ知らせていないお店の数）
   const profile = await prisma.producerProfile.findUnique({ where: { userId: user.id } });
   await expireOverdue(prisma, listings.map((l) => l.id));
   const used = await usedAmounts(prisma, listings.map((l) => l.id));

@@ -43,7 +43,7 @@ export async function BuyerOrderList({ userId, trial, statuses, emptyText }: { u
               {methodLabel[o.method]}・納品 {formatDate(o.deliveryDate)}
             </p>
             {/* 数量と金額（合計は大きく、色を変える） */}
-            <OrderAmount isTrial={o.isTrial} quantityG={o.quantityG} unitG={o.unitG} unitPriceYen={o.unitPriceYen} itemYen={o.itemYen} shippingYen={o.shippingYen} totalYen={o.totalYen} />
+            <OrderAmount isTrial={o.isTrial} quantityG={o.quantityG} unitG={o.unitG} unitPriceYen={o.unitPriceYen} itemYen={o.itemYen} shippingYen={o.shippingYen} totalYen={o.totalYen} shippingToBeDecided={o.shippingToBeDecided} />
             <p className="text-sm">支払方法：{o.paymentMethod ? paymentLabel[o.paymentMethod] : "メッセージで相談"}</p>
             <Link href={`/orders/${o.id}`} className="text-sm font-bold text-leaf underline">
               注文の詳細・メッセージ{(unread.get(o.id) ?? 0) > 0 && `（未読 ${unread.get(o.id)}件）`}
@@ -58,8 +58,13 @@ export async function BuyerOrderList({ userId, trial, statuses, emptyText }: { u
                 <p>
                   数量 {quantityText(o.quantityG, o.isTrial)} → <strong>{quantityText(o.proposedQuantityG, o.isTrial)}</strong>
                 </p>
+                {o.shippingToBeDecided && o.proposedShippingYen !== null && (
+                  <p>
+                    送料 要相談 → <strong>{o.proposedShippingYen.toLocaleString()}円</strong>
+                  </p>
+                )}
                 <p>
-                  合計 {o.totalYen.toLocaleString()}円 → <strong>{o.proposedTotalYen.toLocaleString()}円</strong>
+                  合計 {o.totalYen.toLocaleString()}円{o.shippingToBeDecided && "（送料を除く）"} → <strong>{o.proposedTotalYen.toLocaleString()}円</strong>
                 </p>
                 <p className="mt-1">
                   ※ 断った場合は、{o.confirmIfRefused ? `元の条件（${formatDate(o.deliveryDate)}・${quantityText(o.quantityG, o.isTrial)}）で届きます` : "この購入希望は見送りになります"}

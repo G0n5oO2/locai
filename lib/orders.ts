@@ -9,7 +9,7 @@ import { paymentFits, type PaymentMethodKey } from "./payment";
 import { prisma } from "./prisma";
 import { quote } from "./pricing";
 import { gramsToKgText } from "./quantity";
-import { findMunicipality, isNear } from "./region";
+import { farmShopKm } from "./region";
 import { trialAnswerUntil } from "./trial";
 
 export type PlaceOrderInput = {
@@ -65,9 +65,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       // 2. 申し込める出品・条件かを確かめる
       if (listing.status !== "open" || listing.acceptUntil <= now) return fail("この出品は、受付が終わりました");
       if (!profile || !buyer) return fail("プロフィールが見つかりません");
-      const farm = findMunicipality(profile.prefecture, profile.city);
-      const shop = findMunicipality(buyer.prefecture, buyer.city);
-      if (!farm || !shop || !isNear(farm, shop)) return fail("お店の地域が、この農家さんの対応地域の外です");
+      // 畑からお店までの距離（市区町村の代表地点どうし）。70km 以内に絞る決まりは外した（第2版）。送料と、自分で配達できるかに使う
+      const km = farmShopKm(profile, buyer);
+      if (km === null) return fail("お店か畑の地域が見つかりません");
       const offered = { delivery: listing.offersDelivery, self: listing.offersSelf, pickup: listing.offersPickup }[input.method];
       if (!offered) return fail("この受け取り方法には対応していません");
       // 支払方法：農家さんが受け付ける方法の中から選んでいるか。代金引換は宅配のときだけ（第2版）
@@ -102,7 +102,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       if (input.quantityG > availableG) return fail(`残りが足りません（いま申し込めるのは ${gramsToKgText(Math.max(availableG, 0))}kg までです）`);
 
       // 4. 金額はアプリが計算する（画面から送られた金額は使わない）
-      const q = quote(listing, profile, input.quantityG, input.method);
+      const q = quote(listing, profile, input.quantityG, input.method, km);
       if ("error" in q) return fail(q.error);
 
       // 5. 保存する。回答期限は出品の回答期限を写す
@@ -120,6 +120,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           itemYen: q.itemYen,
           shippingYen: q.shippingYen,
           totalYen: q.totalYen,
+          // 送料が要相談か（距離の料金の表より遠いお店の宅配。農家さんが送料を入れて、お店がもう一度同意する）
+          shippingToBeDecided: q.shippingToBeDecided,
           // 回答期限：ふつうは出品の回答期限。お試し食材は、申し込みから○日（第2版）
           answerUntil: listing.isTrial && listing.trialAnswerDays ? trialAnswerUntil(now, listing.trialAnswerDays, listing.answerUntil) : listing.answerUntil,
           requestKey: input.requestKey,

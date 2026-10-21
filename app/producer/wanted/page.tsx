@@ -1,4 +1,4 @@
-// 近くの「探しています」の一覧（生産者だけが使える）。これに応えて出品できる
+// お店の「探しています」の一覧（生産者だけが使える）。これに応えて出品できる
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -13,7 +13,7 @@ import { Loading } from "@/app/ui/loading";
 
 export default function WantedPage() {
   return (
-    <AuthShell title="近くの「探しています」" wide>
+    <AuthShell title="お店の「探しています」" wide>
       <Suspense fallback={<Loading />}>
         <WantedList />
       </Suspense>
@@ -30,7 +30,7 @@ async function WantedList() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted">畑（{profile.prefecture} {profile.city}）から70km以内のお店です。お店の名前や住所は表示されません。</p>
+      <p className="text-sm text-muted">関西のお店の「探しています」です。お店の名前や住所は表示されません。</p>
       {wanted.length === 0 && <p className="text-muted">今は、近くに「探しています」はありません。</p>}
       {/* パソコンの幅では、カードを横に並べる */}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

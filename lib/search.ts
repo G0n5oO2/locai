@@ -7,7 +7,7 @@ import { expireOverdue, usedAmounts } from "./availability";
 import { jstDateText, parseDate } from "./datetime";
 import { prisma } from "./prisma";
 import { quote } from "./pricing";
-import { findMunicipality, isNear } from "./region";
+import { farmShopKm, findMunicipality } from "./region";
 
 export type SearchInput = {
   buyerId: string;
@@ -36,6 +36,8 @@ export type Candidate = {
   itemYen: number;
   shippingYen: number;
   totalYen: number;
+  shippingToBeDecided: boolean; // 送料が要相談（距離の料金の表より遠い宅配）。このときの合計は商品代だけ
+  distanceKm: number; // 畑からお店までの、だいたいの距離（市区町村の代表地点どうし）
   method: DeliveryMethod;
   earliestDelivery: string; // 届けられる最初の日（"2026-10-20"）
   latestDelivery: string; // 届けられる最後の日（使用日まで）
@@ -104,9 +106,9 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
   for (const l of listings) {
     const profile = l.producer.profile;
     if (!profile) continue;
-    // 地域：畑とお店が 70km 以内か
-    const farm = findMunicipality(profile.prefecture, profile.city);
-    if (!farm || !isNear(farm, buyerPlace)) continue;
+    // 距離：畑からお店まで（第2版：70km 以内に絞る決まりは外した。距離は送料と、自分で配達できるかに使う）
+    const km = farmShopKm(profile, buyerPlace);
+    if (km === null) continue;
     // 量：最低注文量以上・注文単位の倍数・残りの量が足りる（不変条件1）
     const u = used.get(l.id)!;
     const availableG = l.totalG - u.confirmedG - u.reservedG;
@@ -116,7 +118,8 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
     const latest = l.deliverTo < input.useDate ? l.deliverTo : input.useDate;
     if (earliest > latest) continue;
     // 金額：送料込みで予算以内か（金額はアプリが計算する）
-    const q = quote(l, profile, input.quantityG, input.method);
+    // 送料が要相談のときは、商品代だけで予算と比べる（送料は、あとで農家さんが決める）
+    const q = quote(l, profile, input.quantityG, input.method, km);
     if ("error" in q || q.totalYen > input.budgetYen) continue;
 
     candidates.push({
@@ -134,6 +137,7 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
       unitPriceYen: l.unitPriceYen,
       quantityG: input.quantityG,
       ...q,
+      distanceKm: km,
       method: input.method,
       earliestDelivery: earliest.toISOString().slice(0, 10),
       latestDelivery: latest.toISOString().slice(0, 10),

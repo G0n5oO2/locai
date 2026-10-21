@@ -7,6 +7,7 @@ import { methodLabel, type DeliveryMethod } from "@/lib/burden";
 import { formatDate, jstDateText, parseDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { gramsToKgText } from "@/lib/quantity";
+import { farmShopKm } from "@/lib/region";
 import { requireProducer } from "@/lib/session";
 import { ProposeForm, type DateOption } from "./propose-form";
 import { Loading } from "@/app/ui/loading";
@@ -15,7 +16,7 @@ const day = 24 * 60 * 60 * 1000;
 
 export default function ProposePage(props: PageProps<"/producer/orders/[id]/propose">) {
   return (
-    <AuthShell title="条件の変更を提案する">
+    <AuthShell title="条件の変更・送料を提案する">
       <Suspense fallback={<Loading />}>
         <Propose {...props} />
       </Suspense>
@@ -30,7 +31,7 @@ async function Propose({ params }: PageProps<"/producer/orders/[id]/propose">) {
   const { id } = await params;
 
   // 自分の出品への注文だけ（他人の注文は「見つからない」）
-  const order = await prisma.order.findUnique({ where: { id }, include: { listing: true, buyer: { select: { name: true } } } });
+  const order = await prisma.order.findUnique({ where: { id }, include: { listing: true, buyer: { select: { name: true, buyerProfile: { select: { prefecture: true, city: true } } } } } });
   if (!order || order.listing.producerId !== user.id) notFound();
   if (order.status !== "pending") {
     return <p>この申し込みは、いま「回答待ち」ではないので、提案できません。</p>;
@@ -78,6 +79,12 @@ async function Propose({ params }: PageProps<"/producer/orders/[id]/propose">) {
         </p>
         {order.showUseDate && <p className="text-muted">お店の使用日：{formatDate(order.useDate)}</p>}
         <p className="text-muted">あなたの基準：{methodLabel[method]}は1回の出荷で{limit}件まで</p>
+        {/* 送料が要相談のときは、お店の地域と、だいたいの距離を出す（送料を決める手がかり） */}
+        {order.shippingToBeDecided && order.buyer.buyerProfile && (
+          <p className="mt-2 rounded-xl bg-amber-50 p-2 font-bold text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            送料が要相談の注文です。お店の地域：{order.buyer.buyerProfile.prefecture} {order.buyer.buyerProfile.city}（畑から 約{farmShopKm(profile, order.buyer.buyerProfile) ?? "—"}km）
+          </p>
+        )}
       </div>
       <ProposeForm
         orderId={order.id}
@@ -85,6 +92,8 @@ async function Propose({ params }: PageProps<"/producer/orders/[id]/propose">) {
         dateOptions={dateOptions}
         unitText={`${gramsToKgText(order.listing.unitG)}kg`}
         maxQuantityText={`${gramsToKgText(maxG)}kg`}
+        shippingToBeDecided={order.shippingToBeDecided}
+        itemYen={order.itemYen}
       />
     </div>
   );

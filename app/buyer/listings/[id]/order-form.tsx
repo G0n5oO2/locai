@@ -16,6 +16,7 @@ type Props = {
   price: { unitG: number; unitPriceYen: number; minOrderG: number };
   // 送料の計算に使う値（引き取りの場所そのものは渡さない。引き取りできるときは "" にしている）
   fees: Parameters<typeof quote>[1];
+  km: number; // 畑からお店までの、だいたいの距離
   methods: DeliveryMethod[];
   earliest: string;
   latest: string;
@@ -27,14 +28,14 @@ type Props = {
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
 
-export function OrderForm({ listingId, requestKey, price, fees, methods, earliest, latest, initial, payments }: Props) {
+export function OrderForm({ listingId, requestKey, price, fees, km, methods, earliest, latest, initial, payments }: Props) {
   const [state, action, pending] = useActionState<OrderFormState, FormData>(sendOrder, {});
   const v = state.values ?? {};
   const [quantity, setQuantity] = useState(v.quantity ?? initial.quantity);
   const [method, setMethod] = useState(v.method ?? (methods.includes(initial.method as DeliveryMethod) ? initial.method : methods[0]));
 
   const grams = kgTextToGrams(quantity);
-  const q = grams ? quote(price, fees, grams, method as DeliveryMethod) : null;
+  const q = grams ? quote(price, fees, grams, method as DeliveryMethod, km) : null;
 
   // 支払方法：選んだ受け取り方法で使えるものだけを出す（代金引換は宅配のときだけ）
   const paymentOptions = payments.filter((p) => paymentFits(p, method as DeliveryMethod));
@@ -114,10 +115,12 @@ export function OrderForm({ listingId, requestKey, price, fees, methods, earlies
               <dt className="text-muted">商品代</dt>
               <dd className="text-right">{q.itemYen.toLocaleString()}円</dd>
               <dt className="text-muted">送料・配達料</dt>
-              <dd className="text-right">{q.shippingYen.toLocaleString()}円</dd>
+              <dd className="text-right">{q.shippingToBeDecided ? "要相談" : `${q.shippingYen.toLocaleString()}円`}</dd>
             </dl>
+            {/* 送料が要相談（距離の料金の表より遠いお店の宅配）：農家さんが送料を決めてから、もう一度合計を見て決められる */}
+            {q.shippingToBeDecided && <p className="text-xs text-muted">お店が、農家さんの送料の表より遠いため、送料は農家さんが決めてから知らせます。送料を足した合計を見て、承認するか決められます。</p>}
             <div className="flex items-baseline justify-between gap-2 border-t border-line pt-2">
-              <span className="font-bold">合計（送料込み）</span>
+              <span className="font-bold">{q.shippingToBeDecided ? "合計（送料を除く）" : "合計（送料込み）"}</span>
               <span className="text-3xl font-bold text-leaf">{q.totalYen.toLocaleString()}円</span>
             </div>
           </div>

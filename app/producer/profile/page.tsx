@@ -40,7 +40,10 @@ async function ProfileEditor() {
         band2Yen: profile.deliveryBand2Yen?.toString() ?? "",
         band3Kg: profile.deliveryBand3MaxG === null ? "" : gramsToKgText(profile.deliveryBand3MaxG),
         band3Yen: profile.deliveryBand3Yen?.toString() ?? "",
+        // 距離の料金（第2版）：入っている行だけ。「＋距離の料金を追加」で行を増やす
+        ...Object.fromEntries(profile.distanceFeeMaxKm.flatMap((km, i) => [[`dist${i + 1}Km`, String(km)], [`dist${i + 1}Yen`, String(profile.distanceFeeYen[i] ?? "")]])),
         selfDeliveryYen: profile.selfDeliveryYen?.toString() ?? "",
+        selfDeliveryMaxKm: profile.selfDeliveryMaxKm?.toString() ?? "",
         pickupPlace: profile.pickupPlace ?? "",
         paymentMethods: profile.paymentMethods.join(","),
       }

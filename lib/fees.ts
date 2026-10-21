@@ -24,3 +24,22 @@ export function deliveryFeeFor(p: BandColumns, grams: number): number | null {
   const band = deliveryBands(p).find((b) => grams <= b.maxG);
   return band ? band.yen : null;
 }
+
+// ===== 距離の料金（第2版） =====
+// 距離の料金は、5行まで（「＋距離の料金を追加」で増やす）
+export const MAX_DISTANCE_ROWS = 5;
+type DistanceColumns = { distanceFeeMaxKm: number[]; distanceFeeYen: number[] };
+
+// 「◯km まで ◯円」の一覧（近い順）
+export function distanceBands(p: DistanceColumns): { maxKm: number; yen: number }[] {
+  return p.distanceFeeMaxKm.map((maxKm, i) => ({ maxKm, yen: p.distanceFeeYen[i] })).filter((b) => b.yen !== undefined);
+}
+
+// 宅配の距離の料金
+// 表がなければ 0円。表があって、どの行にも入らない（表より遠い）ときは null（送料は要相談）
+export function distanceFeeFor(p: DistanceColumns, km: number): number | null {
+  const bands = distanceBands(p);
+  if (bands.length === 0) return 0;
+  const band = bands.find((b) => km <= b.maxKm);
+  return band ? band.yen : null;
+}

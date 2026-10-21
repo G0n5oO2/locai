@@ -8,6 +8,7 @@ import { jstDateText, parseDate } from "./datetime";
 import { prisma } from "./prisma";
 import { quote } from "./pricing";
 import { gramsToKgText } from "./quantity";
+import { farmShopKm } from "./region";
 
 // 操作 → 誰が・どの状態のときにできるか
 const flow = {
@@ -63,6 +64,8 @@ export async function runFlow(
 // 承認：販売確定の量を足しても、出品した量を超えないか確かめてから、販売確定にする（不変条件1）
 export function approveOrder(producerId: string, orderId: string) {
   return runFlow("approve", producerId, orderId, async (tx, order) => {
+    // 送料が要相談の注文は、送料が決まらないまま販売確定にしない（不変条件2）。送料を入れて提案してもらう
+    if (order.shippingToBeDecided) return { ok: false, message: "送料が要相談の注文です。送料を入れて、お店に提案してください" };
     const listing = await tx.listing.findUniqueOrThrow({ where: { id: order.listingId } });
     const used = (await usedAmounts(tx, [order.listingId])).get(order.listingId)!;
     if (used.confirmedG + order.quantityG > listing.totalG) return { ok: false, message: "在庫が足りないため、承認できません" };
@@ -85,7 +88,11 @@ export type ProposalInput = {
   newDeliveryDate: Date | null; // 納品日を変えないときは null
   newQuantityG: number | null; // 数量を変えないときは null
   confirmIfRefused: boolean; // 断られたら元の条件で確定するか（false なら見送り）
+  shippingYen?: number | null; // 送料が要相談の注文で、農家さんが決めた送料（円の整数）。それ以外の注文では null
 };
+
+// 送料が要相談のときに、農家さんが入れられる送料の範囲（円）
+export const MAX_DECIDED_SHIPPING_YEN = 100_000;
 
 // 生産者が、納品日や数量の変更を提案する（回答待ち → 条件変更の確認待ち）
 export function proposeChange(producerId: string, orderId: string, input: ProposalInput) {
@@ -96,7 +103,11 @@ export function proposeChange(producerId: string, orderId: string, input: Propos
 
     const dateChanged = input.newDeliveryDate !== null && input.newDeliveryDate.getTime() !== order.deliveryDate.getTime();
     const quantityChanged = input.newQuantityG !== null && input.newQuantityG !== order.quantityG;
-    if (!dateChanged && !quantityChanged) return { ok: false, message: "納品日か数量のどちらかを変えてください" };
+    // 送料が要相談の注文は、送料を決めることが提案になる（納品日・数量は変えなくてよい）
+    if (order.shippingToBeDecided) {
+      const y = input.shippingYen ?? null;
+      if (y === null || !Number.isInteger(y) || y < 0 || y > MAX_DECIDED_SHIPPING_YEN) return { ok: false, message: `送料を 0〜${MAX_DECIDED_SHIPPING_YEN.toLocaleString()}円の整数で入れてください` };
+    } else if (!dateChanged && !quantityChanged) return { ok: false, message: "納品日か数量のどちらかを変えてください" };
 
     const newDate = dateChanged ? input.newDeliveryDate! : order.deliveryDate;
     const newQuantityG = quantityChanged ? input.newQuantityG! : order.quantityG;
@@ -121,8 +132,14 @@ export function proposeChange(producerId: string, orderId: string, input: Propos
     }
 
     // 金額はアプリが計算し直す（不変条件2）
-    const q = quote(listing, profile, newQuantityG, order.method);
+    const buyer = await tx.buyerProfile.findUnique({ where: { userId: order.buyerId } });
+    const km = buyer && farmShopKm(profile, buyer);
+    if (km === null || km === undefined) return { ok: false, message: "お店の地域が見つかりません" };
+    const q = quote(listing, profile, newQuantityG, order.method, km);
     if ("error" in q) return { ok: false, message: q.error };
+    // 送料が要相談の注文：送料は農家さんが決めた金額、合計はアプリが足し算する
+    const shippingYen = order.shippingToBeDecided ? input.shippingYen! : q.shippingYen;
+    if (!order.shippingToBeDecided && q.shippingToBeDecided) return { ok: false, message: "送料が決まらないため、提案できません" };
 
     await tx.order.update({
       where: { id: order.id },
@@ -131,10 +148,10 @@ export function proposeChange(producerId: string, orderId: string, input: Propos
         proposedDeliveryDate: newDate,
         proposedQuantityG: newQuantityG,
         proposedItemYen: q.itemYen,
-        proposedShippingYen: q.shippingYen,
-        proposedTotalYen: q.totalYen,
-        // 数量を変えるときは、断られたら見送りだけ（出せない量を約束しないため）
-        confirmIfRefused: quantityChanged ? false : input.confirmIfRefused,
+        proposedShippingYen: shippingYen,
+        proposedTotalYen: q.itemYen + shippingYen,
+        // 数量を変えるとき・送料が要相談のときは、断られたら見送りだけ（出せない量や、決まっていない送料を約束しないため）
+        confirmIfRefused: quantityChanged || order.shippingToBeDecided ? false : input.confirmIfRefused,
         dateChangeProposed: dateChanged,
       },
     });
@@ -165,6 +182,8 @@ export function acceptProposal(buyerId: string, orderId: string) {
         itemYen: order.proposedItemYen!,
         shippingYen: order.proposedShippingYen!,
         totalYen: order.proposedTotalYen,
+        // 送料が決まった（要相談でなくなった）
+        shippingToBeDecided: false,
       },
     });
     return { ok: true };
