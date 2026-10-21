@@ -247,7 +247,8 @@ export function DeliveryCalendar({
               const accept = deadlines.find((d) => d.listingId === id && d.kind === "accept");
               const answer = deadlines.find((d) => d.listingId === id && d.kind === "answer");
               return (
-                <li key={id} className="flex flex-wrap items-center gap-x-2">
+                // 名前の長さで並び方が変わらないよう、いつも「名前の下に日付」にそろえる
+                <li key={id} className="flex flex-col rounded-xl bg-surface px-2 py-1">
                   <span className="font-bold">
                     {circled(numberOf(id))} {(accept ?? answer)?.vegetable}
                   </span>
