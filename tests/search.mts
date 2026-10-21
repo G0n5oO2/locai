@@ -60,6 +60,16 @@ try {
   const r2 = await search();
   check("お試しで買った農家さんの出品だけが「お試しを利用した農家」に出る", owners(r2.trial) === "B", owners(r2.trial));
 
+  // 希望数量・予算・使用日は任意（第2版）。空にすると、その条件では絞らず、金額は出さない
+  const open = await searchListings({ buyerId: buyer, buyerPrefecture: buyerProfile.prefecture, buyerCity: buyerProfile.city, vegetable, quantityG: null, budgetYen: null, useDate: null, method: "delivery" });
+  check("希望数量・予算・使用日が空でも、4件とも候補に出る", open.random.length === 4, `${open.random.length}件`);
+  check("希望数量が空のときは、合計を出さず、1kg あたりの値段を出す", open.random.every((c) => c.totalYen === null && c.quantityG === null && c.perKgYen > 0));
+  check("希望数量が空のときの安い順は、1kg あたりの値段の順", open.cheap[0]?.listingId === listings[0].id);
+  const noBudget = await searchListings({ buyerId: buyer, buyerPrefecture: buyerProfile.prefecture, buyerCity: buyerProfile.city, vegetable, quantityG: 1000, budgetYen: null, useDate: null, method: "delivery" });
+  check("予算が空なら予算では絞らず、希望数量があれば合計は出す", noBudget.random.length === 4 && noBudget.random.every((c) => c.totalYen !== null));
+  const tight = await searchListings({ buyerId: buyer, buyerPrefecture: buyerProfile.prefecture, buyerCity: buyerProfile.city, vegetable, quantityG: 1000, budgetYen: 1, useDate: null, method: "delivery" });
+  check("予算を入れたときは、今までどおり予算で絞る", tight.random.length === 0);
+
   // ランダムは、毎回同じ順番にならない（20回探して、一番上が2種類以上ある）
   const tops = new Set<string>();
   for (let i = 0; i < 20; i++) tops.add((await search()).random[0].listingId);

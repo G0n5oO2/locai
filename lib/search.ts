@@ -14,9 +14,10 @@ export type SearchInput = {
   buyerPrefecture: string;
   buyerCity: string;
   vegetable: string;
-  quantityG: number;
-  budgetYen: number;
-  useDate: Date;
+  // 希望数量・予算・使用日は任意（第2版）。null なら、その条件では絞らない
+  quantityG: number | null;
+  budgetYen: number | null;
+  useDate: Date | null;
   method: DeliveryMethod;
 };
 
@@ -32,10 +33,12 @@ export type Candidate = {
   note: string;
   unitG: number;
   unitPriceYen: number;
-  quantityG: number;
-  itemYen: number;
-  shippingYen: number;
-  totalYen: number;
+  perKgYen: number; // 1kg あたりの値段（比べるための目安。四捨五入）
+  // 希望数量を入れたときだけ、量と金額を出す（入れていなければ null）
+  quantityG: number | null;
+  itemYen: number | null;
+  shippingYen: number | null;
+  totalYen: number | null;
   shippingToBeDecided: boolean; // 送料が要相談（距離の料金の表より遠い宅配）。このときの合計は商品代だけ
   distanceKm: number; // 畑からお店までの、だいたいの距離（市区町村の代表地点どうし）
   method: DeliveryMethod;
@@ -94,7 +97,7 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
       acceptUntil: { gt: now },
       vegetable: { contains: input.vegetable, mode: "insensitive" },
       [methodColumn[input.method]]: true,
-      deliverFrom: { lte: input.useDate },
+      ...(input.useDate ? { deliverFrom: { lte: input.useDate } } : {}),
     },
     include: { producer: { select: { id: true, name: true, profile: true } } },
   });
@@ -112,15 +115,20 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
     // 量：最低注文量以上・注文単位の倍数・残りの量が足りる（不変条件1）
     const u = used.get(l.id)!;
     const availableG = l.totalG - u.confirmedG - u.reservedG;
-    if (input.quantityG < l.minOrderG || input.quantityG % l.unitG !== 0 || input.quantityG > availableG) continue;
-    // 日付：今日以降で、納品できる日の中に、使用日までに届く日があるか
+    // 希望数量がないときは、最低注文量の分が残っているか
+    const wantG = input.quantityG ?? l.minOrderG;
+    if (wantG < l.minOrderG || wantG % l.unitG !== 0 || wantG > availableG) continue;
+    // 日付：今日以降で、納品できる日の中に、使用日までに届く日があるか（使用日がなければ、納品できる最後の日まで）
     const earliest = l.deliverFrom > today ? l.deliverFrom : today;
-    const latest = l.deliverTo < input.useDate ? l.deliverTo : input.useDate;
+    const latest = input.useDate && input.useDate < l.deliverTo ? input.useDate : l.deliverTo;
     if (earliest > latest) continue;
-    // 金額：送料込みで予算以内か（金額はアプリが計算する）
+    // 金額：送料込みで予算以内か（金額はアプリが計算する）。予算がなければ比べない
+    // 受け取り方法で届けられるか（自分で配達の距離・宅配の重さ）は、希望数量（なければ最低注文量）で確かめる
     // 送料が要相談のときは、商品代だけで予算と比べる（送料は、あとで農家さんが決める）
-    const q = quote(l, profile, input.quantityG, input.method, km);
-    if ("error" in q || q.totalYen > input.budgetYen) continue;
+    const q = quote(l, profile, wantG, input.method, km);
+    if ("error" in q || (input.budgetYen !== null && q.totalYen > input.budgetYen)) continue;
+    // 希望数量がないときは、金額を出さない（1kg あたりの値段だけを出す）
+    const amounts = input.quantityG === null ? { itemYen: null, shippingYen: null, totalYen: null, shippingToBeDecided: false } : q;
 
     candidates.push({
       producerId: l.producerId,
@@ -135,8 +143,9 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
       note: l.note,
       unitG: l.unitG,
       unitPriceYen: l.unitPriceYen,
+      perKgYen: Math.round((l.unitPriceYen * 1000) / l.unitG),
       quantityG: input.quantityG,
-      ...q,
+      ...amounts,
       distanceKm: km,
       method: input.method,
       earliestDelivery: earliest.toISOString().slice(0, 10),
@@ -161,7 +170,8 @@ export async function searchListings(input: SearchInput): Promise<SearchResult> 
   // 先にばらばらにしておくと、金額や日付が同じ出品どうしの順番もくじ引きになる（いつも同じ農家さんが上に来ない）
   const base = shuffle(candidates);
   const random = noRepeatInRow(base);
-  const cheap = noRepeatInRow([...base].sort((a, b) => a.totalYen - b.totalYen));
+  // 安い順：希望数量があれば送料込みの合計、なければ 1kg あたりの値段で並べる
+  const cheap = noRepeatInRow([...base].sort((a, b) => (a.totalYen ?? a.perKgYen) - (b.totalYen ?? b.perKgYen)));
   const early = noRepeatInRow([...base].sort((a, b) => a.earliestDelivery.localeCompare(b.earliestDelivery)));
   const trial = noRepeatInRow(base.filter((c) => trialIds.has(c.producerId)));
 

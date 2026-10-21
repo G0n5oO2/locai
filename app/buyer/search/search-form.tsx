@@ -11,7 +11,7 @@ import { gramsToKgText } from "@/lib/quantity";
 import type { Candidate, SortKey } from "@/lib/search";
 import { PublishWanted } from "./publish-wanted";
 import { RequiredMark } from "@/app/ui/required-mark";
-import { QualityTags } from "@/app/ui/price-box";
+import { PriceBox, QualityTags } from "@/app/ui/price-box";
 
 const inputClass = "rounded-xl border border-line bg-surface px-3 py-3 text-base";
 const errorClass = "text-sm text-red-700 dark:text-red-400";
@@ -30,9 +30,10 @@ export function SearchForm({ area, initialVegetable }: { area: string; initialVe
       {/* 入力の部分：スマホは縦に1つずつ。パソコンは横幅いっぱいに使い、入力欄を2〜3列に並べる */}
       <form action={action} className="card grid w-full gap-4 p-5 md:grid-cols-2 md:items-end lg:grid-cols-3">
         <Field label="食材（空なら種類を問わない）" name="vegetable" maxLength={50} placeholder="例：賀茂茄子" defaultValue={v.vegetable ?? initialVegetable} errors={state.errors?.vegetable} />
-        <Field label="希望数量（kg）" required name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
-        <Field label="予算（円・送料込み）" required name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
-        <Field label="使用日" required name="useDate" type="date" defaultValue={v.useDate} errors={state.errors?.useDate} />
+        {/* 希望数量・予算・使用日は任意（第2版：条件が厳しすぎないように）。空なら、その条件では絞らない */}
+        <Field label="希望数量（kg）" optional name="quantity" inputMode="decimal" defaultValue={v.quantity} errors={state.errors?.quantity} />
+        <Field label="予算（円・送料込み）" optional name="budget" inputMode="numeric" defaultValue={v.budget} errors={state.errors?.budget} />
+        <Field label="使用日" optional name="useDate" type="date" defaultValue={v.useDate} errors={state.errors?.useDate} />
         <div className="flex flex-col gap-1">
           <label htmlFor="method" className="text-sm font-bold">受け取り方法<RequiredMark /></label>
           <select id="method" name="method" defaultValue={v.method ?? ""} className={inputClass}>
@@ -116,8 +117,6 @@ function Group({ list, useDate }: { list: Candidate[]; useDate?: string }) {
 // 条件に合った出品のカード
 // 一番知りたい「送料込みの合計」を大きく出し、内訳・量・日付は小さな枠に分けて、ひと目で読めるようにする
 function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
-  // 1kg あたりの値段は、市場と比べるための参考（計算には使わない）
-  const perKg = Math.round((c.unitPriceYen * 1000) / c.unitG);
   return (
     <article className="flex flex-col gap-3 card p-4">
       <div className="flex flex-col gap-1">
@@ -138,25 +137,33 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
         </div>
       )}
 
-      {/* 金額：合計を大きく、内訳は小さく添える（金額はアプリが計算したもの：不変条件2） */}
-      <div className="flex flex-col gap-2 rounded-2xl bg-earth-soft px-4 py-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="text-sm font-bold text-earth">
-            {gramsToKgText(c.quantityG)}kg の合計{c.shippingToBeDecided ? "（送料を除く）" : "（送料込み）"}
-          </span>
-          <span className="text-3xl font-bold text-earth">{c.totalYen.toLocaleString()}円</span>
+      {/* 金額：合計を大きく、内訳は小さく添える（金額はアプリが計算したもの：不変条件2）
+          希望数量を入れていないときは、合計が計算できないので、1kg あたりの値段を大きく出す */}
+      {c.quantityG === null || c.totalYen === null || c.itemYen === null || c.shippingYen === null ? (
+        <>
+          <PriceBox unitG={c.unitG} unitPriceYen={c.unitPriceYen} />
+          <p className="text-xs text-muted">送料込みの合計は、希望数量を入れて探すか、次の画面で数量を入れると出ます。</p>
+        </>
+      ) : (
+        <div className="flex flex-col gap-2 rounded-2xl bg-earth-soft px-4 py-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-sm font-bold text-earth">
+              {gramsToKgText(c.quantityG)}kg の合計{c.shippingToBeDecided ? "（送料を除く）" : "（送料込み）"}
+            </span>
+            <span className="text-3xl font-bold text-earth">{c.totalYen.toLocaleString()}円</span>
+          </div>
+          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 border-t border-earth/20 pt-2 text-sm">
+            <dt className="text-muted">
+              商品代（{gramsToKgText(c.unitG)}kg {c.unitPriceYen.toLocaleString()}円 × {c.quantityG / c.unitG}）
+            </dt>
+            <dd className="text-right">{c.itemYen.toLocaleString()}円</dd>
+            <dt className="text-muted">送料・配達料（{methodLabel[c.method]}）</dt>
+            <dd className="text-right">{c.shippingToBeDecided ? "要相談" : `${c.shippingYen.toLocaleString()}円`}</dd>
+          </dl>
+          {c.shippingToBeDecided && <p className="text-xs text-muted">お店が農家さんの送料の表より遠いため、送料は農家さんが決めてから知らせます。</p>}
+          <p className="text-xs text-muted">1kg あたり 約{c.perKgYen.toLocaleString()}円（送料を除く）</p>
         </div>
-        <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 border-t border-earth/20 pt-2 text-sm">
-          <dt className="text-muted">
-            商品代（{gramsToKgText(c.unitG)}kg {c.unitPriceYen.toLocaleString()}円 × {c.quantityG / c.unitG}）
-          </dt>
-          <dd className="text-right">{c.itemYen.toLocaleString()}円</dd>
-          <dt className="text-muted">送料・配達料（{methodLabel[c.method]}）</dt>
-          <dd className="text-right">{c.shippingToBeDecided ? "要相談" : `${c.shippingYen.toLocaleString()}円`}</dd>
-        </dl>
-        {c.shippingToBeDecided && <p className="text-xs text-muted">お店が農家さんの送料の表より遠いため、送料は農家さんが決めてから知らせます。</p>}
-        <p className="text-xs text-muted">1kg あたり 約{perKg.toLocaleString()}円（送料を除く）</p>
-      </div>
+      )}
 
       {/* 日付と期限 */}
       <dl className="grid grid-cols-2 gap-2 text-sm">
@@ -189,7 +196,7 @@ function CandidateCard({ c, useDate }: { c: Candidate; useDate: string }) {
 
       {/* 探したときの条件を持って、購入希望の画面へ */}
       <Link
-        href={`/buyer/listings/${c.listingId}?${new URLSearchParams({ quantity: gramsToKgText(c.quantityG), method: c.method, useDate })}`}
+        href={`/buyer/listings/${c.listingId}?${new URLSearchParams({ ...(c.quantityG !== null ? { quantity: gramsToKgText(c.quantityG) } : {}), method: c.method, ...(useDate ? { useDate } : {}) })}`}
         className="btn btn-leaf mt-auto"
       >
         この内容で購入希望へ進む

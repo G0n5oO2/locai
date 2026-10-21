@@ -64,7 +64,20 @@ export function PublishWanted({ values = {}, editable = false }: { values?: Reco
         </div>
       ) : (
         // 仕入れの画面から出すとき：探したときの条件をそのまま送る
-        (["vegetable", "quantity", "useDate", "method"] as const).map((f) => <input key={f} type="hidden" name={f} value={values[f] ?? ""} />)
+        // 希望数量と使用日は、探すときは任意なので、空だったときだけ、ここで入れてもらう（「探しています」には必要なため）
+        <>
+          {(["vegetable", "method"] as const).map((f) => (
+            <input key={f} type="hidden" name={f} value={values[f] ?? ""} />
+          ))}
+          {values.quantity ? <input type="hidden" name="quantity" value={values.quantity} /> : null}
+          {values.useDate ? <input type="hidden" name="useDate" value={values.useDate} /> : null}
+          {(!values.quantity || !values.useDate) && (
+            <div className="grid gap-3 md:grid-cols-2 md:items-end">
+              {!values.quantity && <Field label="希望数量（kg）" name="quantity" inputMode="decimal" required />}
+              {!values.useDate && <Field label="使用日" name="useDate" type="date" required />}
+            </div>
+          )}
+        </>
       )}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 font-bold">

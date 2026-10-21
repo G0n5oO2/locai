@@ -1,6 +1,6 @@
 // 入力欄の見た目をそろえるための部品（ラベル・入力欄・エラー表示）
 import type { InputHTMLAttributes } from "react";
-import { RequiredMark } from "./required-mark";
+import { OptionalMark, RequiredMark } from "./required-mark";
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -8,15 +8,18 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
   errors?: string[];
   // 入力が必須なら true（ラベルの横に赤い「必須」のしるしを出す。確かめはサーバーで行う）
   required?: boolean;
+  // 入れなくてもよいことをはっきり見せたいとき true（ラベルの横に灰色の「任意」のしるしを出す）
+  optional?: boolean;
 };
 
-export function Field({ label, name, errors, required, ...inputProps }: Props) {
+export function Field({ label, name, errors, required, optional, ...inputProps }: Props) {
   const errorId = `${name}-error`;
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={name} className="text-sm font-bold">
         {label}
         {required && <RequiredMark />}
+        {optional && <OptionalMark />}
       </label>
       <input
         id={name}

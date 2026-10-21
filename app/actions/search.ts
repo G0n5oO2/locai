@@ -18,7 +18,9 @@ export type SearchFormState = {
 const searchSchema = z.object({
   // 空なら「種類を問わない」
   vegetable: z.string().trim().max(50, "50文字以内にしてください"),
+  // 希望数量・予算・使用日は任意（第2版：条件が厳しすぎないように）。空なら null で、その条件では絞らない
   quantity: z.string().transform((text, ctx) => {
+    if (text.trim() === "") return null;
     const grams = kgTextToGrams(text);
     if (grams === null || grams < 500 || grams > 1_000_000) {
       ctx.addIssue({ code: "custom", message: "希望数量は 0.5〜1,000kg を 0.1kg 単位で入力してください" });
@@ -27,6 +29,7 @@ const searchSchema = z.object({
     return grams;
   }),
   budget: z.string().transform((text, ctx) => {
+    if (text.trim() === "") return null;
     if (!/^\d{1,6}$/.test(text.trim()) || Number(text) < 1 || Number(text) > 100000) {
       ctx.addIssue({ code: "custom", message: "予算は 1〜100,000 円の整数で入力してください" });
       return z.NEVER;
@@ -34,6 +37,7 @@ const searchSchema = z.object({
     return Number(text);
   }),
   useDate: z.string().transform((text, ctx) => {
+    if (text.trim() === "") return null;
     const date = parseDate(text);
     if (!date) {
       ctx.addIssue({ code: "custom", message: "使用日を入力してください" });
@@ -53,7 +57,9 @@ export async function search(_state: SearchFormState, formData: FormData): Promi
   const parsed = searchSchema.safeParse(values);
   if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors, values };
   const d = parsed.data;
-  if (jstDateText(new Date()) > values.useDate) return { errors: { useDate: ["使用日は、今日以降にしてください"] }, values };
+  if (d.useDate && jstDateText(new Date()) > values.useDate) return { errors: { useDate: ["使用日は、今日以降にしてください"] }, values };
+  // 予算と比べる合計は、希望数量がないと計算できない
+  if (d.budget !== null && d.quantity === null) return { errors: { budget: ["予算で絞るには、希望数量も入れてください"] }, values };
 
   const result = await searchListings({
     buyerId: user.id,
